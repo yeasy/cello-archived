@@ -1,0 +1,50 @@
+# This compose file will deploy the service, and bootup a mongo server
+#  manager: app service of poolmanager
+#  nginx: front end
+#  mongo: mongo db
+
+version: '2'
+services:
+  # poolmanager service
+  manager:
+    build: app
+    image: poolmanager
+    hostname: poolmanager
+    restart: unless-stopped
+    environment:
+      - NO_USED=0
+    volumes:  # This should be removed in product env
+      - ./app:/app
+    links:
+      - mongo
+
+  mongo:
+    image: mongo:3.2
+    hostname: mongo
+    restart: unless-stopped
+    mem_limit: 1024m
+    ports:
+      - "127.0.0.1:27017:27017"
+      - "127.0.0.1:27018:27018"
+    environment:
+      - NO_USED=0
+    volumes:
+      - /opt/poolmanager/mongo:/data/db
+
+  # nginx to forward request, may split it out in future
+  nginx:
+    image: yeasy/nginx
+    hostname: nginx
+    restart: always
+    links:
+      - manager
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.default.conf
+      - /opt/poolmanager/nginx/log/:/var/log/nginx/
+    ports:
+      - "80:80"
+    environment:
+      - BACKEND=manager
+      - PORT=8080
+      - USERNAME=user
+      - PASSWORD=pass

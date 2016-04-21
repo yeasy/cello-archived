@@ -1,0 +1,85 @@
+# this is an example of the PoolManager API
+# as a demonstration of an API spec in YAML
+swagger: '2.0'
+info:
+  title: PoolManager API
+  description: PoolManager API to manage cluster
+  contact:
+    name: Baohua Yang
+    url: https://github.rtp.raleigh.ibm.com/blockchain/poolmanager
+    email: baohyang@cn.ibm.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: "1.0.0"
+# the domain of the service
+host: 9.186.100.88:80
+# array of all schemes that your API supports
+schemes:
+  - http
+# will be prefixed to all paths
+basePath: /v1
+produces:
+  - application/json
+paths:
+  /clusters:
+    get:
+      summary: A list of all clusters
+      description: |
+        The Clusters endpoint returns information about all existing clusters.
+        The response includes the display name
+        and other details about each cluster, and lists the clusters in the
+        proper display order.
+      parameters:
+        - name: host_id
+          in: query
+          description: Filter clusters on specific host id
+          required: false
+          type: string
+        - name: status
+          in: query
+          description: Filter clusters with specific status
+          required: false
+          type: string
+      tags:
+        - Clusters
+      responses:
+        200:
+          description: An array of clusters
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Cluster'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  Cluster:
+    type: object
+    properties:
+      uuid:
+        type: string
+        description: Unique identifier representing a specific cluster.
+      host_id:
+        type: string
+        description: Which host the cluster is at
+      display_name:
+        type: string
+        description: Display name of cluster.
+      occupied:
+        type: boolean
+        description: Occupation of cluster. For example, true or false
+      image:
+        type: string
+        description: Image URL representing the cluster.
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
