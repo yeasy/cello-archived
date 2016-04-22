@@ -1,9 +1,19 @@
 # Database Design
 
-## cluster
-Track information of each cluster
+We have several tables, as follows.
 
-uuid | api_url | user_id | apply_ts | drop_ts
------|---------|---------|--------- | -------
-xxx  |http://192.168.0.1:5000| "" | 20160430101010 | 20160430101010
+## cluster_active
+Track information of active cluster.
+
+uuid | api_url | name | user_id | daemon_url | apply_ts | drop_ts
+---- | --------| ------------ |---------| --------- | --------- |-------
+xxx  | http://192.168.0.1:5000| hoststr_0 | "" | tcp://192.168.0.1:2375 | 20160430101010 |
+
+
+## cluster_dropped
+Track history of dropped clusters.
+
+uuid | api_url | project_name | user_id | daemon_url | apply_ts | drop_ts
+---- | --------| ------------ |---------| --------- | --------- |-------
+xxx  | http://192.168.0.1:5000| hoststr_0 | "xiaoming" | tcp://192.168.0.1:2375 | 20160430101010 | 20160430121212
 

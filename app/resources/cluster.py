@@ -1,25 +1,35 @@
 import __future__
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+import logging
+
 from flask_restful import reqparse, Resource
 
 parser = reqparse.RequestParser()
-parser.add_argument('task')
+
+from common import log_handler
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(log_handler)
 
 
 # clusters list
 class ClustersRoute(Resource):
-    def get(self, chain_id):
+    def get(self):
+        logger.debug("reach ClusterRoute")
         return {}
 
 
 # A single hyperledger cluster
 class ClusterRoute(Resource):
-    def get(self, chain_id):
-        print(chain_id)
+    def get(self, cluster_id):
         return {}
 
-    def post(self):
+    def post(self, cluster_id):
         args = parser.parse_args()
         return {}, 201
 
-    def delete(self, todo_id):
-        return '', 204
+    def delete(self, cluster_id):
+        return {}, 204

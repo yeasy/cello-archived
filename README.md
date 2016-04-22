@@ -17,7 +17,7 @@ The rest API will be called by web service backend.
 ### Node
 TODO: need a setup script.
 
-* docker: >=1.9.0, and open daemon 2735 port for Master.
+* docker: >=1.9.0, and open daemon port 2375 for Master usage.
 * docker images: yeasy/hyperledger (rename to openblockchain/baseimage),
 yeasy/hyperledger-peer,
 yeasy/hyperledger-membersrvc

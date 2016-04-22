@@ -31,14 +31,14 @@ paths:
         and other details about each cluster, and lists the clusters in the
         proper display order.
       parameters:
-        - name: host_id
+        - name: daemon_url
           in: query
-          description: Filter clusters on specific host id
+          description: Filter clusters with specific daemon_url.
           required: false
           type: string
-        - name: status
+        - name: user_id
           in: query
-          description: Filter clusters with specific status
+          description: Filter clusters with specific user_id.
           required: false
           type: string
       tags:

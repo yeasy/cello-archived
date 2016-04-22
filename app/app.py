@@ -1,22 +1,26 @@
+import logging
 from flask import Flask
-from flask_restful import reqparse, abort, Api, Resource
+from flask_restful import Api
 
-from resources import ClusterRoute, ClustersRoute
+from common import log_handler
+from resources import ClusterRoute, ClustersRoute, ApplyRoute, DropRoute
 
 
 app = Flask(__name__)
-api = Api(app)
-api.add_resource(ClustersRoute, '/clusters')
+api = Api(app, prefix='/v1')
 
+api.add_resource(ClustersRoute, '/clusters')
 api.add_resource(ClusterRoute, '/cluster/<cluster_id>')
+
+api.add_resource(ApplyRoute, '/cluster_apply')
+api.add_resource(DropRoute, '/cluster_drop')
 
 # app.config.from_envvar('POOLMANAGER_CONFIG')
 app.config.from_object('config.DevelopmentConfig')
 
+app.logger.setLevel(app.config.get("LOG_LEVEL", logging.INFO))
+app.logger.addHandler(log_handler)
 
-@app.route('/', methods=['GET'])
-def index():
-    return {}
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8080, debug=app.config.get("DEBUG", True))
