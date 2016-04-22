@@ -1,52 +1,28 @@
 # API
+These APIs will be called by front web services.
 
-## External APIs
-### apply_cluster
+Latest API please see [api-front.yaml](api-front.yaml).
 
-Find an available cluster in the pool.
+## cluster_apply
+
+Find an available cluster in the pool for a user.
 
 ```html
-GET /apply_cluster
+GET /v1/cluster_apply
 ```
 
-When `apply_cluster` request arrives, the server will check  available
+When `cluster_apply` request arrives, the server will try checking  available
 cluster in the pool.
 
 Accordingly, the server will return a json response (succeed or fail).
 
-* When succeed:
+## cluster_drop
 
-```json
-{
-    "status": "OK",
-    "cluster": {
-        "id": "xxxxx",
-        "api_url": "192.168.0.2:5000"
-    },
-    "error": "",
-    "metadata":{
-        "req_id":"abcdefg"
-    }
-}
+Declare the user will drop a cluster.
+
+```html
+GET /v1/cluster_drop
 ```
 
-* When error:
-
-```json
-{
-    "status": "ERROR",
-    "error": "something goes wrong",
-    "metadata":{
-        "req_id":"abcdefg"
-    }
-}
-```
-
-## stop
-
-Stop a chain.
-
-## start
-
-Start a chain.
-
+The server will drop the corresponding cluster, recreate it and put into
+available pool for future requests.
