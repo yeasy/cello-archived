@@ -18,7 +18,7 @@ other action.
 * docker images: python:3.5, mongo:3.2, yeasy/nginx,
 
 ### Node
-TODO: need a setup script.
+TODO: We may need a setup script.
 
 * docker: >=1.9.0, and open daemon port 2375 for Master usage.
 * docker images: yeasy/hyperledger (rename to openblockchain/baseimage),
@@ -27,9 +27,11 @@ yeasy/hyperledger-membersrvc
 * SSH: May open for Master to monitor
 
 ### Prodution consideration
+
 * Mode: Set all modes to production, including image, compose, and app.
 * Security: Use firewall to filter traffic, enable TLS and authentication.
-*
+* Monitoring: Enable monitoring services.
+* Backup: Enable automatic data backup.
 
 ## Dependency
 

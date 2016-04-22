@@ -1,10 +1,26 @@
 # This compose file will deploy the service, and bootup a mongo server
-#  manager: app service of poolmanager
+#  admin: admin service of poolmanager, listen on 8080
+#  manager: app service of poolmanager, listen on 80
 #  nginx: front end
 #  mongo: mongo db
 
 version: '2'
 services:
+  admin:
+    build: admin
+    image: poolmanager-admin
+    hostname: admin
+    restart: unless-stopped
+    environment:
+      - USER=admin
+      - PASS=pass
+    ports:
+      - "0.0.0.0:8080:8080"
+    volumes:  # This should be removed in product env
+      - ./admin:/app
+    links:
+      - mongo
+
   # poolmanager service
   manager:
     build: app
