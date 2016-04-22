@@ -1,12 +1,18 @@
 import __future__
-from flask_restful import reqparse, abort, Api, Resource
+from flask_restful import reqparse, Resource
 
 parser = reqparse.RequestParser()
 parser.add_argument('task')
 
 
-# A single block chain, meaning a single hyperledger cluster
-class Chain(Resource):
+# clusters list
+class ClustersRoute(Resource):
+    def get(self, chain_id):
+        return {}
+
+
+# A single hyperledger cluster
+class ClusterRoute(Resource):
     def get(self, chain_id):
         print(chain_id)
         return {}

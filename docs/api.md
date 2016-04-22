@@ -1,16 +1,18 @@
 # API
 
-## find_available
+## External APIs
+### apply_cluster
 
-Find an available chain in the pool.
+Find an available cluster in the pool.
 
 ```html
 GET /apply_cluster
 ```
 
-When `apply_cluster` request arrives, the server will check `available_cluster` table to get a cluster instance or null.
+When `apply_cluster` request arrives, the server will check  available
+cluster in the pool.
 
-Accordingly, the server will return a json response like
+Accordingly, the server will return a json response (succeed or fail).
 
 * When succeed:
 
@@ -33,7 +35,7 @@ Accordingly, the server will return a json response like
 ```json
 {
     "status": "ERROR",
-    "error": "something goes wrong"
+    "error": "something goes wrong",
     "metadata":{
         "req_id":"abcdefg"
     }

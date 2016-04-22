@@ -1,12 +1,14 @@
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
 
-from resources import Chain
+from resources import ClusterRoute, ClustersRoute
 
 
 app = Flask(__name__)
 api = Api(app)
-api.add_resource(Chain, '/chain/<chain_id>')
+api.add_resource(ClustersRoute, '/clusters')
+
+api.add_resource(ClusterRoute, '/cluster/<cluster_id>')
 
 # app.config.from_envvar('POOLMANAGER_CONFIG')
 app.config.from_object('config.DevelopmentConfig')

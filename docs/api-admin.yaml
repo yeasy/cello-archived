@@ -57,24 +57,26 @@ paths:
 definitions:
   Cluster:
     type: object
+    required: [uuid, user_id, api_url]
     properties:
       uuid:
         type: string
         description: Unique identifier representing a specific cluster.
+      user_id:
+        type: string
+        description: User id who owns this cluster, empty by default
+      api_url:
+        type: string
+        description: Cluster REST URL representing the cluster.
       host_id:
         type: string
-        description: Which host the cluster is at
+        description: Which host the cluster is at.
       display_name:
         type: string
         description: Display name of cluster.
-      occupied:
-        type: boolean
-        description: Occupation of cluster. For example, true or false
-      image:
-        type: string
-        description: Image URL representing the cluster.
   Error:
     type: object
+    required: [code]
     properties:
       code:
         type: integer
