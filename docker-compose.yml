@@ -9,7 +9,7 @@ services:
   admin:
     build: admin
     image: poolmanager-admin
-    hostname: admin
+    hostname: poolmanager-admin
     restart: unless-stopped
     environment:
       - USER=admin
@@ -22,10 +22,10 @@ services:
       - mongo
 
   # poolmanager service
-  manager:
+  app:
     build: app
-    image: poolmanager
-    hostname: poolmanager
+    image: poolmanager-app
+    hostname: poolmanager-app
     restart: unless-stopped
     environment:
       - NO_USED=0
@@ -53,14 +53,14 @@ services:
     hostname: nginx
     restart: always
     links:
-      - manager
+      - app
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.default.conf
       - /opt/poolmanager/nginx/log/:/var/log/nginx/
     ports:
       - "80:80"
     environment:
-      - BACKEND=manager
+      - BACKEND=app
       - PORT=8080
       - USERNAME=user
       - PASSWORD=pass

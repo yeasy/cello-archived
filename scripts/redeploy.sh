@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 
-# This script will only build and redeploy the app container.
+# This script will only build and redeploy the specific service.
 # It should be triggered at the upper directory
 
-echo "Building the poolmanager image"
-docker-compose build manager
+if [ "$#" -ne 1 ]; then
+    echo "give service name as arguments, e.g., app, admin"
+    exit
+fi
 
-echo "Redeploy the manager container"
-docker-compose up --no-deps -d manager
+SERVICE=$1
+
+echo "Building the poolmanager-${SERVICE} image"
+docker-compose build ${SERVICE}
+
+echo "Redeploy the poolmanager-${SERVICE} container"
+docker-compose up --no-deps -d ${SERVICE}
