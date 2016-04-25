@@ -1,14 +1,9 @@
 import __future__
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import logging
-
-from flask_restful import reqparse, Resource
-
-parser = reqparse.RequestParser()
-
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
