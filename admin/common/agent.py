@@ -2,17 +2,25 @@
 agent to call docker-compose api
 """
 
-import logging
 from compose.container import Container
 from compose.cli.command import get_project as compose_get_project, get_config_path_from_options
 from compose.config.config import get_default_config_files
 from compose.config.environment import Environment
+from docker.client import Client
+
+
+def clean_exited_containers(daemon_url):
+    client = Client(base_url=daemon_url)
+    containers = client.containers(quiet=True, all=True,
+                                   filters={"status": "exited"})
+    print(containers)
+    for c in containers:
+        client.remove_container(c)
 
 def ps_(project):
     """
     containers status
     """
-    logging.debug('ps ' + project.name)
     containers = project.containers(stopped=True)
 
     items = [{
@@ -52,10 +60,7 @@ def get_project(path):
     """
     get docker project given file path
     """
-    logging.debug('get project ' + path)
     environment = Environment.from_env_file(path)
-    logging.debug(environment)
     config_path = get_config_path_from_options(path, dict(), environment)
-    logging.debug(config_path)
     project = compose_get_project(path, config_path)
     return project

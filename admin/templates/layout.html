@@ -1,18 +1,38 @@
 {% from "macros.html" import nav_link with context %}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <link rel="shortcut icon" href="{{ url_for("static", filename="img/favicon.ico") }}">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
 
-        {% block head %}
-        <title>Admin</title>
-        {% endblock %}
-    </head>
-    <body>
-    <ul class="nav-list">
-        {{ nav_link("index.show", "Home") }}
-    </ul>
-    {% block body %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+    {% block head %}
+    <title>Admin</title>
     {% endblock %}
-    </body>
+    <!-- Bootstrap core CSS -->
+     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+
+     <!-- Custom styles for this template
+     <link href="static/css/signin.css" rel="stylesheet">
+      -->
+
+     <script src="../static/js/jquery-2.2.3.min.js"> </script>
+    <script src="../static/js/script.js"> </script>
+</head>
+
+<body>
+<ul class="nav-list">
+    {{ nav_link("index.show", "Home") }}
+</ul>
+{% block body %}
+{% endblock %}
+</body>
 </html>
