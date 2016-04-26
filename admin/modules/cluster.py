@@ -19,6 +19,7 @@ logger.addHandler(log_handler)
 class ClusterHandler(object):
     def __init__(self):
         self.collections = db["cluster"]
+        self.collections_released = db["cluster_released"]
 
     def _start_compose_project(self, name, port, daemon_url):
         logger.info("start compose project")
@@ -57,7 +58,7 @@ class ClusterHandler(object):
         TODO: maybe need other id generation mechanism
         TODO: maybe need to check daemon_url status
 
-        :return json obj
+        :return bool
         """
         logger.info("create a cluster")
         if not daemon_url.startswith("tcp://"):
@@ -73,7 +74,7 @@ class ClusterHandler(object):
                 'api_url': api_url,
                 'daemon_url': daemon_url,
                 'create_ts': datetime.datetime.utcnow(),
-                'drop_ts': "",
+                'release_ts': "",
             }
         ins_id = self.collections.insert_one(c).inserted_id
         self.collections.update({"_id": ins_id}, {"$set": {"id": str(ins_id)}})
@@ -86,7 +87,10 @@ class ClusterHandler(object):
             return False
         return True
 
-    def delete(self, id):
+    def delete(self, id, record=False):
+        """ Delete a cluster instance
+        :param record: Whether to record into the released collections
+        """
         logger.info("delete a cluster with id="+id)
         ins = self.collections.find_one({"id": id})
         if not ins:
@@ -102,16 +106,48 @@ class ClusterHandler(object):
         except Exception as e:
             logger.warn(e)
             return False
+        if record:
+            ins["release_ts"] = datetime.datetime.utcnow()
+            logger.info("Record the cluster info into released collection")
+            self.collections_released.insert_one(ins)
         self.collections.delete_one({"id": id})
         return True
 
-    def find_free(self):
+    def apply_cluster(self, user_id):
+        """ Apply a cluster for a user
         """
-        Find a free to use cluster
+        result = self.collections.find_one({"user_id": user_id})
+        if result:  # already have one
+            logger.info("Already have one for"+user_id)
+            logger.info(self._serialize(result))
+            return self._serialize(result)
+        free_one = self.collections.find_one({"user_id": ""})
+        if not free_one:
+            logger.info("Not find free one for"+user_id)
+            return {}
+        else:
+            free_one['apply_ts'] = datetime.datetime.utcnow(),
+            logger.info("Assign free one for"+user_id)
+            logger.info(self._serialize(free_one))
+            return self._serialize(free_one)
+
+    def release_cluster(self, user_id):
+        """ Release a cluster for a user_id and recreate it.
         """
-        result = self.collections.find_one({"user_id": ""})
-        result['apply_ts'] = datetime.datetime.utcnow(),
-        return self._serialize(result)
+        result = self.collections.find_one({"user_id": user_id})
+        if not result:  # not have one
+            logger.warn("There is no cluster for"+user_id)
+            return False
+        cluster_id = result.get("id", "")
+        cluster_name = result.get("name", "")
+        cluster_daemon_url = result.get("daemon_url", "")
+        cluster_api_url = result.get("api_url", "")
+        if not self.delete(cluster_id, record=True):
+            logger.warn("Delete cluster error with id="+cluster_id)
+            return False
+        if not self.create(cluster_name, cluster_daemon_url, cluster_api_url):
+            logger.warn("Create cluster error with name="+cluster_name)
+            return False
 
     def set_user_id(self, doc, user_id):
         """
@@ -129,7 +165,7 @@ class ClusterHandler(object):
             'daemon_url': doc.get('daemon_url', ''),
             'create_ts': doc.get('create_ts', ''),
             'apply_ts': doc.get('apply_ts', ''),
-            'drop_ts': doc.get('drop_ts', ''),
+            'release_ts': doc.get('release_ts', ''),
         }
 
     def _gen_api_url(self, daemon_url):

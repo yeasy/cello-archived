@@ -25,38 +25,38 @@ def clusters_show():
 def cluster_operation():
     logger.info("action="+request.method)
     if request.method == 'GET':  # TODO
-        return jsonify({"cluster": "get"})
+        return jsonify({"cluster": "get"}), 200
     elif request.method == 'POST':
         if "name" not in request.form or "daemon_url" not in request.form:
             logger.warn("cluster post without enough data")
             status_response_fail["error"] = "cluster operation post without enough data"
             status_response_fail["data"] = jsonify(request.form)
-            return jsonify(status_response_fail)
+            return jsonify(status_response_fail), 400
         else:
             logger.debug(request.form['name'])
             logger.debug(request.form['daemon_url'])
             if cluster_handler.create(name=request.form['name'],
                                    daemon_url=request.form['daemon_url']):
                 logger.debug("cluster POST successfully")
-                return jsonify(status_response_ok)
+                return jsonify(status_response_ok), 200
             else:
                 logger.debug("cluster POST failed")
-                return jsonify(status_response_fail)
+                return jsonify(status_response_fail), 400
     elif request.method == 'DELETE':
         if "id" not in request.form or not request.form["id"]:
             logger.warn("cluster operation post without enough data")
             status_response_fail["error"] = "cluster delete without " \
                                           "enough data"
             status_response_fail["data"] = jsonify(request.form)
-            return jsonify(status_response_fail)
+            return jsonify(status_response_fail), 400
         else:
             logger.debug(request.form["id"])
             logger.debug("cluster delete with id="+request.form["id"])
             if cluster_handler.delete(id=request.form["id"]):
-                return jsonify(status_response_ok)
+                return jsonify(status_response_ok), 200
             else:
-                return jsonify(status_response_fail)
+                return jsonify(status_response_fail), 400
     else:
         status_response_fail["error"] = "unknown operation method"
         status_response_fail["data"] = jsonify(request.form)
-        return jsonify(status_response_fail)
+        return jsonify(status_response_fail), 400

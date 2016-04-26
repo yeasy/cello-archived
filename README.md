@@ -45,4 +45,5 @@ Details, see [requirements.txt](requirements.txt)
 
 ## TODO
 * Add default 404 and 500 error page.
+* Add doc for most methods and classes.
 * Use async operation for docker container management (maybe not necessary).
