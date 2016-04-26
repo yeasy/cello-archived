@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+{% block title %}Admin{% endblock %}
+{% block body %}
+{{ super() }}
+<h2>Clusters</h2>
+<div class="row">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>user_id</th>
+            <th>api_url</th>
+            <th>daemon_url</th>
+            <th>create_ts</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in items %}
+        <tr>
+            <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
+            <td>{{item.user_id}}</td>
+            <td><SPAN>{{item.api_url}}</SPAN></td>
+            <td>{{item.daemon_url}}</td>
+            <td>{{item.create_ts}}</td>
+            <td><input value="Delete" type="button"
+                       class="btn btn-small btn-danger delete_cluster_button"
+                       data-id="{{item.id}}"
+            /></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="container">
+    <h2 class="form-signin-heading">Add new Cluster </h2>
+    <form role="form">
+        <div class="form-group">
+            <label for="cluster_name"> Cluster Name</label>
+            <input id="cluster_name" name="name" type="text"
+                   class="form-control"
+                   placeholder="Cluster Name" required autofocus>
+            <label for="cluster_daemon_url"> Docker Host URL </label>
+            <input id="cluster_daemon_url" type="text" name="daemon_url"
+                   class="form-control"
+                   placeholder="Docker daemon url, e.g., 192.168.0.1:2375" required>
+        </div>
+        <button id="create_cluster_button"
+                class="btn btn-lg btn-primary btn-block"
+                type="button">Create </button>
+    </form>
+</div>
+
+{% endblock %}

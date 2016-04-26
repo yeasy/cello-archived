@@ -18,14 +18,23 @@ cluster = Blueprint('cluster', __name__)
 
 @cluster.route('/clusters', methods=['GET'])
 def clusters_show():
-    return render_template("cluster.html", items=cluster_handler.list())
+    return render_template("clusters.html", items=cluster_handler.list())
 
 
 @cluster.route('/cluster', methods=['GET', 'POST', 'DELETE'])
 def cluster_operation():
     logger.info("action="+request.method)
     if request.method == 'GET':  # TODO
-        return jsonify({"cluster": "get"}), 200
+        if "id" not in request.form:
+            logger.warn("cluster get without enough data")
+            status_response_fail["error"] = "cluster operation get without " \
+                                            "enough data"
+            status_response_fail["data"] = jsonify(request.form)
+            return jsonify(status_response_fail), 400
+        else:
+            logger.debug("id="+request.form['id'])
+            return jsonify(cluster_handler.get(request.form['id'],
+                                               serialization=True)), 200
     elif request.method == 'POST':
         if "name" not in request.form or "daemon_url" not in request.form:
             logger.warn("cluster post without enough data")
@@ -33,8 +42,8 @@ def cluster_operation():
             status_response_fail["data"] = jsonify(request.form)
             return jsonify(status_response_fail), 400
         else:
-            logger.debug(request.form['name'])
-            logger.debug(request.form['daemon_url'])
+            logger.debug("name="+request.form['name'])
+            logger.debug("daemon_url="+request.form['daemon_url'])
             if cluster_handler.create(name=request.form['name'],
                                    daemon_url=request.form['daemon_url']):
                 logger.debug("cluster POST successfully")
@@ -60,3 +69,10 @@ def cluster_operation():
         status_response_fail["error"] = "unknown operation method"
         status_response_fail["data"] = jsonify(request.form)
         return jsonify(status_response_fail), 400
+
+
+@cluster.route('/cluster_info/<cluster_id>', methods=['GET'])
+def show(cluster_id):
+    logger.info("action="+request.method)
+    return render_template("cluster.html", cluster=cluster_handler.get(
+        cluster_id, serialization=True)), 200

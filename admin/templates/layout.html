@@ -27,27 +27,47 @@
 </head>
 
 <body>
-<nav class="navbar navbar-default">
+<nav class="navbar navbar-inverse">
     <div class="container-fluid">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <!-- Collect the nav links, forms, and other content for toggling -->
-            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav nav-list">
-                    {{ nav_link("index.show", "Home") }}
-                    {{ nav_link("cluster.clusters_show", "Cluster") }}
-                </ul>
-            </div>
+            <a class="navbar-brand" href="#">Pool Manager</a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="navbar">
+            <ul class="nav navbar-nav navbar-right nav-list">
+                {{ nav_link("index.show", "Home") }}
+                {{ nav_link("cluster.clusters_show", "Clusters") }}
+            </ul>
+            <form class="navbar-form navbar-right">
+            <input type="text" class="form-control" placeholder="Search...">
+          </form>
         </div>
     </div>
 </nav>
-{% block body %}
-{% endblock %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+            <ul class="nav nav-sidebar">
+                <li class="active"><a href="/index">Overview <span class="sr-only">(current)</span></a></li>
+                <li><a href="/clusters">Clusters</a></li>
+                <li><a href="https://github.rtp.raleigh.ibm.com/blockchain/poolmanager">Gitlab Repo</a></li>
+                <li><a href="#">Export</a></li>
+            </ul>
+        </div>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            {% block body %}
+            {% endblock %}
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

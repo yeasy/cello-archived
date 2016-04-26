@@ -49,9 +49,13 @@ class ClusterHandler(object):
         result = map(self._serialize, self.collections.find())
         return result
 
-    def get(self, id):
-        logger.info("get a cluster")
-        return self.collections.find_one({"id": id})
+    def get(self, id, serialization=False):
+        logger.info("get a cluster with id="+id)
+        ins = self.collections.find_one({"id": id})
+        if serialization:
+            return self._serialize(ins)
+        else:
+            return ins
 
     def create(self, name, daemon_url, api_url="", user_id=""):
         """ create a cluster based on given data
@@ -173,7 +177,7 @@ class ClusterHandler(object):
         :param daemon_url, may look like: tcp://192.168.0.1:2375
         :param d
         """
-        logger.info("gen_api_url, daemon_url="+daemon_url)
+        logger.debug("gen_api_url, daemon_url="+daemon_url)
         segs = daemon_url.split(":")
         if len(segs) != 3:
             logger.error("invalid daemon url = ", daemon_url)
@@ -183,8 +187,8 @@ class ClusterHandler(object):
         exists = self.collections.find({"daemon_url": daemon_url})
         api_url_existed = list(map(lambda c: c.get("api_url", ""),
                                    exists))
-        logger.warn("api_url_existed:")
-        logger.warn(api_url_existed)
+        logger.debug("api_url_existed:")
+        logger.debug(api_url_existed)
         for i in range(len(list(api_url_existed))+1):
             new_url = "http://{0}:{1}".format(host_ip, CLUSTER_API_PORT_START+i)
             logger.debug("try new_url="+new_url)
