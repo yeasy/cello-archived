@@ -6,16 +6,28 @@ from compose.container import Container
 from compose.cli.command import get_project as compose_get_project, get_config_path_from_options
 from compose.config.config import get_default_config_files
 from compose.config.environment import Environment
-from docker.client import Client
+from docker import Client
 
 
 def clean_exited_containers(daemon_url):
     client = Client(base_url=daemon_url)
     containers = client.containers(quiet=True, all=True,
                                    filters={"status": "exited"})
-    print(containers)
     for c in containers:
         client.remove_container(c)
+
+def check_daemon_url(daemon_url):
+    """ Check if the daemon is active
+    Only wait for 2 seconds.
+
+    :return: bool
+    """
+    client = Client(base_url=daemon_url, timeout=2)
+    try:
+        return client.ping() == u'OK'
+    except:
+        return False
+
 
 def ps_(project):
     """

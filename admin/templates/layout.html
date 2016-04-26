@@ -10,28 +10,43 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
     {% block head %}
     <title>Admin</title>
     {% endblock %}
     <!-- Bootstrap core CSS -->
-     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 
-     <!-- Custom styles for this template
+    <!-- Custom styles for this template
      <link href="static/css/signin.css" rel="stylesheet">
       -->
 
-     <script src="../static/js/jquery-2.2.3.min.js"> </script>
+    <script src="../static/js/jquery-2.2.3.min.js"> </script>
     <script src="../static/js/script.js"> </script>
 </head>
 
 <body>
-<ul class="nav-list">
-    {{ nav_link("index.show", "Home") }}
-</ul>
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav nav-list">
+                    {{ nav_link("index.show", "Home") }}
+                    {{ nav_link("cluster.clusters_show", "Cluster") }}
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
 {% block body %}
 {% endblock %}
 </body>

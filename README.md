@@ -43,3 +43,6 @@ There are 3 main dependencies:
 
 Details, see [requirements.txt](requirements.txt)
 
+## TODO
+* Add default 404 and 500 error page.
+* Use async operation for docker container management (maybe not necessary).

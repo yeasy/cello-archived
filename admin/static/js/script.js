@@ -16,10 +16,11 @@ $(function() {
             },
             error: function(error) {
                 console.log(error);
+                location.reload(); 
             }
         });
     });
-    $('#delete_cluster_button').click(function() {
+    $('.delete_cluster_button').click(function() {
         // Confirm
         var id = $(this).attr('data-id');
 
@@ -36,6 +37,7 @@ $(function() {
             },
             error: function(error) {
                 console.log(error);
+                location.reload(); 
             }
         });
     });

@@ -12,10 +12,13 @@ logger.addHandler(log_handler)
 
 from modules import cluster_handler
 
-index = Blueprint('index', __name__, url_prefix='/admin')
+index = Blueprint('index', __name__)
 
 
 @index.route('/', methods=['GET'])
+@index.route('/admin', methods=['GET'])
+@index.route('/index', methods=['GET'])
+@index.route('/home', methods=['GET'])
 def show():
     return render_template("index.html", items=cluster_handler.list())
 
