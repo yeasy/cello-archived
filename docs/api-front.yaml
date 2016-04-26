@@ -47,9 +47,9 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-  /cluster_drop:
+  /cluster_release:
     get:
-        summary: Drop a cluster, no use it more.
+        summary: Release a cluster, no use it more.
         description: |
           The endpoint returns information about the action.
           The response includes message about result.
@@ -60,7 +60,7 @@ paths:
             required: true
             type: string
         tags:
-          - Cluster_drop
+          - Cluster_release
         responses:
           200:
             description: message tell success.

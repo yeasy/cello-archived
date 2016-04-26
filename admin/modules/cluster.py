@@ -7,7 +7,7 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import get_project, db, log_handler, get_project, \
-    clean_exited_containers, check_daemon_url
+    clean_exited_containers, clean_chaincode_images, check_daemon_url
 
 from common.utils import CLUSTER_API_PORT_START
 
@@ -22,13 +22,17 @@ class ClusterHandler(object):
         self.collections_released = db["cluster_released"]
 
     def _start_compose_project(self, name, port, daemon_url):
+        """
+        :return: The name list of the started peer containers
+        """
         logger.info("start compose project")
         os.environ['DOCKER_HOST'] = daemon_url
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['PEER_NETWORKID'] = name
         os.environ['API_URL_PORT'] = port
         project = get_project("./common")
-        logger.warn(project.up(detached=True))
+        containers = project.up(detached=True)
+        return [c.get('Name')[1:] for c in containers]
 
     def _stop_compose_project(self, name, port, daemon_url):
         logger.info("stop compose project")
@@ -44,9 +48,13 @@ class ClusterHandler(object):
         logger.info("clean exited containers")
         clean_exited_containers(daemon_url)
 
-    def list(self):
+    def _clean_images(self, daemon_url, name):
+        logger.info("clean chaincode images")
+        clean_chaincode_images(daemon_url, name)
+
+    def list(self, filter_data={}):
         logger.info("list all clusters")
-        result = map(self._serialize, self.collections.find())
+        result = map(self._serialize, self.collections.find(filter_data))
         return result
 
     def get(self, id, serialization=False):
@@ -81,14 +89,15 @@ class ClusterHandler(object):
                 'release_ts': "",
             }
         ins_id = self.collections.insert_one(c).inserted_id
-        self.collections.update({"_id": ins_id}, {"$set": {"id": str(ins_id)}})
         try:
-            self._start_compose_project(name=str(ins_id),
-                                        port=api_url.split(":")[-1],
-                                        daemon_url=daemon_url)
+            container_names = self._start_compose_project(name=str(ins_id),
+                                                          port=api_url.split(":")[-1],
+                                                          daemon_url=daemon_url)
         except Exception as e:
             logger.warn(e)
             return False
+        self.collections.update({"_id": ins_id}, {"$set": {"id": str(
+            ins_id), "node_containers": container_names}})
         return True
 
     def delete(self, id, record=False):
@@ -107,6 +116,7 @@ class ClusterHandler(object):
                                    port=api_url.split(":")[-1],
                                    daemon_url=daemon_url)
             self._clean_containers(daemon_url)
+            self._clean_images(daemon_url=daemon_url, name=id)
         except Exception as e:
             logger.warn(e)
             return False
@@ -170,6 +180,7 @@ class ClusterHandler(object):
             'create_ts': doc.get('create_ts', ''),
             'apply_ts': doc.get('apply_ts', ''),
             'release_ts': doc.get('release_ts', ''),
+            'node_containers': doc.get('node_containers', ''),
         }
 
     def _gen_api_url(self, daemon_url):

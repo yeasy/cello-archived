@@ -1,4 +1,3 @@
-import __future__
 import os
 import sys
 
@@ -18,7 +17,11 @@ cluster = Blueprint('cluster', __name__)
 
 @cluster.route('/clusters', methods=['GET'])
 def clusters_show():
-    return render_template("clusters.html", items=cluster_handler.list())
+    for k in request.args:
+        logger.debug("{0}:{1}".format(k, request.args[k]))
+    filter = dict((key, request.args.get(key)) for key in request.args)
+
+    return render_template("clusters.html", items=cluster_handler.list(filter))
 
 
 @cluster.route('/cluster', methods=['GET', 'POST', 'DELETE'])

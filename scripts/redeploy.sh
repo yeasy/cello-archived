@@ -10,8 +10,14 @@ fi
 
 SERVICE=$1
 
+echo "Remove the container and image"
+docker-compose stop ${SERVICE}
+docker-compose rm -f --all ${SERVICE}
+docker rmi poolmanager-${SERVICE}
+
 echo "Building the poolmanager-${SERVICE} image"
 docker-compose build ${SERVICE}
+
 
 echo "Redeploy the poolmanager-${SERVICE} container"
 docker-compose up --no-deps -d ${SERVICE}
