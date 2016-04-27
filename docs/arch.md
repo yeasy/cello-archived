@@ -17,3 +17,15 @@ docker hosts.
 
 Master will use remote API to start and stop hyperledger clusters in those
 docker hosts.
+
+
+## Implementation
+
+The implementation is based on [Flask](flask.pocoo.org), a microframework for Python based on Werkzeug.
+
+I choose it for:
+
+* Lightweight
+* Good enough in performance
+* Flexible for extending
+* Stable in code

@@ -40,7 +40,7 @@ def clusters_released_show():
 @cluster.route('/cluster', methods=['GET', 'POST', 'DELETE'])
 def cluster_operation():
     logger.info("/cluster action="+request.method)
-    if request.method == 'GET':  # TODO
+    if request.method == 'GET':
         if "id" not in request.form:
             logger.warn("cluster get without enough data")
             status_response_fail["error"] = "cluster GET without " \

@@ -1,9 +1,11 @@
 # API
+
+## Front
 These APIs will be called by front web services.
 
-Latest API please see [api-front.yaml](api-front.yaml).
+Latest version please see [api-front.yaml](api-front.yaml).
 
-## cluster_apply
+### cluster_apply
 
 Find an available cluster in the pool for a user.
 
@@ -15,7 +17,7 @@ When `cluster_apply` request arrives, the server will try checking  available cl
 
 Accordingly, the server will return a json response (succeed or fail).
 
-## cluster_release
+### cluster_release
 
 Declare the user will release a cluster.
 
@@ -24,3 +26,7 @@ GET /v1/cluster_release
 ```
 
 The server will drop the corresponding cluster, recreate it and put into available pool for future requests.
+
+## Admin
+Those APIs should not be called by outside applications. Just for
+information, please see [api-admin.yaml](api-admin.yaml)

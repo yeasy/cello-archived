@@ -1,6 +1,7 @@
 import logging
 from flask import Flask, render_template
 
+from common import log_handler
 from resources import index, cluster
 
 app = Flask(__name__)
@@ -9,6 +10,7 @@ app.config.from_object('config.DevelopmentConfig')
 app.config.from_envvar('POOLMANAGER_CONFIG_FILE', silent=True)
 
 app.logger.setLevel(app.config.get("LOG_LEVEL", logging.INFO))
+app.logger.addHandler(log_handler)
 
 app.register_blueprint(index)
 app.register_blueprint(cluster)

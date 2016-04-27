@@ -1,5 +1,8 @@
+import os
 from pymongo import MongoClient
 
-mongo_client = MongoClient('mongodb://mongo:27017/')
+MONGO_URL = os.environ.get('MONGO_URL', None) or 'mongodb://mongo:27017'
+MONGO_COLLECTION = os.environ.get('MONGO_COLLECTION', None) or 'dev'
 
-db = mongo_client['dev']
+mongo_client = MongoClient(MONGO_URL)
+db = mongo_client[MONGO_COLLECTION]
