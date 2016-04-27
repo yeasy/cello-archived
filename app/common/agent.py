@@ -1,6 +1,4 @@
-"""
-agent to call docker-compose api
-"""
+import logging
 
 from compose.container import Container
 from compose.cli.command import get_project as compose_get_project, get_config_path_from_options
@@ -8,13 +6,30 @@ from compose.config.config import get_default_config_files
 from compose.config.environment import Environment
 from docker import Client
 
+from .log import log_handler
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(log_handler)
+
+
+def clean_chaincode_images(daemon_url, name_prefix):
+    client = Client(base_url=daemon_url)
+    images = client.images()
+    id_removes = [e['Id'] for e in images if e['RepoTags'][0].startswith(
+        name_prefix)]
+    logger.debug("chaincode image id to removes="+", ".join(id_removes))
+    for _ in id_removes:
+        client.remove_image(_)
 
 def clean_exited_containers(daemon_url):
     client = Client(base_url=daemon_url)
     containers = client.containers(quiet=True, all=True,
                                    filters={"status": "exited"})
-    for c in containers:
-        client.remove_container(c)
+    id_removes = [e['Id'] for e in containers]
+    logger.debug("exited container id to removes="+", ".join(id_removes))
+    for _ in id_removes:
+        client.remove_container(_)
 
 def check_daemon_url(daemon_url):
     """ Check if the daemon is active

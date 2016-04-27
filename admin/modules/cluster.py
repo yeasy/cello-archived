@@ -25,7 +25,7 @@ class ClusterHandler(object):
         """
         :return: The name list of the started peer containers
         """
-        logger.info("start compose project")
+        logger.debug("start compose project")
         os.environ['DOCKER_HOST'] = daemon_url
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['PEER_NETWORKID'] = name
@@ -35,7 +35,7 @@ class ClusterHandler(object):
         return [c.get('Name')[1:] for c in containers]
 
     def _stop_compose_project(self, name, port, daemon_url):
-        logger.info("stop compose project")
+        logger.debug("stop compose project")
         os.environ['DOCKER_HOST'] = daemon_url
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['PEER_NETWORKID'] = name
@@ -45,21 +45,33 @@ class ClusterHandler(object):
         project.remove_stopped()
 
     def _clean_containers(self, daemon_url):
-        logger.info("clean exited containers")
+        logger.debug("clean exited containers")
         clean_exited_containers(daemon_url)
 
     def _clean_images(self, daemon_url, name):
-        logger.info("clean chaincode images")
+        logger.debug("clean chaincode images")
         clean_chaincode_images(daemon_url, name)
 
-    def list(self, filter_data={}):
-        logger.info("list all clusters")
-        result = map(self._serialize, self.collections.find(filter_data))
+    def list(self, filter_data={}, released=False):
+        if not released:
+            logger.debug("list all active clusters")
+            result = map(self._serialize, self.collections.find(filter_data))
+        else:
+            logger.debug("list all released clusters")
+            result = map(self._serialize, self.collections_released.find(
+                filter_data))
         return result
 
-    def get(self, id, serialization=False):
-        logger.info("get a cluster with id="+id)
-        ins = self.collections.find_one({"id": id})
+    def get(self, id, serialization=False, released=False):
+        if not released:
+            logger.debug("get a cluster with id="+id)
+            ins = self.collections.find_one({"id": id})
+        else:
+            logger.debug("get a released cluster with id="+id)
+            ins = self.collections_released.find_one({"id": id})
+        if not ins:
+            logger.warn("No cluster found with id="+id)
+            return {}
         if serialization:
             return self._serialize(ins)
         else:
@@ -68,11 +80,10 @@ class ClusterHandler(object):
     def create(self, name, daemon_url, api_url="", user_id=""):
         """ create a cluster based on given data
         TODO: maybe need other id generation mechanism
-        TODO: maybe need to check daemon_url status
 
         :return bool
         """
-        logger.info("create a cluster")
+        logger.debug("create a cluster")
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
         if not check_daemon_url(daemon_url):
@@ -104,7 +115,7 @@ class ClusterHandler(object):
         """ Delete a cluster instance
         :param record: Whether to record into the released collections
         """
-        logger.info("delete a cluster with id="+id)
+        logger.debug("delete a cluster with id="+id)
         ins = self.collections.find_one({"id": id})
         if not ins:
             logger.warn("Cannot delete non-existed instance")
@@ -122,7 +133,7 @@ class ClusterHandler(object):
             return False
         if record:
             ins["release_ts"] = datetime.datetime.utcnow()
-            logger.info("Record the cluster info into released collection")
+            logger.debug("Record the cluster info into released collection")
             self.collections_released.insert_one(ins)
         self.collections.delete_one({"id": id})
         return True
@@ -130,20 +141,28 @@ class ClusterHandler(object):
     def apply_cluster(self, user_id):
         """ Apply a cluster for a user
         """
-        result = self.collections.find_one({"user_id": user_id})
-        if result:  # already have one
-            logger.info("Already have one for"+user_id)
-            logger.info(self._serialize(result))
-            return self._serialize(result)
+        doc = self.collections.find_one({"user_id": user_id})
+        if doc:  # already have one
+            logger.debug("Already assigned cluster for "+user_id)
+            logger.debug(self._serialize(doc, keys=['id', 'name', 'user_id',
+                                                    'api_url']))
+            return self._serialize(doc, keys=['id', 'name', 'user_id',
+                                                    'api_url'])
         free_one = self.collections.find_one({"user_id": ""})
         if not free_one:
-            logger.info("Not find free one for"+user_id)
+            logger.warn("Not find free one for "+user_id)
             return {}
         else:
-            free_one['apply_ts'] = datetime.datetime.utcnow(),
+            free_one["user_id"] = user_id
+            free_one["apply_ts"] = datetime.datetime.utcnow()
+            self.collections.update({"id": free_one.get('id', '')},
+                                    {"$set": {"user_id": free_one["user_id"],
+                                              "apply_ts": free_one[
+                                                  "apply_ts"]}})
             logger.info("Assign free one for"+user_id)
             logger.info(self._serialize(free_one))
-            return self._serialize(free_one)
+            return self._serialize(free_one, keys=['id', 'name', 'user_id',
+                                                    'api_url'])
 
     def release_cluster(self, user_id):
         """ Release a cluster for a user_id and recreate it.
@@ -161,7 +180,7 @@ class ClusterHandler(object):
             return False
         if not self.create(cluster_name, cluster_daemon_url, cluster_api_url):
             logger.warn("Create cluster error with name="+cluster_name)
-            return False
+        return True
 
     def set_user_id(self, doc, user_id):
         """
@@ -170,18 +189,14 @@ class ClusterHandler(object):
         return self.collections.update({"id": doc.get('id','')},
                                        {"$set": {"user_id": user_id}})
 
-    def _serialize(self, doc):
-        return {
-            'id': doc.get('id', ''),
-            'name': doc.get('name', ''),
-            'user_id': doc.get('user_id', ''),
-            'api_url': doc.get('api_url', ''),
-            'daemon_url': doc.get('daemon_url', ''),
-            'create_ts': doc.get('create_ts', ''),
-            'apply_ts': doc.get('apply_ts', ''),
-            'release_ts': doc.get('release_ts', ''),
-            'node_containers': doc.get('node_containers', ''),
-        }
+    def _serialize(self, doc, keys=['id', 'name', 'user_id', 'daemon_url',
+                                    'api_url',
+                                    'create_ts', 'apply_ts', 'release_ts',
+                                    'node_containers']):
+        result = {}
+        for k in keys:
+            result[k] = doc.get(k, '')
+        return result
 
     def _gen_api_url(self, daemon_url):
         """ Generate an api url automatically.

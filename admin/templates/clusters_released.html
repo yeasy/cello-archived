@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block title %}Admin{% endblock %}
+{% block body %}
+{{ super() }}
+<h2>Clusters</h2>
+<div class="row">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>user_id</th>
+            <th>api_url</th>
+            <th>daemon_url</th>
+            <th>apply_ts</th>
+            <th>release_ts</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in items %}
+        <tr>
+            <td><a href="/cluster_info/{{item.id}}?released=1">{{item
+                .name}}</a></td>
+            <td>{{item.user_id}}</td>
+            <td><SPAN>{{item.api_url}}</SPAN></td>
+            <td>{{item.daemon_url}}</td>
+            <td>{{item.apply_ts}}</td>
+            <td>{{item.release_ts}}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
