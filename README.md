@@ -1,15 +1,20 @@
 # PoolManager
 
-Manager who maintains a pool of hyperledger cluster, and provides rest API
-for other front end services.
+Manager who maintains a pool of hyperledger cluster, and provides:
+
+ * rest API for front end services.
+ * admin dashbord to manage clusters.
 
 ## docs
 I highly recommend carefully reading these documentation before taking any
 other action.
 
 * [Terminology](docs/terminology.md)
+* [Scenarios](docs/scenario.md)
 * [API](docs/api.md)
 * [Architecture Design](docs/arch.md)
+* [Database Model](docs/db.md)
+* [Admin](docs/admin.md)
 
 ## Deployment
 
