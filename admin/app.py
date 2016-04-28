@@ -4,7 +4,7 @@ from common import log_handler
 from flask import Flask, render_template
 from resources import index, cluster
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 
 app.config.from_object('config.DevelopmentConfig')
 app.config.from_envvar('POOLMANAGER_CONFIG_FILE', silent=True)

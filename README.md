@@ -23,7 +23,7 @@ other action.*
 * docker engine: >=1.9.0.
 * docker-py: >= 1.8.0
 * docker-compose: >=1.7.0.
-* docker images: python:3.5, mongo:3.2, yeasy/nginx
+* docker images: python:3.x, mongo:3.2, yeasy/nginx
 
 ### Node
 
@@ -67,7 +67,7 @@ and app.
 
 ## TODO
 * ~~Add default 404 and 500 error page.~~
-* Add doc for all methods and classes.
+* ~~Add doc for all methods and classes~~.
 * Admin: Add manual release button.
-* Admin: Update api definitions in yml files.
-* Use async operation for docker container management (optional).
+* Admin: Update api definitions in yml files (optional).
+* ~~Use async operation for container management (optional)~~.

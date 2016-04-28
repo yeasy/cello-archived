@@ -3,11 +3,12 @@ import logging
 import os
 import sys
 
+from threading import Thread
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, get_project, \
-    clean_exited_containers, clean_chaincode_images, check_daemon_url
-
-from common.utils import CLUSTER_API_PORT_START
+    clean_exited_containers, clean_chaincode_images, check_daemon_url, \
+    CLUSTER_API_PORT_START, COMPOSE_FILE_PATH
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -15,12 +16,19 @@ logger.addHandler(log_handler)
 
 
 class ClusterHandler(object):
+    """ Main handler to operate the cluster in pool
+
+    """
     def __init__(self):
         self.collections = db["cluster"]
         self.collections_released = db["cluster_released"]
 
-    def _start_compose_project(self, name, port, daemon_url):
-        """
+    def _compose_start_project(self, name, port, daemon_url):
+        """ Start a compose project
+
+        :param name: The name of the cluster
+        :param port: The port of the cluster API
+        :param daemon_url: Docker host daemon
         :return: The name list of the started peer containers
         """
         logger.debug("start compose project")
@@ -28,30 +36,56 @@ class ClusterHandler(object):
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['PEER_NETWORKID'] = name
         os.environ['API_URL_PORT'] = port
-        project = get_project("./common")
+        project = get_project(COMPOSE_FILE_PATH)
         containers = project.up(detached=True)
         return [c.get('Name')[1:] for c in containers]
 
-    def _stop_compose_project(self, name, port, daemon_url):
-        logger.debug("stop compose project")
+    def _compose_stop_project(self, name, port, daemon_url):
+        """ Stop a compose project
+
+        :param name: The name of the cluster
+        :param port: The port of the cluster API
+        :param daemon_url: Docker host daemon
+        :return:
+        """
+        logger.debug("stop compose project "+name)
         os.environ['DOCKER_HOST'] = daemon_url
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['PEER_NETWORKID'] = name
         os.environ['API_URL_PORT'] = port
-        project = get_project("./common")
+        project = get_project(COMPOSE_FILE_PATH)
         project.stop()
         project.remove_stopped()
 
     def _clean_containers(self, daemon_url):
+        """
+
+        :param daemon_url: Docker host daemon
+        :return:
+        """
         logger.debug("clean exited containers")
         clean_exited_containers(daemon_url)
 
-    def _clean_images(self, daemon_url, name):
-        logger.debug("clean chaincode images")
-        clean_chaincode_images(daemon_url, name)
+    def _clean_images(self, daemon_url, name_prefix):
+        """ Clean unused images.
 
-    def list(self, filter_data={}, released=False):
-        if not released:
+        Image with given name prefix will be removed.
+
+        :param daemon_url:
+        :param name_prefix:
+        :return:
+        """
+        logger.debug("clean chaincode images")
+        clean_chaincode_images(daemon_url, name_prefix)
+
+    def list(self, filter_data={}, collection=""):
+        """ List clusters with given criteria
+
+        :param filter_data: Image with the filter properties
+        :param collection: Use data in which collection
+        :return: list of serialized doc
+        """
+        if collection != "released":
             logger.debug("list all active clusters")
             result = map(self._serialize, self.collections.find(filter_data))
         else:
@@ -60,8 +94,15 @@ class ClusterHandler(object):
                 filter_data))
         return result
 
-    def get(self, id, serialization=False, released=False):
-        if not released:
+    def get(self, id, serialization=False, collection=""):
+        """ Get a cluster
+
+        :param id: id of the doc
+        :param serialization: whether to get serialized result or object
+        :param collection: collection to check
+        :return: serialized result or obj
+        """
+        if collection != "released":
             logger.debug("get a cluster with id=" + id)
             ins = self.collections.find_one({"id": id})
         else:
@@ -76,12 +117,17 @@ class ClusterHandler(object):
             return ins
 
     def create(self, name, daemon_url, api_url="", user_id=""):
-        """ create a cluster based on given data
+        """ Create a cluster based on given data
         TODO: maybe need other id generation mechanism
 
-        :return bool
+        :param name: name of the cluster
+        :param daemon_url: name of the cluster
+        :param api_url: cluster has specific api_url, will generate
+        automatically if not given
+        :param user_id: user_id of the cluster
+        :return: True or False
         """
-        logger.debug("create a cluster")
+        logger.debug("create a new cluster")
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
         if not check_daemon_url(daemon_url):
@@ -97,23 +143,27 @@ class ClusterHandler(object):
             'create_ts': datetime.datetime.utcnow(),
             'release_ts': "",
         }
-        ins_id = self.collections.insert_one(c).inserted_id
+        ins_id = self.collections.insert_one(c).inserted_id  # object type
         try:
-            container_names = self._start_compose_project(name=str(ins_id),
-                                                          port=
-                                                          api_url.split(":")[
-                                                              -1],
-                                                          daemon_url=daemon_url)
+            container = self._compose_start_project(name=str(ins_id),
+                                                    port=
+                                                    api_url.split(":")[-1],
+                                                    daemon_url=daemon_url)
         except Exception as e:
             logger.warn(e)
+            logger.warn("Remove unsuccessful started cluster info")
+            self.collections.delete_one({"_id": ins_id})
             return False
         self.collections.update({"_id": ins_id}, {"$set": {"id": str(
-            ins_id), "node_containers": container_names}})
+            ins_id), "node_containers": container}})
         return True
 
     def delete(self, id, record=False):
         """ Delete a cluster instance
+
+        :param id: id of the cluster to delete
         :param record: Whether to record into the released collections
+        :return:
         """
         logger.debug("delete a cluster with id=" + id)
         ins = self.collections.find_one({"id": id})
@@ -123,12 +173,13 @@ class ClusterHandler(object):
         api_url = ins.get("api_url", "")
         daemon_url = ins.get("daemon_url", "")
         try:
-            self._stop_compose_project(name=id,
+            self._compose_stop_project(name=id,
                                        port=api_url.split(":")[-1],
                                        daemon_url=daemon_url)
             self._clean_containers(daemon_url)
-            self._clean_images(daemon_url=daemon_url, name=id)
+            self._clean_images(daemon_url=daemon_url, name_prefix=id)
         except Exception as e:
+            logger.warn("Wrong in clean compose project and containers")
             logger.warn(e)
             return False
         if record:
@@ -140,6 +191,9 @@ class ClusterHandler(object):
 
     def apply_cluster(self, user_id):
         """ Apply a cluster for a user
+
+        :param user_id: which user will apply the cluster
+        :return: serialized cluster
         """
         doc = self.collections.find_one({"user_id": user_id})
         if doc:  # already have one
@@ -166,42 +220,51 @@ class ClusterHandler(object):
 
     def release_cluster(self, user_id):
         """ Release a cluster for a user_id and recreate it.
+
+        :param user_id: which user will apply the cluster
+        :return: True or False
         """
         result = self.collections.find_one({"user_id": user_id})
         if not result:  # not have one
             logger.warn("There is no cluster for" + user_id)
             return False
-        cluster_id = result.get("id", "")
-        cluster_name = result.get("name", "")
-        cluster_daemon_url = result.get("daemon_url", "")
-        cluster_api_url = result.get("api_url", "")
-        if not self.delete(cluster_id, record=True):
-            logger.warn("Delete cluster error with id=" + cluster_id)
-            return False
-        if not self.create(cluster_name, cluster_daemon_url, cluster_api_url):
-            logger.warn("Create cluster error with name=" + cluster_name)
-        return True
 
-    def set_user_id(self, doc, user_id):
-        """
-        Set the user_id value to given doc
-        """
-        return self.collections.update({"id": doc.get('id', '')},
-                                       {"$set": {"user_id": user_id}})
+        def recreate_work():
+            cluster_id = result.get("id", "")
+            cluster_name = result.get("name", "")
+            cluster_daemon_url = result.get("daemon_url", "")
+            cluster_api_url = result.get("api_url", "")
+            if not self.delete(cluster_id, record=True):
+                logger.warn("Delete cluster error with id=" + cluster_id)
+            if not self.create(cluster_name, cluster_daemon_url,
+                               cluster_api_url):
+                logger.warn("Create cluster error with name=" + cluster_name)
+
+        t = Thread(target=recreate_work, args=())
+        t.start()
+
+        return True
 
     def _serialize(self, doc, keys=['id', 'name', 'user_id', 'daemon_url',
                                     'api_url',
                                     'create_ts', 'apply_ts', 'release_ts',
                                     'node_containers']):
+        """ Serialize an obj
+
+        :param doc: doc to serialize
+        :param keys: filter which key in the results
+        :return: serialized obj
+        """
         result = {}
         for k in keys:
             result[k] = doc.get(k, '')
         return result
 
     def _gen_api_url(self, daemon_url):
-        """ Generate an api url automatically.
+        """ Generate an api url automatically
+
         :param daemon_url, may look like: tcp://192.168.0.1:2375
-        :param d
+        :return: The generated api url address
         """
         logger.debug("gen_api_url, daemon_url=" + daemon_url)
         segs = daemon_url.split(":")
@@ -226,4 +289,5 @@ class ClusterHandler(object):
         return ""
 
 
+# This will be exported as single instance for usage.
 cluster_handler = ClusterHandler()

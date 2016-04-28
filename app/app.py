@@ -4,7 +4,7 @@ from flask import Flask
 from common import log_handler
 from resources import action
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 
 app.config.from_object('config.DevelopmentConfig')
 app.config.from_envvar('POOLMANAGER_CONFIG_FILE', silent=True)

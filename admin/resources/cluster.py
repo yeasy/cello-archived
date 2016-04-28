@@ -35,7 +35,7 @@ def clusters_released_show():
 
     return render_template("clusters_released.html",
                            items=cluster_handler.list(filter_data=filter,
-                                                      released=True))
+                                                      collection="released"))
 
 
 @cluster.route('/cluster', methods=['GET', 'POST', 'DELETE'])
@@ -100,4 +100,4 @@ def show(cluster_id):
     logger.debug("/ cluster_info/{0}?released={1} action={2}".format(
         cluster_id, request.args.get('released'), request.method))
     return render_template("cluster.html", cluster=cluster_handler.get(
-        cluster_id, serialization=True, released=released)), 200
+        cluster_id, serialization=True, collection="released")), 200

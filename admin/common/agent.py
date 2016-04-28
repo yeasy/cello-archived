@@ -39,12 +39,13 @@ def clean_exited_containers(daemon_url):
     :param daemon_url: Docker daemon url
     :return: None
     """
+    logger.debug("Clean exited containers")
     client = Client(base_url=daemon_url)
     containers = client.containers(quiet=True, all=True,
                                    filters={"status": "exited"})
     id_removes = [e['Id'] for e in containers]
-    logger.debug("exited container id to removes=" + ", ".join(id_removes))
     for _ in id_removes:
+        logger.debug("exited container id to removes="+_)
         client.remove_container(_)
 
 
