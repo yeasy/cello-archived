@@ -1,18 +1,21 @@
 CODE_OK = 200
 CODE_FAIL = 400
-CODE_INVALID_PARAM = 401
-CODE_INVALID_OPERATION = 402
 CODE_NOT_FOUND = 404
+CODE_INVALID_OPERATION = 405
+CODE_INVALID_PARAM = 406
 CODE_ALREADY_EXIST = 409
 
 status_response_ok = {
+    "status": "OK",
+    "code": CODE_OK,
     "error": "",
-    "data": ""
+    "data": "",
 }
 
 status_response_fail = {
-    "error": "",
-    "data": ""
+    "status": "FAIL",
+    "code": CODE_FAIL,
+    "data": "",
 }
 
 errors = {

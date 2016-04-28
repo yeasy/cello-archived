@@ -6,13 +6,16 @@ CODE_INVALID_PARAM = 406
 CODE_ALREADY_EXIST = 409
 
 status_response_ok = {
+    "status": "OK",
+    "code": CODE_OK,
     "error": "",
-    "data": ""
+    "data": "",
 }
 
 status_response_fail = {
-    "error": "",
-    "data": ""
+    "status": "FAIL",
+    "code": CODE_FAIL,
+    "data": "",
 }
 
 errors = {

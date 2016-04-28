@@ -1,4 +1,5 @@
 import os
+
 from pymongo import MongoClient
 
 MONGO_URL = os.environ.get('MONGO_URL', None) or 'mongodb://mongo:27017'

@@ -67,6 +67,7 @@ and app.
 
 ## TODO
 * ~~Add default 404 and 500 error page.~~
-* Update api definitions in yml files.
-* Add doc for most methods and classes.
+* Add doc for all methods and classes.
+* Admin: Add manual release button.
+* Admin: Update api definitions in yml files.
 * Use async operation for docker container management (optional).

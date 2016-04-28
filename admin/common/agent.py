@@ -1,7 +1,10 @@
+# This module provides some static api to operate compose and docker engine
+
+
 import logging
 
 from compose.cli.command import get_project as compose_get_project, \
-    get_config_path_from_options
+    get_config_path_from_options as compose_get_config_path_from_options
 from compose.config.config import get_default_config_files
 from compose.config.environment import Environment
 from compose.container import Container
@@ -15,11 +18,11 @@ logger.addHandler(log_handler)
 
 
 def clean_chaincode_images(daemon_url, name_prefix):
-    """
-    Clean chaincode images, whose name should have cluster id as prefix
+    """ Clean chaincode images, whose name should have cluster id as prefix
+
     :param daemon_url: Docker daemon url
     :param name_prefix: image name prefix
-    :return:
+    :return: None
     """
     client = Client(base_url=daemon_url)
     images = client.images()
@@ -31,6 +34,11 @@ def clean_chaincode_images(daemon_url, name_prefix):
 
 
 def clean_exited_containers(daemon_url):
+    """ Clean those containers with exited status
+
+    :param daemon_url: Docker daemon url
+    :return: None
+    """
     client = Client(base_url=daemon_url)
     containers = client.containers(quiet=True, all=True,
                                    filters={"status": "exited"})
@@ -40,22 +48,41 @@ def clean_exited_containers(daemon_url):
         client.remove_container(_)
 
 
-def check_daemon_url(daemon_url):
+def check_daemon_url(daemon_url, timeout=2):
     """ Check if the daemon is active
+
     Only wait for 2 seconds.
 
-    :return: bool
+    :param daemon_url: Docker daemon url
+    :param timeout: Time to wait for the response
+    :return: True for active, False for inactive
     """
-    client = Client(base_url=daemon_url, timeout=2)
+    client = Client(base_url=daemon_url, timeout=timeout)
     try:
-        return client.ping() == u'OK'
+        return client.ping() == 'OK'
     except:
         return False
 
 
-def ps_(project):
+def get_project(template_path):
+    """ Get compose project with given template file path
+
+    :param template_path: path of the compose template file
+    :return: project object
     """
-    containers status
+    environment = Environment.from_env_file(template_path)
+    config_path = compose_get_config_path_from_options(template_path, dict(),
+                                                       environment)
+    project = compose_get_project(template_path, config_path)
+    return project
+
+
+# no used
+def compose_ps(project):
+    """ Get containers status of given compose project
+
+    :param project: Project to operate
+    :return: Those container information in dict
     """
     containers = project.containers(stopped=True)
 
@@ -74,6 +101,7 @@ def ps_(project):
     return items
 
 
+# no used
 def get_container_from_id(client, container_id):
     """
     return the docker container from a given id
@@ -81,6 +109,7 @@ def get_container_from_id(client, container_id):
     return Container.from_id(client, container_id)
 
 
+# no used
 def get_volumes(container):
     """
     retrieve container volumes details
@@ -88,18 +117,9 @@ def get_volumes(container):
     return container.get('Config.Volumes')
 
 
+# no used
 def get_yml_path(path):
     """
     get path of docker-compose.yml file
     """
     return get_default_config_files(path)[0]
-
-
-def get_project(path):
-    """
-    get docker project given file path
-    """
-    environment = Environment.from_env_file(path)
-    config_path = get_config_path_from_options(path, dict(), environment)
-    project = compose_get_project(path, config_path)
-    return project

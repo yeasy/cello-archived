@@ -17,16 +17,20 @@
         </thead>
         <tbody>
         {% for item in items %}
-        <tr>
-            <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
-            <td>{{item.user_id}}</td>
-            <td><SPAN>{{item.api_url}}</SPAN></td>
-            <td>{{item.daemon_url}}</td>
-            <td>{{item.create_ts}}</td>
-            <td><input value="Delete" type="button"
-                       class="btn btn-small btn-danger delete_cluster_button"
-                       data-id="{{item.id}}"
-            /></td>
+            {% if item.user_id %}
+                <tr bgcolor="#add8e6">
+                    {% else %}
+                <tr>
+            {% endif %}
+        <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
+        <td>{{item.user_id}}</td>
+        <td><SPAN>{{item.api_url}}</SPAN></td>
+        <td>{{item.daemon_url}}</td>
+        <td>{{item.create_ts}}</td>
+        <td><input value="Delete" type="button"
+                   class="btn btn-xs btn-small btn-danger delete_cluster_button"
+                   data-id="{{item.id}}"/>
+        </td>
         </tr>
         {% endfor %}
         </tbody>

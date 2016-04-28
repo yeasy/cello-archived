@@ -1,11 +1,12 @@
-from flask import Blueprint, request, jsonify, render_template
-
+import logging
 import os
 import sys
 
-import logging
+from flask import Blueprint, render_template
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(log_handler)
@@ -21,5 +22,3 @@ index = Blueprint('index', __name__)
 @index.route('/home', methods=['GET'])
 def show():
     return render_template("index.html", items=cluster_handler.list())
-
-

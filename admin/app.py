@@ -1,7 +1,7 @@
 import logging
-from flask import Flask, render_template
 
 from common import log_handler
+from flask import Flask, render_template
 from resources import index, cluster
 
 app = Flask(__name__)
