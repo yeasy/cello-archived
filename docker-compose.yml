@@ -64,7 +64,7 @@ services:
       - app
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.default.conf
-      - /opt/poolmanager/nginx/log/:/var/log/nginx/
+      #- /opt/poolmanager/nginx/log/:/var/log/nginx/
     ports:
       - "80:80"
     environment:
