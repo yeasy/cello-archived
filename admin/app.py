@@ -1,4 +1,5 @@
 import logging
+import os
 
 from common import log_handler
 from flask import Flask, render_template
@@ -27,4 +28,8 @@ def internal_error(error):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=app.config.get("DEBUG", True))
+    app.run(
+        host='0.0.0.0',
+        port=8080,
+        debug=os.environ.get('DEBUG', app.config.get("DEBUG", True))
+    )

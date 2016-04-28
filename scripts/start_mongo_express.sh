@@ -1,4 +1,7 @@
 #!/bin/bash
+# NOT run this in production environment.
+# This script will start a mongo-express node for debugging.
+# It should be triggered at the upper directory
 
 BIND_ADDR=0.0.0.0
 #BIND_ADDR=127.0.0.1

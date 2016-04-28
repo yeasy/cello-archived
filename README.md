@@ -19,15 +19,19 @@ other action.*
 
 ## Deployment
 
-### Master
-* docker engine: >=1.9.0.
-* docker-py: >= 1.8.0
-* docker-compose: >=1.7.0.
-* docker images: python:3.x, mongo:3.2, yeasy/nginx
-
-### Node
-
 *TODO: We may need a setup script.*
+
+All services are setup through Docker containers by default.
+
+### Master Requirement
+* docker engine: >=1.9.0
+* docker-compose: >=1.7.0
+* docker images:
+    - python:3.5
+    - mongo:3.2
+    - yeasy/nginx
+
+### Node Requirement
 
 * docker engine: >=1.9.0, and open daemon port 2375 for Master usage.
 * docker images:
@@ -42,10 +46,12 @@ the file name.
 
 By default, it also loads the `config.py` file for the configurations.
 
-Database can be set through following environment variables:
+Configuration can be set through following environment variables in the
+[docker-compose.yml](docker-compose.yml):
 
 * `MONGO_URL=mongodb://mongo:27017`
 * `MONGO_COLLECTION=dev`
+* `DEBUG=True`
 
 ### Data Storage
 The mongo container will use local `/opt/poolmanager/mongo` directory for
@@ -59,6 +65,14 @@ and app.
 * Backup: Enable automatic data backup.
 * Monitoring: Enable monitoring services.
 
+### Start
+After all required images and tools are prepared in all nodes, you can start
+the poolmanager service by running
+
+```sh
+$ bash ./scripts/start.sh
+```
+
 ## Dependency
 
 * [app requirements](app/requirements.txt)
@@ -68,6 +82,6 @@ and app.
 ## TODO
 * ~~Add default 404 and 500 error page.~~
 * ~~Add doc for all methods and classes~~.
-* Admin: Add manual release button.
+* Admin: Add authentication for user login.
 * Admin: Update api definitions in yml files (optional).
 * ~~Use async operation for container management (optional)~~.
