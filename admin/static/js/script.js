@@ -1,15 +1,14 @@
-$(function() {
-    $('#create_cluster_button').click(function() {
-        var name = $('#cluster_name').val();
-        var daemon_url = $('#cluster_daemon_url').val();
+$(document).ready(function() {
+    $('.create_cluster_button').click(function() {
+        //var name = $(this).parents('form:first').find('[name="name"]').val();
+        //var daemon_url = $(this).parents('form:first').find('[name="daemon_url"]').val();
+        var form_data = $(this).parents('form:first').serialize();
+        
         $.ajax({
             url: "/cluster",
             type: 'POST',
             dataType: 'json',
-            data:{
-                "name": name,
-                "daemon_url": daemon_url,
-            },
+            data: form_data,
             success: function(response) {
                 console.log(response);
                 location.reload(); 
@@ -22,14 +21,14 @@ $(function() {
     });
     $('.delete_cluster_button').click(function() {
         // Confirm
-        var id = $(this).attr('data-id');
+        var id_data = $(this).attr('data-id');
 
         $.ajax({
             url: "/cluster",
             type: 'DELETE',
             dataType: 'json',
             data:{
-                "id": id
+                "id": id_data
             },
             success: function(response) {
                 console.log(response);

@@ -39,8 +39,12 @@ def clusters_released_show():
 
 
 @cluster.route('/cluster', methods=['GET', 'POST', 'DELETE'])
-def cluster_operation():
+def cluster_api():
     logger.info("/cluster action=" + request.method)
+    for k in request.args:
+        logger.debug("Arg: {0}:{1}".format(k, request.args[k]))
+    for k in request.form:
+        logger.debug("Form: {0}:{1}".format(k, request.form[k]))
     if request.method == 'GET':
         if "id" not in request.form:
             logger.warn("cluster get without enough data")
@@ -95,9 +99,13 @@ def cluster_operation():
 
 
 @cluster.route('/cluster_info/<cluster_id>', methods=['GET'])
-def show(cluster_id):
-    released = (request.args.get('released', 0) != 0)
+def cluster_info(cluster_id):
     logger.debug("/ cluster_info/{0}?released={1} action={2}".format(
-        cluster_id, request.args.get('released'), request.method))
-    return render_template("cluster.html", cluster=cluster_handler.get(
-        cluster_id, serialization=True, collection="released")), 200
+        cluster_id, request.args.get('released', 0), request.method))
+    released = (request.args.get('released', 0) != 0)
+    if not released:
+        return render_template("cluster_info.html", item=cluster_handler.get(
+            cluster_id, serialization=True)), 200
+    else:
+        return render_template("cluster_info.html", item=cluster_handler.get(
+            cluster_id, serialization=True, collection="released")), 200

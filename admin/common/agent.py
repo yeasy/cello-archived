@@ -58,8 +58,8 @@ def check_daemon_url(daemon_url, timeout=2):
     :param timeout: Time to wait for the response
     :return: True for active, False for inactive
     """
-    client = Client(base_url=daemon_url, timeout=timeout)
     try:
+        client = Client(base_url=daemon_url, timeout=timeout)
         return client.ping() == 'OK'
     except:
         return False

@@ -2,7 +2,7 @@
 {% block title %}Admin{% endblock %}
 {% block body %}
 {{ super() }}
-<h2>Clusters</h2>
+<h2>Active Clusters</h2>
 <div class="row">
     <table class="table">
         <thead>
@@ -37,22 +37,25 @@
     </table>
 </div>
 
-<div class="container">
-    <h2 class="form-signin-heading">Add new Cluster </h2>
-    <form role="form">
+<div class="row">
+    <form class="form-inline">
         <div class="form-group">
             <label for="cluster_name"> Cluster Name</label>
             <input id="cluster_name" name="name" type="text"
                    class="form-control"
                    placeholder="Cluster Name" required autofocus>
-            <label for="cluster_daemon_url"> Docker Host URL </label>
+        </div>
+
+        <div class="form-group">
+            <label for="cluster_daemon_url"> Docker Daemon</label>
             <input id="cluster_daemon_url" type="text" name="daemon_url"
                    class="form-control"
-                   placeholder="Docker daemon url, e.g., 192.168.0.1:2375" required>
+                   placeholder="192.168.0.1:2375" required>
         </div>
-        <button id="create_cluster_button"
-                class="btn btn-lg btn-primary btn-block"
-                type="button">Create </button>
+        <button class="btn btn-primary btn-success btn-sm btn-default
+        create_cluster_button"
+                type="button">Create Cluster
+        </button>
     </form>
 </div>
 

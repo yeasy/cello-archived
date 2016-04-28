@@ -31,7 +31,7 @@ class ClusterHandler(object):
         :param daemon_url: Docker host daemon
         :return: The name list of the started peer containers
         """
-        logger.debug("start compose project")
+        logger.debug("Start compose project")
         os.environ['DOCKER_HOST'] = daemon_url
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['PEER_NETWORKID'] = name
@@ -48,7 +48,7 @@ class ClusterHandler(object):
         :param daemon_url: Docker host daemon
         :return:
         """
-        logger.debug("stop compose project "+name)
+        logger.debug("Stop compose project "+name)
         os.environ['DOCKER_HOST'] = daemon_url
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['PEER_NETWORKID'] = name
@@ -63,7 +63,7 @@ class ClusterHandler(object):
         :param daemon_url: Docker host daemon
         :return:
         """
-        logger.debug("clean exited containers")
+        logger.debug("Clean exited containers")
         clean_exited_containers(daemon_url)
 
     def _clean_images(self, daemon_url, name_prefix):
@@ -75,7 +75,7 @@ class ClusterHandler(object):
         :param name_prefix:
         :return:
         """
-        logger.debug("clean chaincode images")
+        logger.debug("Clean chaincode images")
         clean_chaincode_images(daemon_url, name_prefix)
 
     def list(self, filter_data={}, collection=""):
@@ -86,10 +86,10 @@ class ClusterHandler(object):
         :return: list of serialized doc
         """
         if collection != "released":
-            logger.debug("list all active clusters")
+            logger.debug("List all active clusters")
             result = map(self._serialize, self.collections.find(filter_data))
         else:
-            logger.debug("list all released clusters")
+            logger.debug("List all released clusters")
             result = map(self._serialize, self.collections_released.find(
                 filter_data))
         return result
@@ -103,10 +103,10 @@ class ClusterHandler(object):
         :return: serialized result or obj
         """
         if collection != "released":
-            logger.debug("get a cluster with id=" + id)
+            logger.debug("Get a cluster with id=" + id)
             ins = self.collections.find_one({"id": id})
         else:
-            logger.debug("get a released cluster with id=" + id)
+            logger.debug("Get a released cluster with id=" + id)
             ins = self.collections_released.find_one({"id": id})
         if not ins:
             logger.warn("No cluster found with id=" + id)
@@ -116,7 +116,7 @@ class ClusterHandler(object):
         else:
             return ins
 
-    def create(self, name, daemon_url, api_url="", user_id=""):
+    def create(self, name="test", daemon_url="", api_url="", user_id=""):
         """ Create a cluster based on given data
         TODO: maybe need other id generation mechanism
 
@@ -127,11 +127,12 @@ class ClusterHandler(object):
         :param user_id: user_id of the cluster
         :return: True or False
         """
-        logger.debug("create a new cluster")
+        logger.debug("Create new cluster with name={0}, daemon_url={"
+                     "1}".format(name, daemon_url))
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
         if not check_daemon_url(daemon_url):
-            logger.warn("daemon_url is not valid:" + daemon_url)
+            logger.warn("The daemon_url is not valid:" + daemon_url)
             return False
         if not api_url:  # automatically schedule one
             api_url = self._gen_api_url(daemon_url)
@@ -165,7 +166,7 @@ class ClusterHandler(object):
         :param record: Whether to record into the released collections
         :return:
         """
-        logger.debug("delete a cluster with id=" + id)
+        logger.debug("Delete a cluster with id=" + id)
         ins = self.collections.find_one({"id": id})
         if not ins:
             logger.warn("Cannot delete non-existed instance")
@@ -266,26 +267,26 @@ class ClusterHandler(object):
         :param daemon_url, may look like: tcp://192.168.0.1:2375
         :return: The generated api url address
         """
-        logger.debug("gen_api_url, daemon_url=" + daemon_url)
+        logger.debug("Generate api_url, daemon_url=" + daemon_url)
         segs = daemon_url.split(":")
         if len(segs) != 3:
-            logger.error("invalid daemon url = ", daemon_url)
+            logger.error("Invalid daemon url = ", daemon_url)
             return ""
         host_ip = segs[1][2:]
-        logger.debug("host_ip=" + host_ip)
+        logger.debug("The host_ip=" + host_ip)
         exists = self.collections.find({"daemon_url": daemon_url})
         api_url_existed = list(map(lambda c: c.get("api_url", ""),
                                    exists))
-        logger.debug("api_url_existed:")
+        logger.debug("The api_url_existed:")
         logger.debug(api_url_existed)
         for i in range(len(list(api_url_existed)) + 1):
             new_url = "http://{0}:{1}".format(host_ip,
                                               CLUSTER_API_PORT_START + i)
-            logger.debug("try new_url=" + new_url)
+            logger.debug("Try new_url=" + new_url)
             if new_url not in api_url_existed:
-                logger.debug("get valid new_url=" + new_url)
+                logger.debug("Get valid new_url=" + new_url)
                 return new_url
-        logger.warn("no valid api_url is generated")
+        logger.warn("No valid api_url is generated")
         return ""
 
 

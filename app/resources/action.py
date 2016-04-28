@@ -22,6 +22,10 @@ def cluster_apply():
     """
     user_id = request.args.get("user_id", "")
     logger.debug("userid="+user_id)
+    for k in request.args:
+        logger.debug("Arg: {0}:{1}".format(k, request.args[k]))
+    for k in request.form:
+        logger.debug("Form: {0}:{1}".format(k, request.form[k]))
     if not user_id:
         logger.warn("cluster_apply without user_id")
         status_response_fail["error"] = "No user_id is given"
@@ -45,6 +49,10 @@ def cluster_release():
     """
     user_id = request.args.get("user_id", "")
     logger.debug("userid="+user_id)
+    for k in request.args:
+        logger.debug("Arg: {0}:{1}".format(k, request.args[k]))
+    for k in request.form:
+        logger.debug("Form: {0}:{1}".format(k, request.form[k]))
     if not user_id:
         logger.warn("cluster_apply without user_id")
         status_response_fail["error"] = "No user_id is given"
