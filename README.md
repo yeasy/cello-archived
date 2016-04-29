@@ -59,6 +59,7 @@ storage. Please create it manually before starting the service.
 
 ### Production Consideration
 
+* Use the code from `master` branch.
 * Configuration: Set all parameters to production, including image, compose,
 and app.
 * Security: Use firewall to filter traffic, enable TLS and authentication.
@@ -84,4 +85,5 @@ $ bash ./scripts/start.sh
 * ~~Add doc for all methods and classes~~.
 * Admin: Add authentication for user login.
 * Admin: Update api definitions in yml files (optional).
+* Admin: Add host module to add cluster in batch (optional).
 * ~~Use async operation for container management (optional)~~.
