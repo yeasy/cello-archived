@@ -5,10 +5,10 @@ import sys
 from flask import Blueprint, render_template
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import log_handler
+from common import log_handler, LOG_LEVEL
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 from modules import cluster_handler

@@ -6,12 +6,12 @@ import sys
 from threading import Thread
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import db, log_handler, get_project, \
+from common import db, log_handler, LOG_LEVEL, get_project, \
     clean_exited_containers, clean_chaincode_images, check_daemon_url, \
     CLUSTER_API_PORT_START, COMPOSE_FILE_PATH
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 

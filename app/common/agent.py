@@ -10,10 +10,10 @@ from compose.config.environment import Environment
 from compose.container import Container
 from docker import Client
 
-from .log import log_handler
+from .log import log_handler, LOG_LEVEL
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 

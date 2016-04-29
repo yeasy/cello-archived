@@ -1,7 +1,7 @@
 import logging
 from flask import Flask
 
-from common import log_handler
+from common import log_handler, LOG_LEVEL
 from resources import action
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -9,8 +9,8 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config.from_object('config.DevelopmentConfig')
 app.config.from_envvar('POOLMANAGER_CONFIG_FILE', silent=True)
 
-app.logger.setLevel(app.config.get("LOG_LEVEL", logging.INFO))
 app.logger.addHandler(log_handler)
+app.logger.setLevel(LOG_LEVEL)
 
 app.register_blueprint(action)
 

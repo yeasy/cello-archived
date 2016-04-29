@@ -10,7 +10,7 @@ RUN pip install -r requirements.txt
 COPY . /app
 
 # use this in development
-CMD ["python", "app.py"]
+#CMD ["python", "app.py"]
 
 # use this in product
-#CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "app:app"]
+CMD ["gunicorn", "-w", "8", "-b", "0.0.0.0:8080", "app:app"]

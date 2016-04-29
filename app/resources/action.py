@@ -6,10 +6,11 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import log_handler, status_response_ok, status_response_fail
+from common import log_handler, LOG_LEVEL, status_response_ok, \
+    status_response_fail
 from modules import cluster_handler
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 action = Blueprint('action', __name__, url_prefix='/v1')

@@ -1,21 +1,14 @@
-import logging
+import os
+
 
 class Config(object):
-    DEBUG = False
-    TESTING = False
+    DEBUG = os.environ.get("DEBUG", False)
     SECRET_KEY = '?\xbf,\xb4\x8d\xa3"<\x9c\xb0@\x0f5\xab,w\xee\x8d$0\x13\x8b83'
-    LOG_LEVEL = logging.DEBUG
 
 
 class ProductionConfig(Config):
-    LOG_LEVEL = logging.INFO
+    DEBUG = os.environ.get("DEBUG", False)
 
 
 class DevelopmentConfig(Config):
-    DEBUG = True
-    LOG_LEVEL = logging.DEBUG
-
-
-class TestingConfig(Config):
-    TESTING = True
-    LOG_LEVEL = logging.DEBUG
+    DEBUG = os.environ.get("DEBUG", True)

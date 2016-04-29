@@ -5,10 +5,11 @@ import sys
 from flask import jsonify, Blueprint, request, render_template
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import log_handler, status_response_ok, status_response_fail
+from common import log_handler, LOG_LEVEL, status_response_ok, \
+    status_response_fail
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 from modules import cluster_handler
