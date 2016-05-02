@@ -87,3 +87,5 @@ $ bash ./scripts/start.sh
 * Admin: Update api definitions in yml files (optional).
 * Admin: Add host module to add cluster in batch (optional).
 * ~~Use async operation for container management (optional)~~.
+* Support multiple version in API.
+

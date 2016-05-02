@@ -21,14 +21,16 @@ $(document).ready(function() {
     });
     $('.delete_cluster_button').click(function() {
         // Confirm
-        var id_data = $(this).attr('data-id');
+        var id_data = $(this).attr('id_data');
+        var col_name = $(this).attr('col_name');
 
         $.ajax({
             url: "/cluster",
             type: 'DELETE',
             dataType: 'json',
             data:{
-                "id": id_data
+                "id": id_data,
+                "col_name": col_name
             },
             success: function(response) {
                 console.log(response);

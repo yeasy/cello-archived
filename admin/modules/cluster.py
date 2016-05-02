@@ -20,7 +20,7 @@ class ClusterHandler(object):
 
     """
     def __init__(self):
-        self.collections = db["cluster"]
+        self.collections_active = db["cluster_active"]
         self.collections_released = db["cluster_released"]
 
     def _compose_start_project(self, name, port, daemon_url):
@@ -78,20 +78,23 @@ class ClusterHandler(object):
         logger.debug("Clean chaincode images")
         clean_chaincode_images(daemon_url, name_prefix)
 
-    def list(self, filter_data={}, collection=""):
+    def list(self, filter_data={}, collection="active"):
         """ List clusters with given criteria
 
         :param filter_data: Image with the filter properties
         :param collection: Use data in which collection
-        :return: list of serialized doc
+        :return: iteration of serialized doc
         """
-        if collection != "released":
+        if collection == "active":
             logger.debug("List all active clusters")
-            result = map(self._serialize, self.collections.find(filter_data))
-        else:
+            result = map(self._serialize, self.collections_active.find(filter_data))
+        elif collection == "released":
             logger.debug("List all released clusters")
             result = map(self._serialize, self.collections_released.find(
                 filter_data))
+        else:
+            logger.warn("Unknown cluster collection="+collection)
+            return None
         return result
 
     def get(self, id, serialization=False, collection=""):
@@ -104,7 +107,7 @@ class ClusterHandler(object):
         """
         if collection != "released":
             logger.debug("Get a cluster with id=" + id)
-            ins = self.collections.find_one({"id": id})
+            ins = self.collections_active.find_one({"id": id})
         else:
             logger.debug("Get a released cluster with id=" + id)
             ins = self.collections_released.find_one({"id": id})
@@ -141,10 +144,10 @@ class ClusterHandler(object):
             'user_id': user_id,
             'api_url': api_url,
             'daemon_url': daemon_url,
-            'create_ts': datetime.datetime.utcnow(),
+            'create_ts': datetime.datetime.now(),
             'release_ts': "",
         }
-        ins_id = self.collections.insert_one(c).inserted_id  # object type
+        ins_id = self.collections_active.insert_one(c).inserted_id  # object type
         try:
             container = self._compose_start_project(name=str(ins_id),
                                                     port=
@@ -153,41 +156,49 @@ class ClusterHandler(object):
         except Exception as e:
             logger.warn(e)
             logger.warn("Remove unsuccessful started cluster info")
-            self.collections.delete_one({"_id": ins_id})
+            self.collections_active.delete_one({"_id": ins_id})
             return False
-        self.collections.update({"_id": ins_id}, {"$set": {"id": str(
+        self.collections_active.update({"_id": ins_id}, {"$set": {"id": str(
             ins_id), "node_containers": container}})
         return True
 
-    def delete(self, id, record=False):
+    def delete(self, id, col_name, record=False):
         """ Delete a cluster instance
 
         :param id: id of the cluster to delete
+        :param col_name: name of the cluster to operate
         :param record: Whether to record into the released collections
         :return:
         """
-        logger.debug("Delete a cluster with id=" + id)
-        ins = self.collections.find_one({"id": id})
+        logger.debug("Delete a cluster with id={0}, col_name={1}".format(id,
+                                                                         col_name))
+        if col_name == "active":
+            collection = self.collections_active
+        else:
+            collection = self.collections_released
+
+        ins = collection.find_one({"id": id})
         if not ins:
             logger.warn("Cannot delete non-existed instance")
             return False
-        api_url = ins.get("api_url", "")
-        daemon_url = ins.get("daemon_url", "")
-        try:
-            self._compose_stop_project(name=id,
-                                       port=api_url.split(":")[-1],
-                                       daemon_url=daemon_url)
-            self._clean_containers(daemon_url)
-            self._clean_images(daemon_url=daemon_url, name_prefix=id)
-        except Exception as e:
-            logger.warn("Wrong in clean compose project and containers")
-            logger.warn(e)
-            return False
-        if record:
-            ins["release_ts"] = datetime.datetime.utcnow()
-            logger.debug("Record the cluster info into released collection")
-            self.collections_released.insert_one(ins)
-        self.collections.delete_one({"id": id})
+        if col_name == "active":  # stop running containers when active
+            api_url = ins.get("api_url", "")
+            daemon_url = ins.get("daemon_url", "")
+            try:
+                self._compose_stop_project(name=id,
+                                           port=api_url.split(":")[-1],
+                                           daemon_url=daemon_url)
+                self._clean_containers(daemon_url)
+                self._clean_images(daemon_url=daemon_url, name_prefix=id)
+            except Exception as e:
+                logger.warn("Wrong in clean compose project and containers")
+                logger.warn(e)
+                return False
+            if record:
+                ins["release_ts"] = datetime.datetime.now()
+                logger.debug("Record the cluster info into released collection")
+                self.collections_released.insert_one(ins)
+        collection.delete_one({"id": id})
         return True
 
     def apply_cluster(self, user_id):
@@ -196,22 +207,22 @@ class ClusterHandler(object):
         :param user_id: which user will apply the cluster
         :return: serialized cluster
         """
-        doc = self.collections.find_one({"user_id": user_id})
+        doc = self.collections_active.find_one({"user_id": user_id})
         if doc:  # already have one
             logger.debug("Already assigned cluster for " + user_id)
             logger.debug(self._serialize(doc, keys=['id', 'name', 'user_id',
                                                     'api_url']))
             return self._serialize(doc, keys=['id', 'name', 'user_id',
                                               'api_url'])
-        free_one = self.collections.find_one({"user_id": ""})
+        free_one = self.collections_active.find_one({"user_id": ""})
         if not free_one:
             logger.warn("Not find free one for " + user_id)
             return {}
         else:
             free_one["user_id"] = user_id
-            free_one["apply_ts"] = datetime.datetime.utcnow()
-            self.collections.update({"id": free_one.get('id', '')},
-                                    {"$set": {"user_id": free_one["user_id"],
+            free_one["apply_ts"] = datetime.datetime.now()
+            self.collections_active.update({"id": free_one.get('id', '')},
+                                           {"$set": {"user_id": free_one["user_id"],
                                               "apply_ts": free_one[
                                                   "apply_ts"]}})
             logger.info("Assign free one for" + user_id)
@@ -225,7 +236,7 @@ class ClusterHandler(object):
         :param user_id: which user will apply the cluster
         :return: True or False
         """
-        result = self.collections.find_one({"user_id": user_id})
+        result = self.collections_active.find_one({"user_id": user_id})
         if not result:  # not have one
             logger.warn("There is no cluster for" + user_id)
             return False
@@ -274,7 +285,7 @@ class ClusterHandler(object):
             return ""
         host_ip = segs[1][2:]
         logger.debug("The host_ip=" + host_ip)
-        exists = self.collections.find({"daemon_url": daemon_url})
+        exists = self.collections_active.find({"daemon_url": daemon_url})
         api_url_existed = list(map(lambda c: c.get("api_url", ""),
                                    exists))
         logger.debug("The api_url_existed:")

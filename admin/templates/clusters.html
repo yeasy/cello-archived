@@ -1,62 +1,47 @@
 {% extends "layout.html" %}
-{% block title %}Admin{% endblock %}
+{% block title %}Clusters{% endblock %}
 {% block body %}
 {{ super() }}
-<h2>Active Clusters</h2>
-<div class="row">
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Name</th>
-            <th>user_id</th>
-            <th>api_url</th>
-            <th>daemon_url</th>
-            <th>create_ts</th>
-            <th></th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for item in items %}
-            {% if item.user_id %}
-                <tr bgcolor="#add8e6">
-                    {% else %}
+    {% if col_name == "active" %}
+        <h1 class="page-header">Active Clusters ({{items_count}})</h1>
+    {% else %}
+        <h1 class="page-header">Released Clusters ({{items_count}})</h1>
+    {% endif %}
+
+    {% if items_count > 0 %}
+        <div class="row">
+            <table class="table">
+                <thead>
                 <tr>
-            {% endif %}
-        <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
-        <td>{{item.user_id}}</td>
-        <td><SPAN>{{item.api_url}}</SPAN></td>
-        <td>{{item.daemon_url}}</td>
-        <td>{{item.create_ts}}</td>
-        <td><input value="Delete" type="button"
-                   class="btn btn-xs btn-small btn-danger delete_cluster_button"
-                   data-id="{{item.id}}"/>
-        </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<div class="row">
-    <form class="form-inline">
-        <div class="form-group">
-            <label for="cluster_name"> Cluster Name</label>
-            <input id="cluster_name" name="name" type="text"
-                   class="form-control"
-                   placeholder="Cluster Name" required autofocus>
+                    <th>Name</th>
+                    <th>user_id</th>
+                    <th>api_url</th>
+                    <th>daemon_url</th>
+                    <th>create_ts</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in items %}
+                    {% if item.user_id and col_name=="active" %}
+                        <tr bgcolor="#add8e6">
+                            {% else %}
+                        <tr>
+                    {% endif %}
+                <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
+                <td>{{item.user_id}}</td>
+                <td><SPAN>{{item.api_url}}</SPAN></td>
+                <td>{{item.daemon_url}}</td>
+                <td>{{item.create_ts}}</td>
+                <td><input value="Delete" type="button"
+                           class="btn btn-xs btn-small btn-danger delete_cluster_button"
+                           id_data="{{item.id}}" col_name="{{col_name}}"/>
+                </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
-
-        <div class="form-group">
-            <label for="cluster_daemon_url"> Docker Daemon</label>
-            <input id="cluster_daemon_url" type="text" name="daemon_url"
-                   class="form-control"
-                   placeholder="192.168.0.1:2375" required>
-        </div>
-        <button class="btn btn-primary btn-success btn-sm btn-default
-        create_cluster_button"
-                type="button">Create Cluster
-        </button>
-    </form>
-</div>
+    {% endif %}
 
 {% endblock %}
