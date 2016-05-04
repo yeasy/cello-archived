@@ -27,7 +27,7 @@
                     {% endif %}
                 <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
                 <td>{{item.daemon_url}}</td>
-                <td>{{item.capacity}}</td>
+                <td>{{item.capacity|string}}</td>
                 <td>{{item.create_ts}}</td>
                 <td>{{item.status}}</td>
                 <td>{{item.clusters}}</td>

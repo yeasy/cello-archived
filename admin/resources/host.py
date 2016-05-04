@@ -92,6 +92,6 @@ def host_api():
 
 @host.route('/host_info/<host_id>', methods=['GET'])
 def host_info(host_id):
-    logger.debug("/ host_info/{0} action={1}".format( host_id, request.method))
+    logger.debug("/ host_info/{0} action={1}".format(host_id, request.method))
     return render_template("host_info.html", item=host_handler.get(
         host_id, serialization=True)), CODE_OK

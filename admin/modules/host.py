@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 import sys
+import time
 
 from threading import Thread
 
@@ -20,7 +21,7 @@ class HostHandler(object):
 
     """
     def __init__(self):
-        self.collection = db["host"]
+        self.col = db["host"]
 
     def create(self, name, daemon_url, capacity=1, status="active"):
         """ Create a new docker host node
@@ -38,23 +39,9 @@ class HostHandler(object):
         if not check_daemon_url(daemon_url):
             logger.warn("The daemon_url is inactive:" + daemon_url)
             status = "inactive"
-        if self.collection.find_one({"daemon_url": daemon_url}):
+        if self.col.find_one({"daemon_url": daemon_url}):
             logger.warn("{} already existed in db".format(daemon_url))
             return False
-
-
-        clusters = []
-        #def create_cluster_work():
-        if status == "active":
-            logger.debug("Init with {} clusters in host".format(capacity))
-            for _ in range(capacity):
-                if cluster_handler.create("{}_{}".format(name, _),
-                                          daemon_url=daemon_url):
-                    clusters.append("{}_{}".format(name, _))
-
-        #if status == "active":
-        #    t = Thread(target=create_cluster_work, args=())
-        #    t.start()
 
         h = {
             'name': name,
@@ -62,10 +49,21 @@ class HostHandler(object):
             'create_ts': datetime.datetime.now(),
             'capacity': capacity,
             'status': status,
-            'clusters': clusters
+            'clusters': []
         }
-        ins_id = self.collection.insert_one(h).inserted_id  # object type
-        self.collection.update({"_id": ins_id}, {"$set": {"id": str(ins_id)}})
+        hid = self.col.insert_one(h).inserted_id  # object type
+        self.col.update_one({"_id": hid}, {"$set": {"id": str(hid)}})
+
+        def create_cluster_work():
+            logger.debug("Init with {} clusters in host".format(capacity))
+            for _ in range(capacity):
+                cid = cluster_handler.create("{}_{}".format(name, _), str(hid))
+                logger.debug("Create cluster with id={}".format(cid))
+                time.sleep(1)
+
+        if status == "active":
+            t = Thread(target=create_cluster_work, args=())
+            t.start()
 
         return True
 
@@ -77,7 +75,7 @@ class HostHandler(object):
         :return: serialized result or obj
         """
         logger.debug("Get a host with id=" + id)
-        ins = self.collection.find_one({"id": id})
+        ins = self.col.find_one({"id": id})
         if not ins:
             logger.warn("No cluster found with id=" + id)
             return {}
@@ -92,7 +90,7 @@ class HostHandler(object):
         :param filter_data: Image with the filter properties
         :return: iteration of serialized doc
         """
-        result = map(self._serialize, self.collection.find(filter_data))
+        result = map(self._serialize, self.col.find(filter_data))
         return result
 
     def delete(self, id):
@@ -103,18 +101,17 @@ class HostHandler(object):
         """
         logger.debug("Delete a host with id={0}".format(id))
 
-        ins = self.collection.find_one({"id": id})
+        ins = self.col.find_one({"id": id})
         if not ins:
             logger.warn("Cannot delete non-existed host")
             return False
-        # TODO: check active status
         if ins.get("clusters", ""):
             logger.warn("There are clusters on that host, cannot delete.")
             return False
-        self.collection.delete_one({"id": id})
+        self.col.delete_one({"id": id})
         return True
 
-    def _serialize(self, doc, keys=['id', 'name', 'daemon_url',
+    def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
                                     'create_ts', 'status', 'clusters']):
         """ Serialize an obj
 
