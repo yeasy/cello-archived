@@ -88,4 +88,5 @@ $ bash ./scripts/start.sh
 * Admin: Add host module to add cluster in batch (optional).
 * ~~Use async operation for container management (optional)~~.
 * Support multiple version in API.
+* Support user selected cluster configuration.
 

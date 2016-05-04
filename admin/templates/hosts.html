@@ -2,11 +2,7 @@
 {% block title %}Clusters{% endblock %}
 {% block body %}
 {{ super() }}
-    {% if col_name == "active" %}
-        <h1 class="page-header">Active Clusters ({{items_count}})</h1>
-    {% else %}
-        <h1 class="page-header">Released Clusters ({{items_count}})</h1>
-    {% endif %}
+    <h1 class="page-header">Hosts ({{items_count}})</h1>
 
     {% if items_count > 0 %}
         <div class="row">
@@ -14,28 +10,31 @@
                 <thead>
                 <tr>
                     <th>Name</th>
-                    <th>user_id</th>
-                    <th>api_url</th>
-                    <th>host_id</th>
-                    <th>create_ts</th>
+                    <th>Daemon_url</th>
+                    <th>Capacity</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th>Clusters</th>
                     <th></th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for item in items %}
-                    {% if item.user_id and col_name=="active" %}
+                    {% if item.status != "active" %}
                         <tr bgcolor="#add8e6">
                             {% else %}
                         <tr>
                     {% endif %}
-                <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
-                <td>{{item.user_id}}</td>
-                <td><SPAN>{{item.api_url}}</SPAN></td>
-                <td>{{item.host_id}}</td>
+                <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
+                <td>{{item.daemon_url}}</td>
+                <td>{{item.capacity}}</td>
                 <td>{{item.create_ts}}</td>
+                <td>{{item.status}}</td>
+                <td>{{item.clusters}}</td>
                 <td><input value="Delete" type="button"
-                           class="btn btn-xs btn-small btn-danger delete_cluster_button"
-                           id_data="{{item.id}}" col_name="{{col_name}}"/>
+                           class="btn btn-xs btn-small btn-danger
+                           delete_host_button"
+                           id_data="{{item.id}}"/>
                 </td>
                 </tr>
                 {% endfor %}

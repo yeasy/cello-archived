@@ -50,9 +50,10 @@
     <div class="row">
         <div class="col-sm-3 col-md-2 sidebar">
             <ul class="nav nav-sidebar nav-list">
-                {{ nav_link("index.show", "Home") }}
-                {{ nav_link("cluster.clusters_show", "Active Clusters", col_name="active") }}
-                {{ nav_link("cluster.clusters_show", "Released Clusters", col_name="released") }}
+                {{ nav_link("index.show", "Overview") }}
+                {{ nav_link("host.hosts_show", "Hosts") }}
+                {{ nav_link("cluster.clusters_show", "Clusters", col_name="active") }}
+                {{ nav_link("cluster.clusters_show", "Release History", col_name="released") }}
                 <li><a href="https://github.rtp.raleigh.ibm.com/blockchain/poolmanager">Gitlab Repo</a></li>
                 <li><a href="#">About</a></li>
             </ul>

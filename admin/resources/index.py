@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
-from modules import cluster_handler
+from modules import cluster_handler, host_handler
 
 index = Blueprint('index', __name__)
 
@@ -21,9 +21,11 @@ index = Blueprint('index', __name__)
 @index.route('/index', methods=['GET'])
 def show():
     logger.info("/clusters action=" + request.method)
-    cluster_active = len(list(cluster_handler.list()))
-    cluster_released = len(list(cluster_handler.list(collection="released")))
+    hosts = list(host_handler.list())
+    clusters_active = len(list(cluster_handler.list(collection="active")))
+    clusters_released = len(list(cluster_handler.list(collection="released")))
 
     #return render_template("test.html")
-    return render_template("index.html", cluster_active=cluster_active,
-                           cluster_released=cluster_released)
+    return render_template("index.html", hosts=hosts,
+                           clusters_active=clusters_active,
+                           clusters_released=clusters_released)

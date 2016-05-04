@@ -59,16 +59,14 @@ def cluster_api():
                 status_response_fail["data"] = request.form
                 return jsonify(status_response_fail), CODE_BAD_REQUEST
     elif request.method == 'POST':
-        if "name" not in request.form or "daemon_url" not in request.form:
+        if "name" not in request.form or "host_id" not in request.form:
             logger.warn("cluster post without enough data")
             status_response_fail["error"] = "cluster POST without enough data"
             status_response_fail["data"] = request.form
             return jsonify(status_response_fail), CODE_BAD_REQUEST
         else:
-            logger.debug("name=" + request.form['name'])
-            logger.debug("daemon_url=" + request.form['daemon_url'])
-            if cluster_handler.create(name=request.form['name'],
-                                      daemon_url=request.form['daemon_url']):
+            name, host_id = request.form['name'], request.form['host_id']
+            if cluster_handler.create(name, host_id):
                 logger.debug("cluster POST successfully")
                 return jsonify(status_response_ok), CODE_CREATED
             else:
