@@ -163,13 +163,18 @@ class ClusterHandler(object):
         cid = self.col_active.insert_one(c).inserted_id  # object type
         try:
             logger.debug("Start compose project with name={}".format(str(cid)))
-            container = self._compose_start_project(name=str(cid),
+            containers = self._compose_start_project(name=str(cid),
                                                     port=
                                                     api_url.split(":")[-1],
                                                     daemon_url=daemon_url)
         except Exception as e:
             logger.warn(e)
-            logger.warn("Remove unsuccessful started cluster")
+            logger.warn("Compose start error, then remove failed clusters ")
+            self.delete(id=str(cid), col_name="active", record=False)
+            return None
+        if not containers:
+            logger.warn("Compose containers empty, then remove failed "
+                        "clusters ")
             self.delete(id=str(cid), col_name="active", record=False)
             return None
         if host:
@@ -177,7 +182,7 @@ class ClusterHandler(object):
             clusters = col_host.find_one({"id": host_id}).get("clusters")
             clusters.append(str(cid))
             col_host.update_one({"id": host_id},
-                            {"$set": {"clusters": clusters}}),
+                                {"$set": {"clusters": clusters}}),
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(
             cid), "node_containers": container}})
         return str(cid)
@@ -316,7 +321,7 @@ class ClusterHandler(object):
         :param host_id: id of the host
         :return: The generated api url address
         """
-        logger.debug("Generate api_url, host_id=" + host_id)
+        logger.debug("Generate api_url, host_id="+host_id)
         host = col_host.find_one({"id": host_id})
         if not host:
             logger.warn("Cannot find host with id="+host_id)
