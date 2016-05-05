@@ -3,6 +3,8 @@ import os
 import sys
 
 from flask import jsonify, Blueprint, request, render_template
+from flask.ext.paginate import Pagination
+
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, status_response_ok, \
@@ -24,14 +26,37 @@ def clusters_show():
     for k in request.args:
         logger.debug("{0}:{1}".format(k, request.args[k]))
     col_filter = dict((key, request.args.get(key)) for key in request.args if
-                  key != "col_name")
+                      key != "col_name" and key != "page")
     col_name = request.args.get("col_name", "active")
     items = list(cluster_handler.list(filter_data=col_filter,
                                       collection=col_name))
+    total_items = len(items)
+
+    search = False
+    q = request.args.get('q')
+    if q:
+        search = True
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
+
+    per_page = 10
+    if page*per_page >= total_items:  # show ends at this page
+        show_items = items[(page-1)*per_page:]
+        logger.debug("last page, total={} page={},per_page={},show_items={"
+                     "}".format(total_items, page, per_page, show_items))
+    else:
+        show_items = items[(page-1)*per_page:page*per_page]
+        logger.debug("middle page, total={}, page={},per_page={},show_items={"
+                     "}".format(total_items, page, per_page, show_items))
+
+    pagination = Pagination(page=page, per_page=per_page, total=total_items,
+                            search=search, record_name='clusters')
 
     return render_template("clusters.html", col_name=col_name,
-                           items_count=len(items), items=items)
-    #return render_template("test.html")
+                           items_count=total_items, items=show_items,
+                           pagination=pagination)
 
 
 @cluster.route('/cluster', methods=['GET', 'POST', 'DELETE'])

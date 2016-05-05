@@ -31,10 +31,17 @@
                 <td>{{item.create_ts}}</td>
                 <td>{{item.status}}</td>
                 <td>{{item.clusters}}</td>
-                <td><input value="Delete" type="button"
-                           class="btn btn-xs btn-small btn-danger
-                           delete_host_button"
-                           id_data="{{item.id}}"/>
+                <td>
+                    <button type="button" data-id="{{item.id}}" class="btn
+                    btn-xs btn-sm
+                    btn-primary btn-info btn-default edit_host_button">
+                        Edit
+                    </button>
+                    <button type="button" data-id="{{item.id}}"
+                            class="btn btn-xs btn-sm btn-danger
+                            delete_host_button" >
+                        Delete
+                    </button>
                 </td>
                 </tr>
                 {% endfor %}
@@ -42,5 +49,58 @@
             </table>
         </div>
     {% endif %}
+
+   <!-- The form which is used to populate the item data -->
+    <form id="config_host_form" class="form-horizontal" style="display: none;">
+        <div class="form-group">
+            <label class="col-sm-3 form-control-label">ID</label>
+            <div class="col-sm-8">
+            <input type="text" class="form-control" name="id" disabled="disabled" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-3 form-control-label">Name</label>
+            <div class="col-sm-8">
+            <input type="text" class="form-control" name="name" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-3 form-control-label">Daemon URL</label>
+            <div class="col-sm-8">
+            <input type="text" class="form-control" name="daemon_url"
+                   disabled="disabled" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-3 form-control-label">Capacity</label>
+            <div class="col-sm-8">
+            <input type="number" class="form-control" name="capacity" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-3 form-control-label">Created</label>
+            <div class="col-sm-8">
+            <input type="text" class="form-control" name="create_ts"
+                   disabled="disabled" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-3 form-control-label">Cluster Numbers</label>
+            <div class="col-sm-8">
+            <input type="number" class="form-control" name="clusters"
+                   disabled="disabled" />
+            </div>
+        </div>
+
+        <div class="form-group">
+                <button type="button" id="save_host_button" class="btn btn-primary
+        btn-default">Save</button>
+        </div>
+    </form>
 
 {% endblock %}

@@ -30,7 +30,7 @@ def hosts_show():
     #return render_template("test.html")
 
 
-@host.route('/host', methods=['GET', 'POST', 'DELETE'])
+@host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def host_api():
     logger.info("/host action=" + request.method)
     for k in request.args:
@@ -38,20 +38,20 @@ def host_api():
     for k in request.form:
         logger.debug("Form: {0}:{1}".format(k, request.form[k]))
     if request.method == 'GET':
-        if "id" not in request.form:
+        if "id" not in request.args and "id" not in request.form:
             logger.warn("host get without enough data")
             status_response_fail["error"] = "host GET without " \
                                             "enough data"
             status_response_fail["data"] = request.form
             return jsonify(status_response_fail), CODE_BAD_REQUEST
         else:
-            logger.debug("id=" + request.form['id'])
-            result = host_handler.get(request.form['id'],
-                                      serialization=True)
+            host_id = request.args.get("id") or request.form.get("id")
+            logger.debug("id=" + host_id)
+            result = host_handler.get(host_id, serialization=True)
             if result:
                 return jsonify(result), CODE_OK
             else:
-                logger.warn("host not found with id=" + id)
+                logger.warn("host not found with id=" + host_id)
                 status_response_fail["data"] = request.form
                 return jsonify(status_response_fail), CODE_BAD_REQUEST
     elif request.method == 'POST':
@@ -70,6 +70,27 @@ def host_api():
                 return jsonify(status_response_ok), CODE_CREATED
             else:
                 logger.debug("host POST failed")
+                return jsonify(status_response_fail), CODE_BAD_REQUEST
+    elif request.method == 'PUT':
+        if "id" not in request.form or "name" not in request.form or "capacity" not in request.form:
+            logger.warn("host put without enough data")
+            status_response_fail["error"] = "host PUT without enough data"
+            status_response_fail["data"] = request.form
+            return jsonify(status_response_fail), CODE_BAD_REQUEST
+        else:
+            id, name, capacity = request.form['id'], request.form['name'], \
+                                 int(request.form['capacity'])
+            logger.debug("id={}, name={}, capacity={}".format(id, name,
+                                                              capacity))
+            d = {
+                "name": name,
+                "capacity": capacity
+            }
+            if host_handler.update(id, d):
+                logger.debug("host PUT successfully")
+                return jsonify(status_response_ok), CODE_CREATED
+            else:
+                logger.debug("host PUT failed")
                 return jsonify(status_response_fail), CODE_BAD_REQUEST
     elif request.method == 'DELETE':
         if "id" not in request.form or not request.form["id"]:
