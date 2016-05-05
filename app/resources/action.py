@@ -6,14 +6,14 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import log_handler, LOG_LEVEL, status_response_ok, \
-    status_response_fail
+from common import log_handler, LOG_LEVEL, APP_API_VERSION, \
+    status_response_ok, status_response_fail
 from modules import cluster_handler
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
-action = Blueprint('action', __name__, url_prefix='/v1')
+action = Blueprint('action', __name__, url_prefix='/{}'.format(APP_API_VERSION))
 
 
 @action.route('/cluster_apply', methods=['GET'])

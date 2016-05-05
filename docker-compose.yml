@@ -17,7 +17,7 @@ services:
       - USER=admin
       - PASS=pass
       - MONGO_URL=mongodb://mongo:27017
-      - MONGO_COLLECTION=dev
+      - MONGO_DB=dev
       - DEBUG=True
       - LOG_LEVEL=DEBUG
     ports:
@@ -35,9 +35,9 @@ services:
     restart: unless-stopped
     environment:
       - MONGO_URL=mongodb://mongo:27017
-      - MONGO_COLLECTION=dev
-      - DEBUG=False
-      - LOG_LEVEL=WARN
+      - MONGO_DB=dev
+      - DEBUG=True
+      - LOG_LEVEL=DEBUG
     volumes:  # This should be removed in product env
       - ./app:/app
     links:

@@ -3,10 +3,13 @@ import os
 import sys
 
 from flask import jsonify, Blueprint, request, render_template
+from flask.ext.paginate import Pagination
+
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, status_response_ok, \
-    status_response_fail
+    status_response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
+    CODE_NO_CONTENT
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -22,21 +25,38 @@ def clusters_show():
     logger.info("/clusters action=" + request.method)
     for k in request.args:
         logger.debug("{0}:{1}".format(k, request.args[k]))
-    filter = dict((key, request.args.get(key)) for key in request.args)
+    col_filter = dict((key, request.args.get(key)) for key in request.args if
+                      key != "col_name" and key != "page")
+    col_name = request.args.get("col_name", "active")
+    items = list(cluster_handler.list(filter_data=col_filter,
+                                      collection=col_name))
+    total_items = len(items)
 
-    return render_template("clusters.html", items=cluster_handler.list(filter))
+    search = False
+    q = request.args.get('q')
+    if q:
+        search = True
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        page = 1
 
+    per_page = 10
+    if page*per_page >= total_items:  # show ends at this page
+        show_items = items[(page-1)*per_page:]
+        logger.debug("last page, total={} page={},per_page={},show_items={"
+                     "}".format(total_items, page, per_page, show_items))
+    else:
+        show_items = items[(page-1)*per_page:page*per_page]
+        logger.debug("middle page, total={}, page={},per_page={},show_items={"
+                     "}".format(total_items, page, per_page, show_items))
 
-@cluster.route('/clusters_released', methods=['GET'])
-def clusters_released_show():
-    logger.info("/cluster_released action=" + request.method)
-    for k in request.args:
-        logger.debug("{0}:{1}".format(k, request.args[k]))
-    filter = dict((key, request.args.get(key)) for key in request.args)
+    pagination = Pagination(page=page, per_page=per_page, total=total_items,
+                            search=search, record_name='clusters')
 
-    return render_template("clusters_released.html",
-                           items=cluster_handler.list(filter_data=filter,
-                                                      collection="released"))
+    return render_template("clusters.html", col_name=col_name,
+                           items_count=total_items, items=show_items,
+                           pagination=pagination)
 
 
 @cluster.route('/cluster', methods=['GET', 'POST', 'DELETE'])
@@ -52,51 +72,51 @@ def cluster_api():
             status_response_fail["error"] = "cluster GET without " \
                                             "enough data"
             status_response_fail["data"] = request.form
-            return jsonify(status_response_fail), 400
+            return jsonify(status_response_fail), CODE_BAD_REQUEST
         else:
             logger.debug("id=" + request.form['id'])
             result = cluster_handler.get(request.form['id'],
                                          serialization=True)
             if result:
-                return jsonify(result), 200
+                return jsonify(result), CODE_OK
             else:
                 logger.warn("cluster not found with id=" + id)
                 status_response_fail["data"] = request.form
-                return jsonify(status_response_fail), 400
+                return jsonify(status_response_fail), CODE_BAD_REQUEST
     elif request.method == 'POST':
-        if "name" not in request.form or "daemon_url" not in request.form:
+        if "name" not in request.form or "host_id" not in request.form:
             logger.warn("cluster post without enough data")
             status_response_fail["error"] = "cluster POST without enough data"
             status_response_fail["data"] = request.form
-            return jsonify(status_response_fail), 400
+            return jsonify(status_response_fail), CODE_BAD_REQUEST
         else:
-            logger.debug("name=" + request.form['name'])
-            logger.debug("daemon_url=" + request.form['daemon_url'])
-            if cluster_handler.create(name=request.form['name'],
-                                      daemon_url=request.form['daemon_url']):
+            name, host_id = request.form['name'], request.form['host_id']
+            if cluster_handler.create(name, host_id):
                 logger.debug("cluster POST successfully")
-                return jsonify(status_response_ok), 200
+                return jsonify(status_response_ok), CODE_CREATED
             else:
                 logger.debug("cluster POST failed")
-                return jsonify(status_response_fail), 400
+                return jsonify(status_response_fail), CODE_BAD_REQUEST
     elif request.method == 'DELETE':
-        if "id" not in request.form or not request.form["id"]:
+        if "id" not in request.form or "col_name" not in request.form or not \
+                request.form["id"] or not request.form["col_name"]:
             logger.warn("cluster operation post without enough data")
             status_response_fail["error"] = "cluster delete without " \
                                             "enough data"
             status_response_fail["data"] = request.form
-            return jsonify(status_response_fail), 400
+            return jsonify(status_response_fail), CODE_BAD_REQUEST
         else:
-            logger.debug(request.form["id"])
-            logger.debug("cluster delete with id=" + request.form["id"])
-            if cluster_handler.delete(id=request.form["id"]):
-                return jsonify(status_response_ok), 200
+            logger.debug("cluster delete with id={0}, col_name={1}".format(
+                request.form["id"], request.form["col_name"]))
+            if cluster_handler.delete(id=request.form["id"],
+                                      col_name=request.form["col_name"]):
+                return jsonify(status_response_ok), CODE_NO_CONTENT
             else:
-                return jsonify(status_response_fail), 400
+                return jsonify(status_response_fail), CODE_BAD_REQUEST
     else:
         status_response_fail["error"] = "unknown operation method"
         status_response_fail["data"] = request.form
-        return jsonify(status_response_fail), 400
+        return jsonify(status_response_fail), CODE_BAD_REQUEST
 
 
 @cluster.route('/cluster_info/<cluster_id>', methods=['GET'])
@@ -106,7 +126,7 @@ def cluster_info(cluster_id):
     released = (request.args.get('released', 0) != 0)
     if not released:
         return render_template("cluster_info.html", item=cluster_handler.get(
-            cluster_id, serialization=True)), 200
+            cluster_id, serialization=True)), CODE_OK
     else:
         return render_template("cluster_info.html", item=cluster_handler.get(
-            cluster_id, serialization=True, collection="released")), 200
+            cluster_id, serialization=True, collection="released")), CODE_OK

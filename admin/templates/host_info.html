@@ -7,19 +7,19 @@
     <dl class="dl-horizontal">
         <dt>Id<dt> <dd>{{item.id}}</dd>
         <dt>Name<dt> <dd>{{item.name}}</dd>
-        <dt>API URL<dt> <dd>{{item.api_url}}</dd>
-        <dt>Docker Host<dt> <dd>{{item.host_id}}</dd>
+        <dt>Status<dt> <dd>{{item.status}}</dd>
+        <dt>Capacity<dt> <dd>{{item.capacity|string}}</dd>
+        <dt>Host URL<dt> <dd>{{item.daemon_url}}</dd>
         <dt>Create Time<dt> <dd>{{item.create_ts}}</dd>
-        <dt>Apply Time<dt> <dd>{{item.apply_ts}}</dd>
-        <dt>User Id<dt> <dd>{{item.user_id}}</dd>
-        <dt>Release Time<dt> <dd>{{item.release_ts}}</dd>
-        <dt>Node Containers<dt> <dd> {{item.node_containers}} </dd>
+        <dt>Clusters<dt> <dd> {{item.clusters}} </dd>
     </dl>
+    <!--
     <div class="container-fluid">
         <input value="Delete" type="button"
                class="btn btn-danger btn-default btn-primary delete_cluster_button"
                data-id="{{item.id}}"/>
     </div>
+    -->
 </div>
 
 {% endblock %}

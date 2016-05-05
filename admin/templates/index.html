@@ -1,8 +1,135 @@
 {% extends "layout.html" %}
 {% block title %}PoolManager Admin{% endblock %}
 {% block body %}
-{{ super() }}
-<h1 class="page-header">Dashboard</h1>
-<h2 class="sub-header">Overview</h2>
+    {{ super() }}
+    <h2 class="sub-header">System Overview</h2>
+    <div class="container">
+        <ul class="list-group col-sm-4 col-md-3">
+            <li class="list-group-item  list-group-item-info">
+                <span class="label label-default label-pill
+                pull-xs-right">{{hosts|length}}</span>
+                <a href="/hosts">Hosts</a>
+            </li>
+            <li class="list-group-item  list-group-item-success">
+                <span class="label label-default label-pill pull-xs-right">{{clusters_active}}</span>
+                <a href="/clusters?col_name=active">Active Clusters</a>
+            </li>
+            <li class="list-group-item list-group-item-warning">
+                <span class="label label-default label-pill pull-xs-right">{{clusters_released}}</span>
+                <a href="/clusters?col_name=released">Released Clusters</a>
+            </li>
+        </ul>
+    </div>
+
+    <h2 class="sub-header"></h2>
+    <!-- Trigger the modal with a button -->
+<button type="button" class="btn btn-primary btn-info btn-default" data-toggle="modal" data-target="#newHostModal">Add Host</button>
+
+    {% if hosts|length > 0 %}
+    <button type="button" class="btn btn-primary btn-info btn-default" data-toggle="modal" data-target="#newClusterModal">Add Cluster</button>
+    {% else %}
+    <button type="button" class="btn btn-primary btn-info btn-default" data-toggle="modal" data-target="#newClusterModal" disabled>Add Cluster</button>
+    {% endif %}
+
+    <!-- Modal -->
+<div id="newHostModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Add a host</h4>
+      </div>
+      <div class="modal-body">
+          <form class="form" id="add_new_host_form">
+              <div class="form-group">
+                  <label for="host_name">Name</label>
+                  <input id="host_name" name="name" type="text"
+                         class="form-control"
+                         placeholder="Host Name" required autofocus>
+              </div>
+
+              <div class="form-group">
+                  <label for="host_daemon_url">Daemon URL</label>
+                  <input id="host_daemon_url" type="text" name="daemon_url"
+                         class="form-control" placeholder="192.168.0.1:2375" required>
+              </div>
+              <div class="form-group">
+                  <label for="host_capacity">Capacity</label>
+                  <input id="host_capacity" type="number" name="capacity"
+                         class="form-control" value=2 required>
+              </div>
+          </form>
+      </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary btn-success btn-sm btn-default create_host_button" type="button">Create</button>
+            <button class="btn btn-default btn-sm" data-dismiss="modal" type="button">Cancel</button>
+        </div>
+    </div>
+  </div>
+</div>
+
+<div id="newClusterModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Create a cluster</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form" id="add_new_cluster_form">
+                    <div class="form-group">
+                        <select class="c-select" name="host_id"
+                                required>
+                            <option selected>Select a Host</option>
+                            {% for h in hosts %}
+                                <option value="{{h.id}}">{{h.name}}</option>
+                            {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cluster_name">Name</label>
+                            <input id="cluster_name" name="name" type="text"
+                                   class="form-control"
+                                   placeholder="Cluster Name" required >
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary btn-success btn-sm btn-default create_cluster_button" type="button">Create</button>
+                    <button class="btn btn-default btn-sm" data-dismiss="modal" type="button">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p></p>
+
+    <!--
+    <h2 class="sub-header">Cluster Management</h2>
+    <div class="container-fluid">
+        <form class="form-inline">
+            <div class="form-group">
+                <label for="cluster_name">Name</label>
+                <input id="cluster_name" name="name" type="text"
+                       class="form-control"
+                       placeholder="Cluster Name" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="cluster_daemon_url">Host URL</label>
+                <input id="cluster_daemon_url" type="text" name="daemon_url"
+                       class="form-control"
+                       placeholder="192.168.0.1:2375" required>
+            </div>
+            <button class="btn btn-primary btn-success btn-sm btn-default
+        create_cluster_button"
+                    type="button">Create Cluster
+            </button>
+        </form>
+    </div>
+    -->
 
 {% endblock %}
