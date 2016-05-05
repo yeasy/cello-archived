@@ -5,6 +5,7 @@ import sys
 import time
 
 from threading import Thread
+from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, LOG_LEVEL, get_project, \
@@ -27,7 +28,7 @@ class HostHandler(object):
         """ Create a new docker host node
 
         :param name: name of the node
-        :param daemon_url: daemon_url of the cluster
+        :param daemon_url: daemon_url of the host
         :param capacity: The number of clusters to hold
         :param status: active for using, inactive for not using
         :return: True or False
@@ -68,7 +69,7 @@ class HostHandler(object):
         return True
 
     def get(self, id, serialization=False):
-        """ Get a cluster
+        """ Get a host
 
         :param id: id of the doc
         :param serialization: whether to get serialized result or object
@@ -84,8 +85,30 @@ class HostHandler(object):
         else:
             return ins
 
+    def update(self, id, d, serialization=True):
+        """ Update a host
+
+        :param id: id of the host
+        :param d: dict to use as updated values
+        :return: serialized result or obj
+        """
+        logger.debug("Get a host with id=" + id)
+
+        ins = self.col.find_one_and_update(
+            {"id": id},
+            {"$set": d},
+            return_document=ReturnDocument.AFTER)
+
+        if not ins:
+            logger.warn("No Host found with id=" + id)
+            return {}
+        if serialization:
+            return self._serialize(ins)
+        else:
+            return ins
+
     def list(self, filter_data={}):
-        """ List clusters with given criteria
+        """ List hosts with given criteria
 
         :param filter_data: Image with the filter properties
         :return: iteration of serialized doc
