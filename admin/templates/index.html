@@ -41,28 +41,37 @@
         <h4 class="modal-title">Add a host</h4>
       </div>
       <div class="modal-body">
-          <form class="form" id="add_new_host_form">
-              <div class="form-group">
-                  <label for="host_name">Name</label>
-                  <input id="host_name" name="name" type="text"
-                         class="form-control"
-                         placeholder="Host Name" required autofocus>
+          <form role="form" id="add_new_host_form"
+                data-toggle="validator">
+              <div class="form-group has-feedback">
+                  <label for="host_name">*Name (less than 16 chars)</label>
+                  <input id="host_name" name="name" type="text" pattern="^[-_A-z0-9]{1,}$"
+                         maxlength="16" class="form-control"  placeholder="Host_Name" data-error="A name is required" required autofocus>
               </div>
 
-              <div class="form-group">
-                  <label for="host_daemon_url">Daemon URL</label>
-                  <input id="host_daemon_url" type="text" name="daemon_url"
-                         class="form-control" placeholder="192.168.0.1:2375" required>
+              <div class="form-group has-feedback">
+                  <label for="host_daemon_url">*Daemon URL</label>
+                  <input id="host_daemon_url" type="text" name="daemon_url" pattern="^(\d+)\.(\d+)\.(\d+)\.(\d+):(\d+)$"
+                         class="form-control" placeholder="192.168.0.1:2375"
+                         data-error="That address is invalid" required>
               </div>
               <div class="form-group">
-                  <label for="host_capacity">Capacity</label>
+                  <label for="host_capacity">Capacity (1~100)</label>
                   <input id="host_capacity" type="number" name="capacity"
-                         class="form-control" value=2 required>
+                         class="form-control" min="1" max="100" value=2
+                         required>
+              </div>
+              <div class="form-group">
+                  <label for="host_status">Status</label>
+                  <select class="c-select" name="status" required>
+                      <option selected value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                  </select>
               </div>
           </form>
       </div>
         <div class="modal-footer">
-            <button class="btn btn-primary btn-success btn-sm btn-default create_host_button" type="button">Create</button>
+            <button class="btn btn-primary btn-success btn-sm btn-default create_host_button" type="submit">Create</button>
             <button class="btn btn-default btn-sm" data-dismiss="modal" type="button">Cancel</button>
         </div>
     </div>
@@ -78,32 +87,35 @@
                 <h4 class="modal-title">Create a cluster</h4>
             </div>
             <div class="modal-body">
-                <form class="form" id="add_new_cluster_form">
+                <form class="form" id="add_new_cluster_form" data-toggle="validator">
                     <div class="form-group">
                         <select class="c-select" name="host_id"
                                 required>
                             <option selected>Select a Host</option>
                             {% for h in hosts %}
-                                <option value="{{h.id}}">{{h.name}}</option>
+                                {% if h.status == "active" %}
+                                    <option value="{{h.id}}">{{h.name}}</option>
+                                {% endif %}
                             {% endfor %}
-                            </select>
-                        </div>
+                        </select>
+                    </div>
 
-                        <div class="form-group">
-                            <label for="cluster_name">Name</label>
-                            <input id="cluster_name" name="name" type="text"
-                                   class="form-control"
-                                   placeholder="Cluster Name" required >
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary btn-success btn-sm btn-default create_cluster_button" type="button">Create</button>
-                    <button class="btn btn-default btn-sm" data-dismiss="modal" type="button">Cancel</button>
-                </div>
+                    <div class="form-group">
+                        <label for="cluster_name">*Name (less than 16 cahrs)
+                        </label>
+                        <input id="cluster_name" name="name" type="text"
+                               class="form-control" pattern="^[-_A-z0-9]{1,}$"
+                               placeholder="Cluster Name" data-error="A name is required" max-length="16" required >
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-success btn-sm btn-default create_cluster_button" type="button">Create</button>
+                <button class="btn btn-default btn-sm" data-dismiss="modal" type="button">Cancel</button>
             </div>
         </div>
     </div>
+</div>
 
     <p></p>
 

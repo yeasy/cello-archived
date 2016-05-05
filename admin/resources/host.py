@@ -55,16 +55,16 @@ def host_api():
                 status_response_fail["data"] = request.form
                 return jsonify(status_response_fail), CODE_BAD_REQUEST
     elif request.method == 'POST':
-        if "name" not in request.form or "daemon_url" not in request.form:
+        name, daemon_url, capacity = request.form['name'], request.form[
+            'daemon_url'], int(request.form['capacity'])
+        logger.debug("name={}, daemon_url={}, capacity={}".format(name,
+                                                                  daemon_url, capacity))
+        if not name or not daemon_url or not capacity:
             logger.warn("host post without enough data")
             status_response_fail["error"] = "host POST without enough data"
             status_response_fail["data"] = request.form
             return jsonify(status_response_fail), CODE_BAD_REQUEST
         else:
-            name, daemon_url, capacity = request.form['name'], request.form[
-                'daemon_url'], int(request.form['capacity'])
-            logger.debug("name={}, daemon_url={}, capacity={}".format(name,
-                                                              daemon_url, capacity))
             if host_handler.create(name, daemon_url, capacity):
                 logger.debug("host POST successfully")
                 return jsonify(status_response_ok), CODE_CREATED
