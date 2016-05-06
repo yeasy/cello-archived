@@ -16,7 +16,7 @@ vp:
     - CORE_PEER_NETWORKID=${PEER_NETWORKID}
     - CORE_LOGGING_LEVEL=debug  #critical, error, warning, notice, info, debug
     # The following section enables bpft consensus
-    - CORE_PEER_VALIDATOR_CONSENSUS=pbft  # noops, obcpbft, pbft
+    - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=pbft  # noops, obcpbft, pbft
     - CORE_PBFT_GENERAL_MODE=classic  # batch, classic, sieve
     - CORE_PBFT_GENERAL_N=4
     - CORE_PBFT_GENERAL_TIMEOUT_REQUEST=10s
