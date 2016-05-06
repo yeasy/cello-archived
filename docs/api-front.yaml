@@ -11,7 +11,7 @@ info:
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  version: "1.0.0"
+  version: "1.1.0"
 # the domain of the service
 host: 9.186.100.88:80
 # array of all schemes that your API supports
@@ -76,9 +76,9 @@ paths:
 definitions:
   Cluster:
     type: object
-    required: [uuid, user_id, api_url]
+    required: [id, user_id, api_url]
     properties:
-      uuid:
+      id:
         type: string
         description: Unique identifier representing a specific cluster.
       user_id:
@@ -90,7 +90,7 @@ definitions:
       host_id:
         type: string
         description: Which host the cluster is at.
-      display_name:
+      name:
         type: string
         description: Display name of cluster.
   Error:
