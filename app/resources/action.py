@@ -7,7 +7,9 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, APP_API_VERSION, \
-    status_response_ok, status_response_fail
+    status_response_ok, status_response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
+    CODE_NO_CONTENT
+
 from modules import cluster_handler
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -31,16 +33,16 @@ def cluster_apply():
         logger.warn("cluster_apply without user_id")
         status_response_fail["error"] = "No user_id is given"
         status_response_fail["data"] = request.args
-        return jsonify(status_response_fail), 400
+        return jsonify(status_response_fail), CODE_BAD_REQUEST
     else:
         c = cluster_handler.apply_cluster(user_id)
         if not c:
             logger.warn("cluster_apply failed")
             status_response_fail["error"] = "No available res for "+user_id
             status_response_fail["data"] = request.args
-            return jsonify(status_response_fail), 400
+            return jsonify(status_response_fail), CODE_BAD_REQUEST
         else:
-            return jsonify(c), 200
+            return jsonify(c), CODE_OK
 
 
 @action.route('/cluster_release', methods=['GET'])
@@ -58,14 +60,13 @@ def cluster_release():
         logger.warn("cluster_apply without user_id")
         status_response_fail["error"] = "No user_id is given"
         status_response_fail["data"] = request.args
-        return jsonify(status_response_fail), 400
+        return jsonify(status_response_fail), CODE_BAD_REQUEST
     else:
         c = cluster_handler.release_cluster(user_id)
         if not c:
             logger.warn("cluster_release failed")
             status_response_fail["error"] = "release fail for "+user_id
             status_response_fail["data"] = request.args
-            return jsonify(status_response_fail), 400
+            return jsonify(status_response_fail), CODE_BAD_REQUEST
         else:
-            return jsonify(status_response_ok), 200
-
+            return jsonify(status_response_ok), CODE_OK

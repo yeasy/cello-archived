@@ -2,7 +2,7 @@
 # Notice that chaincode is executed inside docker in default net mode
 # https://github.com/yeasy/docker-compose-files
 
-# Depends on the yeasy/hyperledger-peer:latest image
+# Depends on the yeasy/hyperledger-peer:pbft image
 
 # If you want enable consensus, just uncomment the
 # CORE_PEER_VALIDATOR_CONSENSUE=obcpbft line

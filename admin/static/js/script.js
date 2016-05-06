@@ -90,6 +90,7 @@ $(document).ready(function() {
 
             var id    = $form.find('[name="id"]').val();
             var name    = $form.find('[name="name"]').val();
+            var status    = $form.find('[name="status"]').val();
             var capacity    = $form.find('[name="capacity"]').val();
 
             // The url and method might be different in your application
@@ -99,6 +100,7 @@ $(document).ready(function() {
                 data: {
                     "id": id,
                     "name": name,
+                    "status": status,
                     "capacity": capacity
                 }
             }).success(function(response) {
