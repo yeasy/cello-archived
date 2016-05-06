@@ -9,7 +9,7 @@
 # See https://github.com/hyperledger/fabric/blob/master/docs/dev-setup/devnet-setup.md#using-consensus-plugin for more details.
 
 vp:
-  image: yeasy/hyperledger-peer:latest
+  image: yeasy/hyperledger-peer:pbft
   restart: unless-stopped
   environment:
     - CORE_PEER_ADDRESSAUTODETECT=true
