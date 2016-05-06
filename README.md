@@ -98,3 +98,4 @@ $ bash ./scripts/start.sh
 * ~~Support updating the host config~~.
 * Support user defined cluster configuration.
 * ~~Add form validation~~.
+* Support auto fresh.
