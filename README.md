@@ -24,7 +24,7 @@ other action.*
 All services are setup through Docker containers by default.
 
 ### Master Requirement
-* docker engine: >=1.9.0
+* docker engine: >=1.10.0
 * docker-compose: >=1.7.0
 * docker images:
     - python:3.5
@@ -33,7 +33,13 @@ All services are setup through Docker containers by default.
 
 ### Node Requirement
 
-* docker engine: >=1.9.0, and open daemon port 2375 for Master usage.
+* docker engine:
+    - >=1.10.0,
+    - let daemon listen on port 2375, and make sure Master can reach Node from port 2375.
+```sh
+# Add this into /etc/default/docker
+DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock"
+```
 * docker images:
     - yeasy/hyperledger (After pulling, rename to openblockchain/baseimage)
     - yeasy/hyperledger-peer (match with the [compose](admin/common/compose-defaults.yml) file)
@@ -88,8 +94,8 @@ $ bash ./scripts/start.sh
 * ~~Admin: Add host module to add cluster in batch (optional).~~
 * ~~Use async operation for container management (optional)~~.
 * Support multiple version in API.
-* Support pagination.
-* Support updating the host config.
+* ~~Support pagination~~.
+* ~~Support updating the host config~~.
 * Support user defined cluster configuration.
-* Add form validation.
-
+* ~~Add form validation~~.
+* Support auto fresh.

@@ -59,7 +59,10 @@ class HostHandler(object):
             logger.debug("Init with {} clusters in host".format(capacity))
             for _ in range(capacity):
                 cid = cluster_handler.create("{}_{}".format(name, _), str(hid))
-                logger.debug("Create cluster with id={}".format(cid))
+                if cid:
+                    logger.debug("Create cluster with id={}".format(cid))
+                else:
+                    logger.warn("Create cluster failed {}".format(_))
                 time.sleep(1)
 
         if status == "active":

@@ -161,12 +161,13 @@ class ClusterHandler(object):
             'release_ts': "",
         }
         cid = self.col_active.insert_one(c).inserted_id  # object type
+        self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
         try:
             logger.debug("Start compose project with name={}".format(str(cid)))
             containers = self._compose_start_project(name=str(cid),
-                                                    port=
-                                                    api_url.split(":")[-1],
-                                                    daemon_url=daemon_url)
+                                                     port=
+                                                     api_url.split(":")[-1],
+                                                     daemon_url=daemon_url)
         except Exception as e:
             logger.warn(e)
             logger.warn("Compose start error, then remove failed clusters ")
@@ -183,8 +184,8 @@ class ClusterHandler(object):
             clusters.append(str(cid))
             col_host.update_one({"id": host_id},
                                 {"$set": {"clusters": clusters}}),
-        self.col_active.update_one({"_id": cid}, {"$set": {"id": str(
-            cid), "node_containers": container}})
+        self.col_active.update_one({"_id": cid},
+                                   {"$set": {"node_containers": containers}})
         return str(cid)
 
     def delete(self, id, col_name="active", record=False):
