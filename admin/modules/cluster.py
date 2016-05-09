@@ -131,8 +131,7 @@ class ClusterHandler(object):
         :param user_id: user_id of the cluster
         :return: Id of the created cluster or None
         """
-        logger.debug("Create new cluster with name={0}, host_id={"
-                     "1}".format(name, host_id))
+        logger.debug("Create cluster {0}, host_id={1}".format(name, host_id))
 
         host = col_host.find_one({"id": host_id})
         if not host:
@@ -156,7 +155,7 @@ class ClusterHandler(object):
         logger.debug("api_url={}".format(api_url))
         c = {
             'name': name,
-            'user_id': user_id,
+            'user_id': user_id or "__not_ready_for_apply__",
             'api_url': api_url,
             'host_id': host_id,
             'create_ts': datetime.datetime.now(),
@@ -172,7 +171,7 @@ class ClusterHandler(object):
                                                      daemon_url=daemon_url)
         except Exception as e:
             logger.warn(e)
-            logger.warn("Compose start error, then remove failed clusters ")
+            logger.warn("Compose start error, then remove failed clusters")
             self.delete(id=str(cid), col_name="active", record=False)
             return None
         if not containers:
@@ -180,14 +179,16 @@ class ClusterHandler(object):
                         "clusters ")
             self.delete(id=str(cid), col_name="active", record=False)
             return None
-        if host:
+        if host:  # this part may miss some element with concurrency
             logger.debug("Add cluster to host collection")
             clusters = col_host.find_one({"id": host_id}).get("clusters")
             clusters.append(str(cid))
             col_host.update_one({"id": host_id},
                                 {"$set": {"clusters": clusters}}),
-        self.col_active.update_one({"_id": cid},
-                                   {"$set": {"node_containers": containers}})
+        self.col_active.update_one(
+            {"_id": cid},
+            {"$set": {"node_containers": containers, "user_id": user_id}})
+        logger.debug("Create cluster successfully, id={}".format(str(cid)))
         return str(cid)
 
     def delete(self, id, col_name="active", record=False):
@@ -252,25 +253,22 @@ class ClusterHandler(object):
         :param user_id: which user will apply the cluster
         :return: serialized cluster
         """
-        doc = self.col_active.find_one({"user_id": user_id})
-        if doc:  # already have one
-            logger.debug("Already assigned cluster for " + user_id)
-            logger.debug(self._serialize(doc, keys=['id', 'name', 'user_id',
-                                                    'api_url']))
-            return self._serialize(doc, keys=['id', 'name', 'user_id',
-                                              'api_url'])
-        c = self.col_active.find_one_and_update({"user_id": ""},
-                                                {"$set": {"user_id": user_id,
-                                                          "apply_ts":
-                                                              datetime.datetime.now()}},
-                                                return_document=ReturnDocument.AFTER)
-        if not c or c.get("user_id") != user_id:
-            logger.warn("Not find available cluster for " + user_id)
-            return {}
+        c = self.col_active.find_one({"user_id": user_id, "release_ts": ""})
+        if not c:  # do not find assigned one, then apply new
+            c = self.col_active.find_one_and_update(
+                {"user_id": ""},
+                {"$set": {"user_id": user_id, "apply_ts": datetime.datetime.now()}},
+                return_document=ReturnDocument.AFTER)
         else:
-            logger.info("Assign one for " + user_id)
+            logger.debug("Already assigned cluster for " + user_id)
+        if c and c.get("user_id") == user_id:
+            logger.info("Now have cluster {} for user {}".format(c.get("id"),
+                                                                 user_id))
             return self._serialize(c, keys=['id', 'name', 'user_id',
                                             'api_url'])
+        else:  # Failed to find available one
+            logger.warn("Not find available cluster for " + user_id)
+            return None
 
     def release_cluster(self, user_id):
         """ Release a cluster for a user_id and recreate it.
@@ -283,8 +281,7 @@ class ClusterHandler(object):
             {"$set": {"release_ts": datetime.datetime.now()}},
             return_document=ReturnDocument.AFTER)
         if not c or not c.get("release_ts"):  # not have one
-            logger.warn("There is no cluster to release for {}".format(
-                user_id))
+            logger.warn("cluster release fail for user {}".format(user_id))
             return False
 
         def delete_recreate_work():
