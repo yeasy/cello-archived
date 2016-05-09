@@ -138,7 +138,7 @@ class ClusterHandler(object):
         if not host:
             logger.warn("Cannot find host with id="+host_id)
             return None
-        logger.debug("Find host for that cluster by host_id")
+        logger.debug("Find host for that cluster by host_id={}".format(host_id))
         daemon_url = host.get("daemon_url")
         if not daemon_url:
             logger.warn("No given daemon_url, and not find daemon_url for "
@@ -150,8 +150,10 @@ class ClusterHandler(object):
         if not check_daemon_url(daemon_url):
             logger.warn("The daemon_url is inactive or invalid:" + daemon_url)
             return None
+        logger.debug("daemon_url={}".format(daemon_url))
         if not api_url:  # automatically schedule one
             api_url = self._gen_api_url(host_id)
+        logger.debug("api_url={}".format(api_url))
         c = {
             'name': name,
             'user_id': user_id,

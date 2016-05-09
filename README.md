@@ -99,3 +99,5 @@ $ bash ./scripts/start.sh
 * Support user defined cluster configuration.
 * ~~Add form validation~~.
 * Support auto fresh.
+* Support metadata field from user apply cluster.
+* Support monitor.

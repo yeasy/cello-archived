@@ -72,20 +72,16 @@ def host_api():
                 logger.debug("host POST failed")
                 return jsonify(status_response_fail), CODE_BAD_REQUEST
     elif request.method == 'PUT':
-        if "id" not in request.form or "name" not in request.form or "capacity" not in request.form:
+        if "id" not in request.form:
             logger.warn("host put without enough data")
             status_response_fail["error"] = "host PUT without enough data"
             status_response_fail["data"] = request.form
             return jsonify(status_response_fail), CODE_BAD_REQUEST
         else:
-            id, name, capacity = request.form['id'], request.form['name'], \
-                                 int(request.form['capacity'])
-            logger.debug("id={}, name={}, capacity={}".format(id, name,
-                                                              capacity))
-            d = {
-                "name": name,
-                "capacity": capacity
-            }
+            id, d = request.form["id"], {}
+            for k in request.form:
+                if k != "id":
+                    d[k] = request.form.get(k)
             if host_handler.update(id, d):
                 logger.debug("host PUT successfully")
                 return jsonify(status_response_ok), CODE_CREATED
