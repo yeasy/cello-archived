@@ -14,8 +14,8 @@
                 <thead>
                 <tr>
                     <th>Name</th>
-                    <th>user_id</th>
                     <th>api_url</th>
+                    <th>user_id</th>
                     <th>host_id</th>
                     <th>create_ts</th>
                     <th></th>
@@ -29,8 +29,8 @@
                         <tr>
                     {% endif %}
                 <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
+                <td>{{item.api_url}}</td>
                 <td>{{item.user_id}}</td>
-                <td><SPAN>{{item.api_url}}</SPAN></td>
                 <td>{{item.host_id}}</td>
                 <td>{{item.create_ts}}</td>
                 <td><input value="Delete" type="button"

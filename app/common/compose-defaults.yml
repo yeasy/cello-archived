@@ -2,7 +2,7 @@
 # Notice that chaincode is executed inside docker in default net mode
 # https://github.com/yeasy/docker-compose-files
 
-# Depends on the yeasy/hyperledger-peer:pbft image
+# Depends on the yeasy/hyperledger-peer:latest image
 
 # If you want enable consensus, just uncomment the
 # CORE_PEER_VALIDATOR_CONSENSUE=obcpbft line
@@ -15,7 +15,7 @@ vp:
     - CORE_PEER_ADDRESSAUTODETECT=true
     - CORE_PEER_NETWORKID=${PEER_NETWORKID}
     - CORE_LOGGING_LEVEL=debug  #critical, error, warning, notice, info, debug
-    # The following section enables pbft consensus
+    # The following section enables bpft consensus
     - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=pbft  # noops, obcpbft, pbft
     - CORE_PBFT_GENERAL_MODE=classic  # batch, classic, sieve
     - CORE_PBFT_GENERAL_N=4
