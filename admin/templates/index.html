@@ -93,7 +93,7 @@
                                 required>
                             <option selected>Select a Host</option>
                             {% for h in hosts %}
-                                {% if h.status == "active" %}
+                                {% if h.status == "active" and h.clusters|length < h.capacity %}
                                     <option value="{{h.id}}">{{h.name}}</option>
                                 {% endif %}
                             {% endfor %}
