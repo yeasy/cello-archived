@@ -10,11 +10,11 @@
                 <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Daemon_url</th>
+                    <th>Clusters</th>
                     <th>Capacity</th>
+                    <th>Daemon_url</th>
                     <th>Created</th>
                     <th>Status</th>
-                    <th>Clusters</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -26,11 +26,11 @@
                         <tr>
                     {% endif %}
                 <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
-                <td>{{item.daemon_url}}</td>
+                <td>{{item.clusters}}</td>
                 <td>{{item.capacity|string}}</td>
+                <td>{{item.daemon_url}}</td>
                 <td>{{item.create_ts}}</td>
                 <td>{{item.status}}</td>
-                <td>{{item.clusters}}</td>
                 <td>
                     <button type="button" data-id="{{item.id}}" class="btn
                     btn-xs btn-sm

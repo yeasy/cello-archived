@@ -120,7 +120,7 @@ class ClusterHandler(object):
         else:
             return ins
 
-    def create(self, name="test", host_id="", api_url="", user_id=""):
+    def create(self, name, host_id, api_url="", user_id=""):
         """ Create a cluster based on given data
         TODO: maybe need other id generation mechanism
 
@@ -128,17 +128,21 @@ class ClusterHandler(object):
         :param host_id: id of the host URL
         :param api_url: cluster has specific api_url, will generate
         automatically if not given
-        :param user_id: user_id of the cluster
+        :param user_id: user_id of the cluster if start to be applied
         :return: Id of the created cluster or None
         """
         logger.debug("Create cluster {0}, host_id={1}".format(name, host_id))
 
-        host = col_host.find_one({"id": host_id})
-        if not host:
+        h = col_host.find_one({"id": host_id})
+        if not h:
             logger.warn("Cannot find host with id="+host_id)
             return None
-        logger.debug("Find host for that cluster by host_id={}".format(host_id))
-        daemon_url = host.get("daemon_url")
+
+        if len(h.get("clusters")) >= h.get("capacity"):
+            logger.warn("host {} is full already".format(host_id))
+            return None
+
+        daemon_url = h.get("daemon_url")
         if not daemon_url:
             logger.warn("No given daemon_url, and not find daemon_url for "
                         "host="+host_id)
@@ -155,7 +159,7 @@ class ClusterHandler(object):
         logger.debug("api_url={}".format(api_url))
         c = {
             'name': name,
-            'user_id': user_id or "__not_ready_for_apply__",
+            'user_id': user_id or "__Not_Ready_For_Apply__",
             'api_url': api_url,
             'host_id': host_id,
             'create_ts': datetime.datetime.now(),
@@ -179,7 +183,7 @@ class ClusterHandler(object):
                         "clusters ")
             self.delete(id=str(cid), col_name="active", record=False)
             return None
-        if host:  # this part may miss some element with concurrency
+        if h:  # this part may miss some element with concurrency
             logger.debug("Add cluster to host collection")
             clusters = col_host.find_one({"id": host_id}).get("clusters")
             clusters.append(str(cid))
@@ -203,10 +207,11 @@ class ClusterHandler(object):
                                                                          col_name))
         if col_name == "active":
             collection = self.col_active
+            c = collection.find_one({"id": id, "user_id": ""})  # only unused
         else:
             collection = self.col_released
+            c = collection.find_one({"id": id})
 
-        c = collection.find_one({"id": id})
         if not c:
             logger.warn("Cannot delete non-existed cluster instance")
             return False
@@ -251,9 +256,14 @@ class ClusterHandler(object):
         """ Apply a cluster for a user
 
         :param user_id: which user will apply the cluster
-        :return: serialized cluster
+        :return: serialized cluster or None
         """
-        c = self.col_active.find_one({"user_id": user_id, "release_ts": ""})
+        h = col_host.find_one({"status": "active"})
+        if not h:
+            logger.warn("No active host exist for cluster applying")
+            return None
+        c = self.col_active.find_one({"user_id": user_id, "release_ts": "",
+                                      "host_id": h.get("id")})
         if not c:  # do not find assigned one, then apply new
             c = self.col_active.find_one_and_update(
                 {"user_id": ""},
