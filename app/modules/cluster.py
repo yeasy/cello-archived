@@ -195,21 +195,24 @@ class ClusterHandler(object):
         logger.debug("Create cluster successfully, id={}".format(str(cid)))
         return str(cid)
 
-    def delete(self, id, col_name="active", record=False):
+    def delete(self, id, col_name="active", record=False, forced=False):
         """ Delete a cluster instance
 
         :param id: id of the cluster to delete
         :param col_name: name of the cluster to operate
         :param record: Whether to record into the released collections
+        :param forced: Whether to force removing user-using cluster
         :return:
         """
         logger.debug("Delete a cluster with id={0}, col_name={1}".format(id,
                                                                          col_name))
         if col_name == "active":
             collection = self.col_active
-            c = collection.find_one({"id": id, "user_id": ""})  # only unused
         else:
             collection = self.col_released
+        if col_name == "active" and not forced:
+            c = collection.find_one({"id": id, "user_id": ""})  # only unused
+        else:
             c = collection.find_one({"id": id})
 
         if not c:
@@ -299,7 +302,7 @@ class ClusterHandler(object):
             cluster_id, cluster_name = c.get("id"), c.get("name")
             host_id, cluster_api_url = c.get("host_id"), c.get("api_url")
             logger.debug("Delete cluster with id=" + cluster_id)
-            if not self.delete(cluster_id, record=True):
+            if not self.delete(cluster_id, record=True, forced=True):
                 logger.warn("Delete cluster error with id=" + cluster_id)
             logger.warn("Recreate cluster with name=" + cluster_name)
             if not self.create(cluster_name, host_id, api_url=cluster_api_url):
