@@ -277,8 +277,10 @@ class ClusterHandler(object):
         if c and c.get("user_id") == user_id:
             logger.info("Now have cluster {} for user {}".format(c.get("id"),
                                                                  user_id))
-            return self._serialize(c, keys=['id', 'name', 'user_id',
-                                            'api_url'])
+            result = self._serialize(c, keys=['id', 'name', 'user_id',
+                                              'api_url'])
+            result['daemon_url'] = h.get('daemon_url')
+            return result
         else:  # Failed to find available one
             logger.warn("Not find available cluster for " + user_id)
             return None
