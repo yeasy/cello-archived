@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# This script will start all services using docker-compose.
+# This script will (re)start all services using docker-compose.
 # It should be triggered at the upper directory
 
 DB_DIR=/opt/poolmanager/mongo
@@ -20,5 +20,11 @@ echo "Checking local Docker image..."
 
 [ `docker ps -qa|wc -l` -gt 0 ] && echo "Warn: existing containers may cause unpredictable failure"
 
-echo "Start all services..."
+echo "Stop all services..."
+docker-compose stop
+
+echo "Remove all services..."
+docker-compose rm -f
+
+echo "Restart all services..."
 docker-compose up -d --no-recreate

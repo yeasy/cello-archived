@@ -73,11 +73,11 @@ and app.
 * Monitoring: Enable monitoring services.
 
 ### Start
-After all required images and tools are prepared in all nodes, you can start
-the poolmanager service by running
+After all required images and tools are prepared in all nodes, you can (re)
+start the poolmanager service by running
 
 ```sh
-$ bash ./scripts/start.sh
+$ bash ./scripts/restart.sh
 ```
 
 ## Dependency
