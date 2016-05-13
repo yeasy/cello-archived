@@ -41,9 +41,10 @@ All services are setup through Docker containers by default.
 DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock"
 ```
 * docker images:
-    - yeasy/hyperledger (After pulling, rename to openblockchain/baseimage)
-    - yeasy/hyperledger-peer (match with the [compose](admin/common/compose-defaults.yml) file)
-    - yeasy/hyperledger-membersrvc (optional, only when need the authentication service)
+    - `yeasy/hyperledger:latest` (After pulling, rename it to `hyperledger/fabric-baseimage:latest`)
+    - `yeasy/hyperledger-peer:pbft` (match with the [compose](admin/common/compose-defaults.yml) file)
+    - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the
+    authentication service)
 * SSH (Optionally ): Open for Master to monitor.
 
 ### Configuration
