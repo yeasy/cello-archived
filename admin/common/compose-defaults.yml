@@ -11,6 +11,8 @@
 vp:
   image: yeasy/hyperledger-peer:pbft
   restart: unless-stopped
+  labels:
+    - monitor=true
   environment:
     - CORE_PEER_ADDRESSAUTODETECT=true
     - CORE_PEER_NETWORKID=${PEER_NETWORKID}

@@ -39,7 +39,7 @@ class ClusterHandler(object):
         os.environ['API_URL_PORT'] = port
         project = get_project(COMPOSE_FILE_PATH)
         containers = project.up(detached=True)
-        return [c.get('Name')[1:] for c in containers]
+        return [c.get('Id') for c in containers]
 
     def _compose_stop_project(self, name, port, daemon_url):
         """ Stop a compose project
@@ -120,13 +120,13 @@ class ClusterHandler(object):
         else:
             return ins
 
-    def create(self, name, host_id, api_url="", user_id=""):
+    def create(self, name, host_id, api_port=0, user_id=""):
         """ Create a cluster based on given data
         TODO: maybe need other id generation mechanism
 
         :param name: name of the cluster
         :param host_id: id of the host URL
-        :param api_url: cluster has specific api_url, will generate
+        :param api_port: cluster has specific api_port, will generate
         automatically if not given
         :param user_id: user_id of the cluster if start to be applied
         :return: Id of the created cluster or None
@@ -154,12 +154,11 @@ class ClusterHandler(object):
             logger.warn("The daemon_url is inactive or invalid:" + daemon_url)
             return None
         logger.debug("daemon_url={}".format(daemon_url))
-        if not api_url:  # automatically schedule one
-            api_url = self._gen_api_url(host_id)
+        api_url = self._gen_api_url(host_id, api_port)
         logger.debug("api_url={}".format(api_url))
         c = {
             'name': name,
-            'user_id': user_id or "__Not_Ready_For_Apply__",
+            'user_id': user_id or "__NOT_READY_FOR_APPLY__",
             'api_url': api_url,
             'host_id': host_id,
             'create_ts': datetime.datetime.now(),
@@ -176,12 +175,14 @@ class ClusterHandler(object):
         except Exception as e:
             logger.warn(e)
             logger.warn("Compose start error, then remove failed clusters")
-            self.delete(id=str(cid), col_name="active", record=False)
+            self.delete(id=str(cid), col_name="active", record=False,
+                        forced=True)
             return None
         if not containers:
             logger.warn("Compose containers empty, then remove failed "
-                        "clusters ")
-            self.delete(id=str(cid), col_name="active", record=False)
+                        "clusters")
+            self.delete(id=str(cid), col_name="active", record=False,
+                        forced=True)
             return None
         if h:  # this part may miss some element with concurrency
             logger.debug("Add cluster to host collection")
@@ -330,13 +331,55 @@ class ClusterHandler(object):
             result[k] = doc.get(k, '')
         return result
 
-    def _gen_api_url(self, host_id):
+    def _gen_api_url(self, host_id, api_port=0):
         """ Generate an api url automatically
 
+        Check existing cluster records in the host, find available one.
+
         :param host_id: id of the host
+        :param api_port: port of the api
         :return: The generated api url address
         """
         logger.debug("Generate api_url, host_id="+host_id)
+        host = col_host.find_one({"id": host_id})
+        if not host:
+            logger.warn("Cannot find host with id="+host_id)
+            return ""
+
+        daemon_url = host.get("daemon_url")
+        segs = daemon_url.split(":")  # tcp://x.x.x.x:2375
+        if len(segs) != 3:
+            logger.error("Invalid daemon url = ", daemon_url)
+            return ""
+        host_ip = segs[1][2:]
+        logger.debug("The host_ip=" + host_ip)
+        if api_port > 0:
+            return "http://{0}:{1}".format(host_ip, api_port)
+        exists = self.col_active.find({"host_id": host_id})
+        api_url_existed = list(map(lambda c: c.get("api_url", ""),
+                                   exists))
+        logger.debug("The api_url_existed:")
+        logger.debug(api_url_existed)
+        for i in range(len(api_url_existed) + 1):
+            new_url = "http://{0}:{1}".format(host_ip,
+                                              CLUSTER_API_PORT_START + i)
+            logger.debug("Try new_url=" + new_url)
+            if new_url not in api_url_existed:
+                logger.debug("Get valid new_url=" + new_url)
+                return new_url
+        logger.warn("No valid api_url is generated")
+        return ""
+
+    def find_available_api_ports(self, host_id, number):
+        """ Find the first avaible port for a new cluster api
+
+        Check existing cluster records in the host, find available one.
+
+        :param host_id: id of the host
+        :param number: Number of ports to get
+        :return: The port list
+        """
+        logger.debug("find available ports for host_id="+host_id)
         host = col_host.find_one({"id": host_id})
         if not host:
             logger.warn("Cannot find host with id="+host_id)
@@ -349,20 +392,21 @@ class ClusterHandler(object):
             return ""
         host_ip = segs[1][2:]
         logger.debug("The host_ip=" + host_ip)
-        exists = self.col_active.find({"host_id": host_id})
-        api_url_existed = list(map(lambda c: c.get("api_url", ""),
-                                   exists))
-        logger.debug("The api_url_existed:")
-        logger.debug(api_url_existed)
-        for i in range(len(list(api_url_existed)) + 1):
-            new_url = "http://{0}:{1}".format(host_ip,
-                                              CLUSTER_API_PORT_START + i)
-            logger.debug("Try new_url=" + new_url)
-            if new_url not in api_url_existed:
-                logger.debug("Get valid new_url=" + new_url)
-                return new_url
-        logger.warn("No valid api_url is generated")
-        return ""
+        clusters_exists = self.col_active.find({"host_id": host_id})
+        ports_existed = list(map(lambda c: c.get("api_url", "").split(":")[-1],
+                                 clusters_exists))
+        logger.debug("The ports existed:")
+        logger.debug(ports_existed)
+        if len(ports_existed) + number >= 64000:
+            logger.warn("Too much ports are already used.")
+            return []
+        candidates = [CLUSTER_API_PORT_START+i for i in range(len(
+            ports_existed)+number)]
+        result = [item for item in candidates if item not in ports_existed]
+
+        logger.debug("available ports are")
+        logger.debug(result[:number])
+        return result[:number]
 
 
 # This will be exported as single instance for usage.

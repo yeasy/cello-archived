@@ -99,6 +99,7 @@ $ bash ./scripts/restart.sh
 * ~~Support updating the host config~~.
 * Support user defined cluster configuration.
 * ~~Add form validation~~.
-* Support auto fresh.
+* Support auto fresh with websocket.
 * Support metadata field from user apply cluster.
 * Support monitor.
+* Support fill-to-full operation on given host.

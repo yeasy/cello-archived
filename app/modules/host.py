@@ -55,19 +55,28 @@ class HostHandler(object):
         hid = self.col.insert_one(h).inserted_id  # object type
         self.col.update_one({"_id": hid}, {"$set": {"id": str(hid)}})
 
-        def create_cluster_work():
-            logger.debug("Init with {} clusters in host".format(capacity))
-            for _ in range(capacity):
-                cid = cluster_handler.create("{}_{}".format(name, _), str(hid))
-                if cid:
-                    logger.debug("Create cluster with id={}".format(cid))
-                else:
-                    logger.warn("Create cluster failed {}".format(_))
-                time.sleep(1)
+        def create_cluster_work(port):
+            cid = cluster_handler.create(
+                "{}_{}".format(name, (port-CLUSTER_API_PORT_START)),
+                str(hid), port)
+            if cid:
+                logger.debug("Create cluster with id={}".format(cid))
+            else:
+                logger.warn("Create cluster failed")
 
-        if status == "active":
-            t = Thread(target=create_cluster_work, args=())
-            t.start()
+        if status == "active":  # active means should fullfill it
+            logger.debug("Init with {} clusters in host".format(capacity))
+            available_ports = cluster_handler.find_available_api_ports(str(
+                hid), capacity)
+            if not available_ports:
+                logger.warn("Error to get available ports")
+            i = 0
+            for p in available_ports:
+                t = Thread(target=create_cluster_work, args=(p,))
+                t.start()
+                i += 1
+                if i % 10 == 0:
+                    time.sleep(1)
 
         return True
 
