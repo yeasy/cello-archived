@@ -1,5 +1,5 @@
 from .agent import get_project, clean_exited_containers, \
-    clean_chaincode_images, check_daemon_url
+    clean_chaincode_images, test_daemon
 from .db import db, col_host
 from .error import status_response_ok, status_response_fail, CODE_NOT_FOUND,\
     CODE_BAD_REQUEST, CODE_CONFLICT, CODE_CREATED, CODE_FORBIDDEN, \

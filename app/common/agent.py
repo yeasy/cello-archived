@@ -49,7 +49,7 @@ def clean_exited_containers(daemon_url):
         client.remove_container(_)
 
 
-def check_daemon_url(daemon_url, timeout=2):
+def test_daemon(daemon_url, timeout=2):
     """ Check if the daemon is active
 
     Only wait for 2 seconds.
@@ -58,6 +58,8 @@ def check_daemon_url(daemon_url, timeout=2):
     :param timeout: Time to wait for the response
     :return: True for active, False for inactive
     """
+    if not daemon_url or not daemon_url.startswith("tcp://"):
+        return False
     try:
         client = Client(base_url=daemon_url, timeout=timeout)
         return client.ping() == 'OK'

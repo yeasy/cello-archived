@@ -9,7 +9,7 @@ from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, LOG_LEVEL, get_project, \
-    clean_exited_containers, clean_chaincode_images, check_daemon_url, \
+    clean_exited_containers, clean_chaincode_images, test_daemon, \
     CLUSTER_API_PORT_START, COMPOSE_FILE_PATH
 
 from modules import cluster_handler
@@ -27,19 +27,22 @@ class HostHandler(object):
     def create(self, name, daemon_url, capacity=1, status="active"):
         """ Create a new docker host node
 
+        Will full fill with clusters of given capacity.
+
         :param name: name of the node
         :param daemon_url: daemon_url of the host
         :param capacity: The number of clusters to hold
         :param status: active for using, inactive for not using
         :return: True or False
         """
-        logger.debug("Create new host with name={0}, daemon_url={1}, "
+        logger.debug("Create host with name={0}, daemon_url={1}, "
                      "capacity={2}".format(name, daemon_url, capacity))
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
-        if not check_daemon_url(daemon_url):
+        if not test_daemon(daemon_url):
             logger.warn("The daemon_url is inactive:" + daemon_url)
             status = "inactive"
+
         if self.col.find_one({"daemon_url": daemon_url}):
             logger.warn("{} already existed in db".format(daemon_url))
             return False
@@ -66,12 +69,10 @@ class HostHandler(object):
 
         if status == "active":  # active means should fullfill it
             logger.debug("Init with {} clusters in host".format(capacity))
-            available_ports = cluster_handler.find_available_api_ports(str(
+            free_ports = cluster_handler.find_free_api_ports(str(
                 hid), capacity)
-            if not available_ports:
-                logger.warn("Error to get available ports")
             i = 0
-            for p in available_ports:
+            for p in free_ports:
                 t = Thread(target=create_cluster_work, args=(p,))
                 t.start()
                 i += 1
@@ -105,19 +106,48 @@ class HostHandler(object):
         :return: serialized result or obj
         """
         logger.debug("Get a host with id=" + id)
+        h_old = self.col.find_one({"id": id})
+        if not h_old or h_old.get("status") != "active":
+            logger.warn("No active host found with id=" + id)
+            return {}
+        cap_old = h_old.get("capacity")
+        hid = h_old.get("id")
+        hname = h_old.get("name")
+        clusters_old = h_old.get("clusters")
 
-        ins = self.col.find_one_and_update(
+        if "capacity" in d:
+            d["capacity"] = int(d["capacity"])
+        h_new = self.col.find_one_and_update(
             {"id": id},
             {"$set": d},
             return_document=ReturnDocument.AFTER)
 
-        if not ins:
-            logger.warn("No Host found with id=" + id)
-            return {}
+        #  auto full to capacity
+        def create_cluster_work(port):
+            cid = cluster_handler.create(
+                "{}_{}".format(hname, (port-CLUSTER_API_PORT_START)),
+                str(hid), port)
+            if cid:
+                logger.debug("Create cluster with id={}".format(cid))
+            else:
+                logger.warn("Create cluster failed")
+        cap_new = int(d.get("capacity", cap_old))
+        if cap_new != cap_old and h_new.get("status") == "active":  #
+            # something is changed
+            free_ports = cluster_handler.find_free_api_ports(
+                str(hid), cap_new - len(clusters_old))
+            i = 0
+            for p in free_ports:
+                t = Thread(target=create_cluster_work, args=(p,))
+                t.start()
+                i += 1
+                if i % 10 == 0:
+                    time.sleep(1)
+
         if serialization:
-            return self._serialize(ins)
+            return self._serialize(h_new)
         else:
-            return ins
+            return h_new
 
     def list(self, filter_data={}):
         """ List hosts with given criteria

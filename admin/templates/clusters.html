@@ -28,7 +28,11 @@
                             {% else %}
                         <tr>
                     {% endif %}
-                <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
+                {% if col_name == "active" %}
+                    <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
+                {% else %}
+                    <td><a href="/cluster_info/{{item.id}}?released=1">{{item.name}}</a></td>
+                {% endif %}
                 <td>{{item.user_id}}</td>
                 <td>{{item.api_url}}</td>
                 <td>{{item.host_id}}</td>

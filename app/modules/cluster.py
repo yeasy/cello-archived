@@ -8,7 +8,7 @@ from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, LOG_LEVEL, get_project, col_host, \
-    clean_exited_containers, clean_chaincode_images, check_daemon_url, \
+    clean_exited_containers, clean_chaincode_images, test_daemon, \
     CLUSTER_API_PORT_START, COMPOSE_FILE_PATH
 
 logger = logging.getLogger(__name__)
@@ -122,6 +122,7 @@ class ClusterHandler(object):
 
     def create(self, name, host_id, api_port=0, user_id=""):
         """ Create a cluster based on given data
+
         TODO: maybe need other id generation mechanism
 
         :param name: name of the cluster
@@ -138,22 +139,16 @@ class ClusterHandler(object):
             logger.warn("Cannot find host with id="+host_id)
             return None
 
-        if len(h.get("clusters")) >= h.get("capacity"):
+        if len(h.get("clusters")) >= int(h.get("capacity")):
             logger.warn("host {} is full already".format(host_id))
             return None
 
         daemon_url = h.get("daemon_url")
-        if not daemon_url:
-            logger.warn("No given daemon_url, and not find daemon_url for "
-                        "host="+host_id)
-            return None
-
-        if not daemon_url.startswith("tcp://"):
-            daemon_url = "tcp://" + daemon_url
-        if not check_daemon_url(daemon_url):
+        if not test_daemon(daemon_url):
             logger.warn("The daemon_url is inactive or invalid:" + daemon_url)
             return None
         logger.debug("daemon_url={}".format(daemon_url))
+
         api_url = self._gen_api_url(host_id, api_port)
         logger.debug("api_url={}".format(api_url))
         c = {
@@ -370,7 +365,7 @@ class ClusterHandler(object):
         logger.warn("No valid api_url is generated")
         return ""
 
-    def find_available_api_ports(self, host_id, number):
+    def find_free_api_ports(self, host_id, number):
         """ Find the first avaible port for a new cluster api
 
         Check existing cluster records in the host, find available one.
@@ -379,7 +374,10 @@ class ClusterHandler(object):
         :param number: Number of ports to get
         :return: The port list
         """
-        logger.debug("find available ports for host_id="+host_id)
+        logger.debug("find {} ports for host_id={}".format(number, host_id))
+        if number <= 0:
+            logger.warn("Available numer {} <= 0".format(number))
+            return []
         host = col_host.find_one({"id": host_id})
         if not host:
             logger.warn("Cannot find host with id="+host_id)
@@ -393,8 +391,8 @@ class ClusterHandler(object):
         host_ip = segs[1][2:]
         logger.debug("The host_ip=" + host_ip)
         clusters_exists = self.col_active.find({"host_id": host_id})
-        ports_existed = list(map(lambda c: c.get("api_url", "").split(":")[-1],
-                                 clusters_exists))
+        ports_existed = list(map(lambda c: int(c.get("api_url", "").split(":")[
+            -1]), clusters_exists))
         logger.debug("The ports existed:")
         logger.debug(ports_existed)
         if len(ports_existed) + number >= 64000:
@@ -404,7 +402,7 @@ class ClusterHandler(object):
             ports_existed)+number)]
         result = [item for item in candidates if item not in ports_existed]
 
-        logger.debug("available ports are")
+        logger.debug("available ports are:")
         logger.debug(result[:number])
         return result[:number]
 

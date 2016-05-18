@@ -80,7 +80,7 @@ def cluster_api():
             if result:
                 return jsonify(result), CODE_OK
             else:
-                logger.warn("cluster not found with id=" + id)
+                logger.warn("cluster not found with id=" + request.form['id'])
                 status_response_fail["data"] = request.form
                 return jsonify(status_response_fail), CODE_BAD_REQUEST
     elif request.method == 'POST':

@@ -38,7 +38,7 @@ All services are setup through Docker containers by default.
     - let daemon listen on port 2375, and make sure Master can reach Node from port 2375.
 ```sh
 # Add this into /etc/default/docker
-DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock"
+DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*'"
 ```
 * docker images:
     - `yeasy/hyperledger:latest` (After pulling, rename it to `hyperledger/fabric-baseimage:latest`)
