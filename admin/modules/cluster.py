@@ -24,7 +24,8 @@ class ClusterHandler(object):
         self.col_active = db["cluster_active"]
         self.col_released = db["cluster_released"]
 
-    def _compose_start_project(self, name, port, daemon_url):
+    def _compose_start_project(self, name, port, daemon_url,
+                               logging_level="debug"):
         """ Start a compose project
 
         :param name: The name of the cluster
@@ -36,6 +37,7 @@ class ClusterHandler(object):
         logger.debug("Start compose project")
         os.environ['DOCKER_HOST'] = daemon_url
         os.environ['COMPOSE_PROJECT_NAME'] = name
+        os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
         os.environ['PEER_NETWORKID'] = name
         os.environ['API_URL_PORT'] = port
         project = get_project(COMPOSE_FILE_PATH)
