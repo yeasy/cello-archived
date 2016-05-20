@@ -30,6 +30,7 @@ class ClusterHandler(object):
         :param name: The name of the cluster
         :param port: The port of the cluster API
         :param daemon_url: Docker host daemon
+        :param logging_level: Logging level
         :return: The name list of the started peer containers
         """
         logger.debug("Start compose project")

@@ -18,8 +18,9 @@ services:
       - PASS=pass
       - MONGO_URL=mongodb://mongo:27017
       - MONGO_DB=dev
-      - DEBUG=True
-      - LOG_LEVEL=DEBUG
+      - DEBUG=True    # in debug mode, service will auto-restart
+      - LOG_LEVEL=DEBUG  # what level log will be output
+      - LOG_LEVEL_CLUSTER=DEBUG  # the level log for the cluster in pool
     ports:
       - "0.0.0.0:8080:8080"
     volumes:  # This should be removed in product env
@@ -36,8 +37,9 @@ services:
     environment:
       - MONGO_URL=mongodb://mongo:27017
       - MONGO_DB=dev
-      - DEBUG=True
-      - LOG_LEVEL=DEBUG
+      - DEBUG=True    # in debug mode, service will auto-restart
+      - LOG_LEVEL=DEBUG  # what level log will be output
+      - LOG_LEVEL_CLUSTER=DEBUG  # the level log for the cluster in pool
     volumes:  # This should be removed in product env
       - ./app:/app
     links:
