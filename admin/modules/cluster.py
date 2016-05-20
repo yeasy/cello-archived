@@ -25,7 +25,7 @@ class ClusterHandler(object):
         self.col_released = db["cluster_released"]
 
     def _compose_start_project(self, name, port, daemon_url,
-                               logging_level="debug"):
+                               logging_level="debug", consenus_type="pbft"):
         """ Start a compose project
 
         :param name: The name of the cluster
@@ -34,13 +34,14 @@ class ClusterHandler(object):
         :param logging_level: Logging level
         :return: The name list of the started peer containers
         """
-        logger.debug("Start compose project")
+        logger.debug("Start compose project with logging_level={}, "
+                     "consensus={}".format(logging_level, consenus_type))
         os.environ['DOCKER_HOST'] = daemon_url
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
         os.environ['PEER_NETWORKID'] = name
         os.environ['API_URL_PORT'] = port
-        project = get_project(COMPOSE_FILE_PATH)
+        project = get_project(COMPOSE_FILE_PATH+"/"+consenus_type)
         containers = project.up(detached=True)
         return [c.get('Id') for c in containers]
 
