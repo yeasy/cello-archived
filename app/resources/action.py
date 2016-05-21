@@ -8,7 +8,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, APP_API_VERSION, \
     status_response_ok, status_response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
-    CODE_NO_CONTENT
+    CODE_NO_CONTENT, CONSENSUS_TYPES
 
 from modules import cluster_handler
 logger = logging.getLogger(__name__)
@@ -24,6 +24,7 @@ def cluster_apply():
     Return a Cluster json body.
     """
     user_id = request.args.get("user_id", "")
+    consensus_type = request.args.get("consensus_type", CONSENSUS_TYPES[0])
     logger.debug("userid="+user_id)
     for k in request.args:
         logger.debug("Arg: {0}:{1}".format(k, request.args[k]))
@@ -35,7 +36,7 @@ def cluster_apply():
         status_response_fail["data"] = request.args
         return jsonify(status_response_fail), CODE_BAD_REQUEST
     else:
-        c = cluster_handler.apply_cluster(user_id)
+        c = cluster_handler.apply_cluster(user_id=user_id,consensus_type=consensus_type)
         if not c:
             logger.warn("cluster_apply failed")
             status_response_fail["error"] = "No available res for "+user_id

@@ -6,4 +6,5 @@ from .error import status_response_ok, status_response_fail, CODE_NOT_FOUND,\
     CODE_METHOD_NOT_ALLOWED, CODE_NO_CONTENT, CODE_NOT_ACCEPTABLE, CODE_OK
 
 from .log import log_handler, LOG_LEVEL
-from .utils import CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, APP_API_VERSION
+from .utils import CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, \
+    APP_API_VERSION, CONSENSUS_TYPES

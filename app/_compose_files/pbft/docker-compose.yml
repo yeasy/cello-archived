@@ -27,7 +27,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}_vp1
     environment:
       - CORE_PEER_ID=vp1
-      - CORE_PEER_DISCOVERY_ROOTNODE="{COMPOSE_PROJECT_NAME}_vp0:30303"
+      - CORE_PEER_DISCOVERY_ROOTNODE=${COMPOSE_PROJECT_NAME}_vp0:30303
     #links:
     #  - vp0
 
@@ -40,7 +40,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}_vp2
     environment:
       - CORE_PEER_ID=vp2
-      - CORE_PEER_DISCOVERY_ROOTNODE="{COMPOSE_PROJECT_NAME}_vp0:30303"
+      - CORE_PEER_DISCOVERY_ROOTNODE=${COMPOSE_PROJECT_NAME}_vp0:30303
 
 
   # validating node
@@ -55,7 +55,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}_vp3
     environment:
       - CORE_PEER_ID=vp3
-      - CORE_PEER_DISCOVERY_ROOTNODE="{COMPOSE_PROJECT_NAME}_vp0:30303"
+      - CORE_PEER_DISCOVERY_ROOTNODE=${COMPOSE_PROJECT_NAME}_vp0:30303
     ports:
       - "${API_URL_PORT}:5000"
      #- "30303:30303"

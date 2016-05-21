@@ -25,7 +25,7 @@
     <!-- Trigger the modal with a button -->
 <button type="button" class="btn btn-primary btn-info btn-default" data-toggle="modal" data-target="#newHostModal">Add Host</button>
 
-    {% if hosts|length > 0 %}
+    {% if available_hosts|length > 0 %}
     <button type="button" class="btn btn-primary btn-info btn-default" data-toggle="modal" data-target="#newClusterModal">Add Cluster</button>
     {% else %}
     <button type="button" class="btn btn-primary btn-info btn-default" data-toggle="modal" data-target="#newClusterModal" disabled>Add Cluster</button>
@@ -88,25 +88,39 @@
             </div>
             <div class="modal-body">
                 <form class="form" id="add_new_cluster_form" data-toggle="validator">
-                    <div class="form-group">
-                        <select class="c-select" name="host_id"
-                                required>
-                            <option selected>Select a Host</option>
-                            {% for h in hosts %}
-                                {% if h.status == "active" and h.clusters|length < h.capacity %}
-                                    <option value="{{h.id}}">{{h.name}}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
 
                     <div class="form-group">
-                        <label for="cluster_name">*Name (less than 16 cahrs)
-                        </label>
+                        <label for="cluster_name">*Name (less than 16 chars) </label>
                         <input id="cluster_name" name="name" type="text"
                                class="form-control" pattern="^[-_A-z0-9]{1,}$"
                                placeholder="Cluster Name" data-error="A name is required" max-length="16" required >
                     </div>
+                {% if available_hosts|length > 0 %}
+                    <div class="form-group">
+                        <label for="host"> Select a Host</label>
+                        <select id="host" class="c-select" name="host_id" required>
+                            <option selected value="{{ available_hosts[0].id}}">{{ available_hosts[0].name }}</option>
+                            {% for h in available_hosts[1:] %}
+                                <option value="{{h.id}}">{{h.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+
+                {% if consensus_types|length > 0 %}
+                    <div class="form-group">
+                        <label for="consensus_type"> Select a Type</label>
+                        <select id="consensus_type" class="c-select"
+                                name="consensus_type"
+                                 required>
+                            <option selected
+                                    value="{{consensus_types[0]}}">{{consensus_types[0]|upper }}</option>
+                            {% for c in consensus_types[1:] %}
+                                    <option value="{{c}}">{{c|upper}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
                 </form>
             </div>
             <div class="modal-footer">

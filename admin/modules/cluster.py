@@ -9,7 +9,7 @@ from pymongo.collection import ReturnDocument
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, LOG_LEVEL, get_project, col_host, \
     clean_exited_containers, clean_chaincode_images, test_daemon, \
-    CLUSTER_API_PORT_START, COMPOSE_FILE_PATH
+    CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, CONSENSUS_TYPES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -25,40 +25,45 @@ class ClusterHandler(object):
         self.col_released = db["cluster_released"]
 
     def _compose_start_project(self, name, port, daemon_url,
-                               logging_level="debug", consenus_type="pbft"):
+                               logging_level="debug",
+                               consensus_type=CONSENSUS_TYPES[0]):
         """ Start a compose project
 
         :param name: The name of the cluster
         :param port: The port of the cluster API
         :param daemon_url: Docker host daemon
         :param logging_level: Logging level
+        :param consensus_type: Cluster consensus type
         :return: The name list of the started peer containers
         """
         logger.debug("Start compose project with logging_level={}, "
-                     "consensus={}".format(logging_level, consenus_type))
+                     "consensus={}".format(logging_level, consensus_type))
         os.environ['DOCKER_HOST'] = daemon_url
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
         os.environ['PEER_NETWORKID'] = name
         os.environ['API_URL_PORT'] = port
-        project = get_project(COMPOSE_FILE_PATH+"/"+consenus_type)
+        project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
         containers = project.up(detached=True)
         return [c.get('Id') for c in containers]
 
-    def _compose_stop_project(self, name, port, daemon_url):
+    def _compose_stop_project(self, name, port, daemon_url,
+                              consensus_type=CONSENSUS_TYPES[0]):
         """ Stop a compose project
 
         :param name: The name of the cluster
         :param port: The port of the cluster API
         :param daemon_url: Docker host daemon
+        :param consensus_type: Cluster consensus type
         :return:
         """
         logger.debug("Stop compose project "+name)
         os.environ['DOCKER_HOST'] = daemon_url
         os.environ['COMPOSE_PROJECT_NAME'] = name
+        os.environ['LOGGING_LEVEL_CLUSTER'] = "debug"
         os.environ['PEER_NETWORKID'] = name
         os.environ['API_URL_PORT'] = port
-        project = get_project(COMPOSE_FILE_PATH)
+        project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
         project.stop()
         project.remove_stopped()
 
@@ -124,7 +129,8 @@ class ClusterHandler(object):
         else:
             return ins
 
-    def create(self, name, host_id, api_port=0, user_id=""):
+    def create(self, name, host_id, api_port=0, user_id="",
+               consensus_type=CONSENSUS_TYPES[0]):
         """ Create a cluster based on given data
 
         TODO: maybe need other id generation mechanism
@@ -134,9 +140,11 @@ class ClusterHandler(object):
         :param api_port: cluster has specific api_port, will generate
         automatically if not given
         :param user_id: user_id of the cluster if start to be applied
+        :param consensus_type: type of the consensus type
         :return: Id of the created cluster or None
         """
-        logger.debug("Create cluster {0}, host_id={1}".format(name, host_id))
+        logger.debug("Create cluster {0}, host_id={1}, consensus={2}".format(
+            name, host_id, consensus_type))
 
         h = col_host.find_one({"id": host_id})
         if not h:
@@ -160,6 +168,7 @@ class ClusterHandler(object):
             'user_id': user_id or "__NOT_READY_FOR_APPLY__",
             'api_url': api_url,
             'host_id': host_id,
+            'consensus_type': consensus_type,
             'create_ts': datetime.datetime.now(),
             'release_ts': "",
         }
@@ -170,7 +179,8 @@ class ClusterHandler(object):
             containers = self._compose_start_project(name=str(cid),
                                                      port=
                                                      api_url.split(":")[-1],
-                                                     daemon_url=daemon_url)
+                                                     daemon_url=daemon_url,
+                                                     consensus_type=consensus_type)
         except Exception as e:
             logger.warn(e)
             logger.warn("Compose start error, then remove failed clusters")
@@ -220,13 +230,15 @@ class ClusterHandler(object):
             return False
         if col_name == "active":  # stop running containers when active
             api_url = c.get("api_url", "")
+            consensus_type = c.get("consensus_type", CONSENSUS_TYPES[0])
             h = col_host.find_one({"id": c.get("host_id")})
             if h:
                 daemon_url = h.get("daemon_url")
                 try:
                     self._compose_stop_project(name=id,
                                                port=api_url.split(":")[-1],
-                                               daemon_url=daemon_url)
+                                               daemon_url=daemon_url,
+                                               consensus_type=consensus_type)
                     self._clean_containers(daemon_url)
                     self._clean_images(daemon_url=daemon_url, name_prefix=id)
                 except Exception as e:
@@ -255,10 +267,11 @@ class ClusterHandler(object):
         collection.delete_one({"id": id})
         return True
 
-    def apply_cluster(self, user_id):
+    def apply_cluster(self, user_id, consensus_type=CONSENSUS_TYPES[0]):
         """ Apply a cluster for a user
 
         :param user_id: which user will apply the cluster
+        :param consensus_type: filter the cluster with consensus
         :return: serialized cluster or None
         """
         h = col_host.find_one({"status": "active"})
@@ -266,10 +279,10 @@ class ClusterHandler(object):
             logger.warn("No active host exist for cluster applying")
             return None
         c = self.col_active.find_one({"user_id": user_id, "release_ts": "",
-                                      "host_id": h.get("id")})
+                                      "consensus_type": consensus_type})
         if not c:  # do not find assigned one, then apply new
             c = self.col_active.find_one_and_update(
-                {"user_id": ""},
+                {"user_id": "", "consensus_type": consensus_type},
                 {"$set": {"user_id": user_id, "apply_ts": datetime.datetime.now()}},
                 return_document=ReturnDocument.AFTER)
         else:
@@ -316,7 +329,7 @@ class ClusterHandler(object):
         return True
 
     def _serialize(self, doc, keys=['id', 'name', 'user_id', 'host_id',
-                                    'api_url',
+                                    'api_url', 'consensus_type',
                                     'create_ts', 'apply_ts', 'release_ts',
                                     'node_containers']):
         """ Serialize an obj

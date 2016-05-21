@@ -1,0 +1,35 @@
+# This is the default base file to config env and command
+# Notice that chaincode is executed inside docker in default net mode
+# https://github.com/yeasy/docker-compose-files
+
+# Depends on the yeasy/hyperledger-peer:noops image
+
+# See https://github.com/hyperledger/fabric/blob/master/docs/dev-setup/devnet-setup.md#using-consensus-plugin for more details.
+
+version: '2'
+
+services:
+  vp:
+    image: yeasy/hyperledger-peer:noops
+    restart: unless-stopped
+    labels:
+      - monitor=true
+      - hyperledger=true
+    environment:
+      - CORE_PEER_ADDRESSAUTODETECT=true
+      - CORE_PEER_NETWORKID=${PEER_NETWORKID}
+      - CORE_LOGGING_LEVEL=${LOGGING_LEVEL_CLUSTER} #critical, error, warning, notice, info, debug
+      # The following section enables bpft consensus
+      - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=noops  # noops, pbft, sieve
+      - CORE_PEER_ID=vp
+      - CORE_NOOPS_BLOCK_TIMEOUT=10
+    expose:
+      - "30303"
+      - "30304"
+      - "31315"
+    ports:
+      - "${API_URL_PORT}:5000"
+    volumes: # docker.sock is mapped as the default CORE_VM_ENDPOINT
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: peer node start
+

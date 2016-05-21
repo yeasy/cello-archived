@@ -41,8 +41,6 @@ $(document).ready(function() {
         });
     });
     $('.create_cluster_button').click(function() {
-        //var name = $(this).parents('form:first').find('[name="name"]').val();
-        //var daemon_url = $(this).parents('form:first').find('[name="daemon_url"]').val();
         var form_data = $('#add_new_cluster_form').serialize();
         
         $.ajax({
