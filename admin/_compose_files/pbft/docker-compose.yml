@@ -57,5 +57,5 @@ services:
       - CORE_PEER_ID=vp3
       - CORE_PEER_DISCOVERY_ROOTNODE=${COMPOSE_PROJECT_NAME}_vp0:30303
     ports:
-      - "${API_URL_PORT}:5000"
+      - "${API_PORT}:5000"
      #- "30303:30303"

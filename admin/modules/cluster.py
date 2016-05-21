@@ -24,9 +24,9 @@ class ClusterHandler(object):
         self.col_active = db["cluster_active"]
         self.col_released = db["cluster_released"]
 
-    def _compose_start_project(self, name, port, daemon_url,
-                               logging_level="debug",
-                               consensus_type=CONSENSUS_TYPES[0]):
+    def _compose_start(self, name, port, daemon_url,
+                       logging_level="debug",
+                       consensus_type=CONSENSUS_TYPES[0]):
         """ Start a compose project
 
         :param name: The name of the cluster
@@ -42,14 +42,15 @@ class ClusterHandler(object):
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
         os.environ['PEER_NETWORKID'] = name
-        os.environ['API_URL_PORT'] = port
+        os.environ['API_PORT'] = str(port)
         project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
         containers = project.up(detached=True)
         return [c.get('Id') for c in containers]
 
-    def _compose_stop_project(self, name, port, daemon_url,
-                              consensus_type=CONSENSUS_TYPES[0]):
-        """ Stop a compose project
+    def _compose_stop(self, name, port, daemon_url,
+                      logging_level="debug",
+                      consensus_type=CONSENSUS_TYPES[0]):
+        """ Stop a compose project and remove the service containers
 
         :param name: The name of the cluster
         :param port: The port of the cluster API
@@ -60,9 +61,9 @@ class ClusterHandler(object):
         logger.debug("Stop compose project "+name)
         os.environ['DOCKER_HOST'] = daemon_url
         os.environ['COMPOSE_PROJECT_NAME'] = name
-        os.environ['LOGGING_LEVEL_CLUSTER'] = "debug"
+        os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
         os.environ['PEER_NETWORKID'] = name
-        os.environ['API_URL_PORT'] = port
+        os.environ['API_PORT'] = str(port)
         project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
         project.stop()
         project.remove_stopped()
@@ -137,8 +138,7 @@ class ClusterHandler(object):
 
         :param name: name of the cluster
         :param host_id: id of the host URL
-        :param api_port: cluster has specific api_port, will generate
-        automatically if not given
+        :param api_port: cluster api_port, will generate if not given
         :param user_id: user_id of the cluster if start to be applied
         :param consensus_type: type of the consensus type
         :return: Id of the created cluster or None
@@ -151,22 +151,26 @@ class ClusterHandler(object):
             logger.warn("Cannot find host with id="+host_id)
             return None
 
+        if h.get("status") != "active":
+            logger.warn("host {} is not active".format(host_id))
+            return None
+
         if len(h.get("clusters")) >= int(h.get("capacity")):
             logger.warn("host {} is full already".format(host_id))
             return None
 
         daemon_url = h.get("daemon_url")
+        logger.debug("daemon_url={}".format(daemon_url))
         if not test_daemon(daemon_url):
             logger.warn("The daemon_url is inactive or invalid:" + daemon_url)
             return None
-        logger.debug("daemon_url={}".format(daemon_url))
 
-        api_url = self._gen_api_url(host_id, api_port)
-        logger.debug("api_url={}".format(api_url))
+        if api_port <= 0:
+            api_port = self.find_free_api_ports(host_id, 1)[0]
+
         c = {
             'name': name,
             'user_id': user_id or "__NOT_READY_FOR_APPLY__",
-            'api_url': api_url,
             'host_id': host_id,
             'consensus_type': consensus_type,
             'create_ts': datetime.datetime.now(),
@@ -176,34 +180,48 @@ class ClusterHandler(object):
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
         try:
             logger.debug("Start compose project with name={}".format(str(cid)))
-            containers = self._compose_start_project(name=str(cid),
-                                                     port=
-                                                     api_url.split(":")[-1],
-                                                     daemon_url=daemon_url,
-                                                     consensus_type=consensus_type)
+            containers = self._compose_start(name=str(cid),
+                                             port=api_port,
+                                             daemon_url=daemon_url,
+                                             consensus_type=consensus_type)
         except Exception as e:
             logger.warn(e)
             logger.warn("Compose start error, then remove failed clusters")
             self.delete(id=str(cid), col_name="active", record=False,
                         forced=True)
             return None
+
         if not containers:
-            logger.warn("Compose containers empty, then remove failed "
-                        "clusters")
-            self.delete(id=str(cid), col_name="active", record=False,
-                        forced=True)
+            logger.warn("containers empty, then stop the project cluster")
+            self._compose_stop(name=str(cid),
+                               port=api_port,
+                               daemon_url=daemon_url,
+                               consensus_type=consensus_type)
             return None
-        if h:  # this part may miss some element with concurrency
-            logger.debug("Add cluster to host collection")
-            clusters = col_host.find_one({"id": host_id}).get("clusters")
-            clusters.append(str(cid))
-            col_host.update_one({"id": host_id},
-                                {"$set": {"clusters": clusters}}),
-        self.col_active.update_one(
-            {"_id": cid},
-            {"$set": {"node_containers": containers, "user_id": user_id}})
-        logger.debug("Create cluster successfully, id={}".format(str(cid)))
-        return str(cid)
+
+        api_url = self._gen_api_url(host_id, api_port)
+        if api_url:
+            logger.debug("api_url={}".format(api_url))
+            if h:  # this part may miss some element with concurrency
+                logger.debug("Add cluster to host collection")
+                clusters = col_host.find_one({"id": host_id}).get("clusters")
+                clusters.append(str(cid))
+                col_host.update_one({"id": host_id},
+                                    {"$set": {"clusters": clusters}}),
+            self.col_active.update_one(
+                {"_id": cid},
+                {"$set": {"node_containers": containers, "user_id": user_id,
+                          'api_url': api_url}})
+
+            logger.debug("Create cluster OK, id={}".format(str(cid)))
+            return str(cid)
+        else:
+            logger.error("Error to generate api_url, stop the project")
+            self._compose_stop(name=str(cid),
+                               port=api_port,
+                               daemon_url=daemon_url,
+                               consensus_type=consensus_type)
+            return None
 
     def delete(self, id, col_name="active", record=False, forced=False):
         """ Delete a cluster instance
@@ -214,8 +232,7 @@ class ClusterHandler(object):
         :param forced: Whether to force removing user-using cluster
         :return:
         """
-        logger.debug("Delete a cluster with id={0}, col_name={1}".format(id,
-                                                                         col_name))
+        logger.debug("Delete cluster: id={}, col_name={}".format(id, col_name))
         if col_name == "active":
             collection = self.col_active
         else:
@@ -235,10 +252,10 @@ class ClusterHandler(object):
             if h:
                 daemon_url = h.get("daemon_url")
                 try:
-                    self._compose_stop_project(name=id,
-                                               port=api_url.split(":")[-1],
-                                               daemon_url=daemon_url,
-                                               consensus_type=consensus_type)
+                    self._compose_stop(name=id,
+                                       port=api_url.split(":")[-1],
+                                       daemon_url=daemon_url,
+                                       consensus_type=consensus_type)
                     self._clean_containers(daemon_url)
                     self._clean_images(daemon_url=daemon_url, name_prefix=id)
                 except Exception as e:
@@ -315,13 +332,12 @@ class ClusterHandler(object):
         def delete_recreate_work():
             logger.debug("Run recreate_work in background thread")
             cluster_id, cluster_name = c.get("id"), c.get("name")
-            host_id, cluster_api_url = c.get("host_id"), c.get("api_url")
-            logger.debug("Delete cluster with id=" + cluster_id)
+            host_id, api_url = c.get("host_id"), c.get("api_url")
             if not self.delete(cluster_id, record=True, forced=True):
                 logger.warn("Delete cluster error with id=" + cluster_id)
-            logger.warn("Recreate cluster with name=" + cluster_name)
-            if not self.create(cluster_name, host_id, api_url=cluster_api_url):
-                logger.warn("Create cluster error with name=" + cluster_name)
+            if not self.create(name=cluster_name, host_id=host_id,
+                               api_port=int(api_url.split(":")[-1])):
+                logger.warn("ReCreate cluster error with name=" + cluster_name)
 
         t = Thread(target=delete_recreate_work, args=())
         t.start()
@@ -365,7 +381,7 @@ class ClusterHandler(object):
             return ""
         host_ip = segs[1][2:]
         logger.debug("The host_ip=" + host_ip)
-        if api_port > 0:
+        if api_port > 0:  # here we need to find by docker inspect for swarm
             return "http://{0}:{1}".format(host_ip, api_port)
         exists = self.col_active.find({"host_id": host_id})
         api_url_existed = list(map(lambda c: c.get("api_url", ""),
@@ -383,7 +399,9 @@ class ClusterHandler(object):
         return ""
 
     def find_free_api_ports(self, host_id, number):
-        """ Find the first avaible port for a new cluster api
+        """ Find the first available port for a new cluster api
+
+        This is NOT lock-free. Should keep simple, fast and safe!
 
         Check existing cluster records in the host, find available one.
 
@@ -391,25 +409,19 @@ class ClusterHandler(object):
         :param number: Number of ports to get
         :return: The port list
         """
-        logger.debug("find {} ports for host_id={}".format(number, host_id))
+        logger.debug("Try find {} ports for host {}".format(number, host_id))
         if number <= 0:
-            logger.warn("Available numer {} <= 0".format(number))
+            logger.warn("Available number {} <= 0".format(number))
             return []
         host = col_host.find_one({"id": host_id})
         if not host:
             logger.warn("Cannot find host with id="+host_id)
             return ""
 
-        daemon_url = host.get("daemon_url")
-        segs = daemon_url.split(":")
-        if len(segs) != 3:
-            logger.error("Invalid daemon url = ", daemon_url)
-            return ""
-        host_ip = segs[1][2:]
-        logger.debug("The host_ip=" + host_ip)
         clusters_exists = self.col_active.find({"host_id": host_id})
-        ports_existed = list(map(lambda c: int(c.get("api_url", "").split(":")[
-            -1]), clusters_exists))
+        ports_existed = list(map(lambda c: int(c["api_url"].split(":")[-1]),
+                                 clusters_exists))
+
         logger.debug("The ports existed:")
         logger.debug(ports_existed)
         if len(ports_existed) + number >= 64000:

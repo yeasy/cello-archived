@@ -2,7 +2,8 @@ import logging
 import os
 import sys
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template
+from flask import request as r
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, CONSENSUS_TYPES
@@ -20,7 +21,7 @@ index = Blueprint('index', __name__)
 @index.route('/admin', methods=['GET'])
 @index.route('/index', methods=['GET'])
 def show():
-    logger.info("/clusters action=" + request.method)
+    logger.info("/clusters action=" + r.method)
     hosts = list(host_handler.list())
     available_hosts = list(filter(
         lambda e: e["status"] == "active"

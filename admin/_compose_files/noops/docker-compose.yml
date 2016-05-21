@@ -28,7 +28,7 @@ services:
       - "30304"
       - "31315"
     ports:
-      - "${API_URL_PORT}:5000"
+      - "${API_PORT}:5000"
     volumes: # docker.sock is mapped as the default CORE_VM_ENDPOINT
       - /var/run/docker.sock:/var/run/docker.sock
     command: peer node start

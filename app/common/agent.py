@@ -60,6 +60,10 @@ def test_daemon(daemon_url, timeout=2):
     """
     if not daemon_url or not daemon_url.startswith("tcp://"):
         return False
+    segs = daemon_url.split(":")
+    if len(segs) != 3:
+        logger.error("Invalid daemon url = ", daemon_url)
+        return False
     try:
         client = Client(base_url=daemon_url, timeout=timeout)
         return client.ping() == 'OK'

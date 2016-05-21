@@ -27,6 +27,7 @@ class HostHandler(object):
     def create(self, name, daemon_url, capacity=1, status="active"):
         """ Create a new docker host node
 
+        A docker host is potentially a single node or a swarm.
         Will full fill with clusters of given capacity.
 
         :param name: name of the node
@@ -35,7 +36,7 @@ class HostHandler(object):
         :param status: active for using, inactive for not using
         :return: True or False
         """
-        logger.debug("Create host with name={0}, daemon_url={1}, "
+        logger.debug("Create host: name={0}, daemon_url={1}, "
                      "capacity={2}".format(name, daemon_url, capacity))
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
@@ -59,13 +60,11 @@ class HostHandler(object):
         self.col.update_one({"_id": hid}, {"$set": {"id": str(hid)}})
 
         def create_cluster_work(port):
+            cluster_name = "{}_{}".format(name, (port-CLUSTER_API_PORT_START))
             cid = cluster_handler.create(
-                "{}_{}".format(name, (port-CLUSTER_API_PORT_START)),
-                str(hid), port)
-            if cid:
+                name=cluster_name, host_id=str(hid), api_port=port)
+            if not cid:
                 logger.debug("Create cluster with id={}".format(cid))
-            else:
-                logger.warn("Create cluster failed")
 
         if status == "active":  # active means should fullfill it
             logger.debug("Init with {} clusters in host".format(capacity))
