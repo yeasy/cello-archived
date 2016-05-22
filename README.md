@@ -1,10 +1,21 @@
 # PoolManager
+Designed by [Baohua Yang](baohyang@cn.ibm.com), 2016-05-08
 
-Manager who maintains a pool of hyperledger clusters, and mainly provides:
+Maintain a pool of hyperledger clusters, and mainly provides:
 
- * REST API for front end services, e.g., apply or release a cluster.
- * Admin dashbord to manage clusters in the pool, e.g., create,
- delete and query the cluster.
+ * REST API for front users, e.g., apply or release a cluster.
+ * Admin dashbord to manage clusters in the pool, e.g., create/delete host,
+ maintain clusters.
+
+## Features
+
+* Provide REST API for user and dashboard for operators.
+* Support most kind of IaaS, including bare-metal or virtual machine.
+* Provide dedicated cluster to user instantly after request arrives.
+* User can select what kind of cluster he want.
+* Support naive docker host or swarm cluster API.
+* Automatically maintain clusters resources in pool when error happens.
+* Support monitor functionality with additional components.
 
 ## Docs
 *I highly recommend carefully reading these documentation before taking any
@@ -21,7 +32,7 @@ other action.*
 
 *TODO: We may need a setup script.*
 
-All services are setup through Docker containers by default.
+All services are recommended to setup through Docker containers by default.
 
 ### Master Requirement
 * docker engine: >=1.10.0

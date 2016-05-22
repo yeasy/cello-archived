@@ -9,8 +9,8 @@ from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, LOG_LEVEL, get_project, \
-    clean_exited_containers, clean_chaincode_images, test_daemon, \
-    CLUSTER_API_PORT_START, COMPOSE_FILE_PATH
+    clean_exited_containers, clean_chaincode_images, test_daemon,  \
+    detect_daemon_type, CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, HOST_TYPES
 
 from modules import cluster_handler
 
@@ -36,13 +36,15 @@ class HostHandler(object):
         :param status: active for using, inactive for not using
         :return: True or False
         """
-        logger.debug("Create host: name={0}, daemon_url={1}, "
-                     "capacity={2}".format(name, daemon_url, capacity))
+        logger.debug("Create host: name={}, daemon_url={}, capacity={}"
+                     .format(name, daemon_url, capacity))
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
         if not test_daemon(daemon_url):
             logger.warn("The daemon_url is inactive:" + daemon_url)
             status = "inactive"
+
+        detected_type = detect_daemon_type(daemon_url)
 
         if self.col.find_one({"daemon_url": daemon_url}):
             logger.warn("{} already existed in db".format(daemon_url))
@@ -54,7 +56,8 @@ class HostHandler(object):
             'create_ts': datetime.datetime.now(),
             'capacity': capacity,
             'status': status,
-            'clusters': []
+            'clusters': [],
+            'type': detected_type
         }
         hid = self.col.insert_one(h).inserted_id  # object type
         self.col.update_one({"_id": hid}, {"$set": {"id": str(hid)}})
@@ -100,22 +103,28 @@ class HostHandler(object):
     def update(self, id, d, serialization=True):
         """ Update a host
 
+        TODO: may check when changing host type
+
         :param id: id of the host
         :param d: dict to use as updated values
         :return: serialized result or obj
         """
         logger.debug("Get a host with id=" + id)
         h_old = self.col.find_one({"id": id})
-        if not h_old or h_old.get("status") != "active":
-            logger.warn("No active host found with id=" + id)
+        if not h_old:
+            logger.warn("No host found with id=" + id)
             return {}
         cap_old = h_old.get("capacity")
         hid = h_old.get("id")
         hname = h_old.get("name")
         clusters_old = h_old.get("clusters")
+        daemon_url = d.get('daemon_url', h_old.get("daemon_url"))
 
         if "capacity" in d:
             d["capacity"] = int(d["capacity"])
+        if "status" in d:
+            if not test_daemon(daemon_url):
+                d["status"] = 'inactive'
         h_new = self.col.find_one_and_update(
             {"id": id},
             {"$set": d},
@@ -176,7 +185,7 @@ class HostHandler(object):
         return True
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
-                                    'create_ts', 'status', 'clusters']):
+                                    'type','create_ts', 'status', 'clusters']):
         """ Serialize an obj
 
         :param doc: doc to serialize

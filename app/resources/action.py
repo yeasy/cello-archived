@@ -36,7 +36,8 @@ def cluster_apply():
         status_response_fail["data"] = request.args
         return jsonify(status_response_fail), CODE_BAD_REQUEST
     else:
-        c = cluster_handler.apply_cluster(user_id=user_id,consensus_type=consensus_type)
+        c = cluster_handler.apply_cluster(user_id=user_id,
+                                          consensus_type=consensus_type)
         if not c:
             logger.warn("cluster_apply failed")
             status_response_fail["error"] = "No available res for "+user_id

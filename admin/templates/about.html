@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block title %}About Pool Manager{% endblock %}
+{% block body %}
+{{ super() }}
+<h3>Brief Introduction</h3>
+<div class="container-fluid">
+    A powerful PaaS that can manage clustered applications.
+</div>
+<p></p>
+<h3>Release Information</h3>
+<div class="container-fluid">
+<p>Written-By: {{ author }}</p>
+<p>Version: {{ version }}</p>
+</div>
+{% endblock %}

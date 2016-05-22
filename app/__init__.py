@@ -1,5 +1,5 @@
-from .version import version, version_info
+from .version import version, version_info, author
 
+__title__ = 'pool manager'
 __version__ = version
-__title__ = 'poolmanager app'
-__author__="Baohua Yang"
+__author__ = author

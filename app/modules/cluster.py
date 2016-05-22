@@ -9,7 +9,10 @@ from pymongo.collection import ReturnDocument
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, LOG_LEVEL, get_project, col_host, \
     clean_exited_containers, clean_chaincode_images, test_daemon, \
-    CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, CONSENSUS_TYPES
+    detect_container_host
+
+from common import CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, CONSENSUS_TYPES,\
+    HOST_TYPES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -166,7 +169,11 @@ class ClusterHandler(object):
             return None
 
         if api_port <= 0:
-            api_port = self.find_free_api_ports(host_id, 1)[0]
+            ports = self.find_free_api_ports(host_id, 1)
+            if not ports:
+                logger.warn("No free port is found")
+                return None
+            api_port = ports[0]
 
         c = {
             'name': name,
@@ -193,13 +200,11 @@ class ClusterHandler(object):
 
         if not containers:
             logger.warn("containers empty, then stop the project cluster")
-            self._compose_stop(name=str(cid),
-                               port=api_port,
-                               daemon_url=daemon_url,
-                               consensus_type=consensus_type)
+            self.delete(id=str(cid), col_name="active", record=False,
+                        forced=True)
             return None
 
-        api_url = self._gen_api_url(host_id, api_port)
+        api_url = self._gen_api_url(str(cid), h, api_port)
         if api_url:
             logger.debug("api_url={}".format(api_url))
             if h:  # this part may miss some element with concurrency
@@ -216,15 +221,13 @@ class ClusterHandler(object):
             logger.debug("Create cluster OK, id={}".format(str(cid)))
             return str(cid)
         else:
-            logger.error("Error to generate api_url, stop the project")
-            self._compose_stop(name=str(cid),
-                               port=api_port,
-                               daemon_url=daemon_url,
-                               consensus_type=consensus_type)
+            logger.error("Error to generate api_url, remove the cluster")
+            self.delete(id=str(cid), col_name="active", record=False,
+                        forced=True)
             return None
 
     def delete(self, id, col_name="active", record=False, forced=False):
-        """ Delete a cluster instance
+        """ Delete a cluster instance, clean containers, remove db entry
 
         :param id: id of the cluster to delete
         :param col_name: name of the cluster to operate
@@ -308,7 +311,7 @@ class ClusterHandler(object):
             logger.info("Now have cluster {} for user {}".format(c.get("id"),
                                                                  user_id))
             result = self._serialize(c, keys=['id', 'name', 'user_id',
-                                              'api_url'])
+                                              'api_url', 'consensus_type'])
             result['daemon_url'] = h.get('daemon_url')
             return result
         else:  # Failed to find available one
@@ -359,44 +362,33 @@ class ClusterHandler(object):
             result[k] = doc.get(k, '')
         return result
 
-    def _gen_api_url(self, host_id, api_port=0):
-        """ Generate an api url automatically
+    def _gen_api_url(self, cluster_name, host, api_port):
+        """ Generate an api url automatically with given api_port
 
         Check existing cluster records in the host, find available one.
 
-        :param host_id: id of the host
+        :param cluster_name: name of the cluster
+        :param host: Host, a single node or a swarm cluster
         :param api_port: port of the api
         :return: The generated api url address
         """
-        logger.debug("Generate api_url, host_id="+host_id)
-        host = col_host.find_one({"id": host_id})
-        if not host:
-            logger.warn("Cannot find host with id="+host_id)
+        daemon_url, host_type = host.get('daemon_url'), host.get('type')
+        logger.debug("daemon_url={}, port={}".format(daemon_url,api_port))
+        if api_port <= 0 or host_type not in HOST_TYPES:
             return ""
+        # we should diff with simple host and swarm host here
+        if host_type == HOST_TYPES[0]:  # single
+            segs = daemon_url.split(":")  # tcp://x.x.x.x:2375
+            if len(segs) != 3:
+                logger.error("Invalid daemon url = ", daemon_url)
+                return ""
+            host_ip = segs[1][2:]
+        elif host_type == HOST_TYPES[1]:  # swarm
+            host_ip = detect_container_host(daemon_url, cluster_name+'_'+'vp3')
+        else:
+            return ""
+        return "http://{0}:{1}".format(host_ip, api_port)
 
-        daemon_url = host.get("daemon_url")
-        segs = daemon_url.split(":")  # tcp://x.x.x.x:2375
-        if len(segs) != 3:
-            logger.error("Invalid daemon url = ", daemon_url)
-            return ""
-        host_ip = segs[1][2:]
-        logger.debug("The host_ip=" + host_ip)
-        if api_port > 0:  # here we need to find by docker inspect for swarm
-            return "http://{0}:{1}".format(host_ip, api_port)
-        exists = self.col_active.find({"host_id": host_id})
-        api_url_existed = list(map(lambda c: c.get("api_url", ""),
-                                   exists))
-        logger.debug("The api_url_existed:")
-        logger.debug(api_url_existed)
-        for i in range(len(api_url_existed) + 1):
-            new_url = "http://{0}:{1}".format(host_ip,
-                                              CLUSTER_API_PORT_START + i)
-            logger.debug("Try new_url=" + new_url)
-            if new_url not in api_url_existed:
-                logger.debug("Get valid new_url=" + new_url)
-                return new_url
-        logger.warn("No valid api_url is generated")
-        return ""
 
     def find_free_api_ports(self, host_id, number):
         """ Find the first available port for a new cluster api

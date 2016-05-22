@@ -90,6 +90,7 @@ $(document).ready(function() {
             var name    = $form.find('[name="name"]').val();
             var status    = $form.find('[name="status"]').val();
             var capacity    = $form.find('[name="capacity"]').val();
+            var type    = $form.find('[name="type"]').val();
 
             // The url and method might be different in your application
             $.ajax({
@@ -99,7 +100,8 @@ $(document).ready(function() {
                     "id": id,
                     "name": name,
                     "status": status,
-                    "capacity": capacity
+                    "capacity": capacity,
+                    "type": type
                 }
             }).success(function(response) {
                 // Get the cells
@@ -146,6 +148,7 @@ $(document).ready(function() {
                 .find('[name="id"]').val(response.id).end()
                 .find('[name="name"]').val(response.name).end()
                 .find('[name="daemon_url"]').val(response.daemon_url).end()
+                .find('[name="type"]').val(response.type).end()
                 .find('[name="capacity"]').val(response.capacity).end()
                 .find('[name="status"]').val(response.status).end()
                 .find('[name="create_ts"]').val(response.create_ts).end()

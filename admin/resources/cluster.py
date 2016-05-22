@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
-from modules import cluster_handler
+from modules import cluster_handler, host_handler
 
 cluster = Blueprint('cluster', __name__)
 
@@ -30,7 +30,7 @@ def clusters_show():
                       key != "col_name" and key != "page")
     col_name = r.args.get("col_name", "active")
     clusters = list(cluster_handler.list(filter_data=col_filter,
-                                      collection=col_name))
+                                         collection=col_name))
     total_items = len(clusters)
 
     search = False
@@ -55,9 +55,14 @@ def clusters_show():
     pagination = Pagination(page=page, per_page=per_page, total=total_items,
                             search=search, record_name='clusters')
 
+    hosts = list(host_handler.list())
+    available_hosts = list(filter(
+        lambda e: e["status"] == "active"
+                  and len(e["clusters"]) < e["capacity"], hosts))
     return render_template("clusters.html", col_name=col_name,
                            items_count=total_items, items=show_clusters,
-                           pagination=pagination)
+                           pagination=pagination,
+                           available_hosts=available_hosts, consensus_types=CONSENSUS_TYPES)
 
 
 @cluster.route('/cluster', methods=['GET', 'POST', 'DELETE'])
