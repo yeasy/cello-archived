@@ -2,8 +2,8 @@
 {% block title %}Clusters{% endblock %}
 {% block body %}
 {{ super() }}
-    <h1 class="page-header">Total Number: {{items_count}} <button
-            type="button" class="btn btn-primary btn-success btn-default pull-right" data-toggle="modal" data-target="#newHostModal">+</button></h1>
+    <h1 class="page-header">Hosts: {{items_count}} <button
+            type="button" class="btn btn-primary btn-success btn-default pull-sm-right" data-toggle="modal" data-target="#newHostModal">Add Host</button></h1>
 
     {% if items_count > 0 %}
         <div class="row">

@@ -5,13 +5,14 @@
     {% if col_name == "active" %}
 
     {% if available_hosts|length > 0 %}
-        <h1 class="page-header">Cluster Number: {{items_count}} <button
-            type="button" class="btn btn-primary btn-success btn-default pull-right" data-toggle="modal" data-target="#newClusterModal">+</button></h1>
+        <h1 class="page-header">Active Clusters: {{items_count}} <button
+            type="button" class="btn btn-primary btn-success btn-default pull-sm-right" data-toggle="modal"
+            data-target="#newClusterModal">Add Cluster</button></h1>
     {% else %}
-        <h1 class="page-header">Cluster Number: {{items_count}} <button
+        <h1 class="page-header">Active Clusters: {{items_count}} <button
                 type="button" class="btn btn-primary btn-success btn-default
-                 pull-right" data-toggle="modal" data-target="#newClusterModal"
-                disabled>+</button></h1>
+                 pull-sm-right" data-toggle="modal" data-target="#newClusterModal"
+                disabled>Add Cluster</button></h1>
     {% endif %}
     {% else %}
         <h1 class="page-header">Released Clusters: {{items_count}}</h1>

@@ -32,7 +32,7 @@
       </button>
       <a class="navbar-brand" href="#">Pool Manager</a>
       <div id="navbar">
-        <nav class="nav navbar-nav pull-xs-right">
+        <nav class="nav navbar-nav pull-xs-left">
           <a class="nav-item nav-link" href="/index">Dashboard</a>
           <a class="nav-item nav-link" href="#">Settings</a>
           <a class="nav-item nav-link" href="#">Profile</a>
@@ -54,6 +54,7 @@
                 {{ nav_link("host.hosts_show", "Hosts") }}
                 {{ nav_link("cluster.clusters_show", "Clusters", col_name="active") }}
                 {{ nav_link("cluster.clusters_show", "Release History", col_name="released") }}
+                {{ nav_link("monitor.show", "Monitor") }}
                 {{ nav_link("index.about", "About") }}
             </ul>
         </div>
@@ -78,13 +79,15 @@
 ================================================== -->
 <!-- Placed at the end of the document so the pages load faster -->
 <script src="../static/js/jquery-2.2.3.min.js"> </script>
-<script src="../static/js/script.js"> </script>
 <script src="../static/js/bootbox.min.js"></script>
 <script src="../static/js/validator.js"></script>
 <script src="../static/js/bootstrap.min.js"></script>
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 <script src="../static/js/ie10-viewport-bug-workaround.js"></script>
 <script src="../static/js/highcharts.js"></script>
+<script src="../static/js/solid-gauge.js"></script>
+<script src="../static/js/highcharts-more.js"></script>
+<script src="../static/js/script.js"> </script>
 
 
 </body>
