@@ -9,7 +9,9 @@
                 <button type="button" class="btn btn-sm btn-success
             btn-default pull-xs-right" data-toggle="modal"
                         data-target="#newHostModal">+</button>
-                <a href="/hosts">Hosts <span class="label label-default label-pill ">{{hosts|length}}</span></a>
+                <a href="/hosts"><span class="label label-default label-pill pull-xs-left
+                 ">{{hosts|length}}</span> Joined Hosts</a>
+
             </li>
             <li class="list-group-item  list-group-item-success">
                 {% if available_hosts|length > 0 %}
@@ -18,10 +20,10 @@
                 {% else %}
                     <button type="button" class="btn btn-sm btn-success btn-default pull-xs-right" data-toggle="modal" data-target="#newClusterModal" disabled>+</button>
                 {% endif %}
-                <a href="/clusters?col_name=active">Active Clusters <span class="label label-default label-pill ">{{clusters_active}}</span></a>
+                <a href="/clusters?col_name=active"><span class="label label-default label-pill ">{{clusters_active}}</span> Active Clusters</a>
             </li>
             <li class="list-group-item list-group-item-warning">
-                <a href="/clusters?col_name=released">Released Clusters <span class="label label-default label-pill">{{clusters_released}}</span></a>
+                <a href="/clusters?col_name=released"><span class="label label-default label-pill">{{clusters_released}}</span> Released Clusters</a>
             </li>
         </ul>
     </div>

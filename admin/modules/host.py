@@ -19,7 +19,6 @@ logger.setLevel(LOG_LEVEL)
 
 class HostHandler(object):
     """ Main handler to operate the Docker hosts
-
     """
     def __init__(self):
         self.col = db["host"]

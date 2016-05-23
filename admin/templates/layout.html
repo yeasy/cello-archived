@@ -17,8 +17,12 @@
 
     <!-- Bootstrap core CSS -->
     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/css/bootstrap.css" rel="stylesheet">
     <link href="../static/css/dashboard.css" rel="stylesheet">
     <link href="../static/css/paginate.css" rel="stylesheet">
+
+
+<!-- Latest compiled and minified CSS -->
 
 </head>
 
@@ -51,10 +55,10 @@
         <div class="col-sm-3 col-md-2 sidebar">
             <ul class="nav nav-sidebar nav-list">
                 {{ nav_link("index.show", "Overview") }}
+                {{ nav_link("monitor.show", "System Status") }}
                 {{ nav_link("host.hosts_show", "Hosts") }}
-                {{ nav_link("cluster.clusters_show", "Clusters", col_name="active") }}
+                {{ nav_link("cluster.clusters_show", "Running Clusters", col_name="active") }}
                 {{ nav_link("cluster.clusters_show", "Release History", col_name="released") }}
-                {{ nav_link("monitor.show", "Monitor") }}
                 {{ nav_link("index.about", "About") }}
             </ul>
         </div>

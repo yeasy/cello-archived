@@ -11,6 +11,7 @@ services:
   admin:
     build: admin
     image: poolmanager-admin
+    container_name: admin
     hostname: poolmanager-admin
     restart: unless-stopped
     environment:
@@ -21,8 +22,8 @@ services:
       - DEBUG=True    # in debug mode, service will auto-restart
       - LOG_LEVEL=DEBUG  # what level log will be output
       - LOG_LEVEL_CLUSTER=DEBUG  # the level log for the cluster in pool
-    ports:
-      - "0.0.0.0:8080:8080"
+    expose:
+      - "8080"
     volumes:  # This should be removed in product env
       - ./admin:/app
     links:
@@ -32,6 +33,7 @@ services:
   app:
     build: app
     image: poolmanager-app
+    container_name: app
     hostname: poolmanager-app
     restart: unless-stopped
     environment:
@@ -40,6 +42,8 @@ services:
       - DEBUG=True    # in debug mode, service will auto-restart
       - LOG_LEVEL=DEBUG  # what level log will be output
       - LOG_LEVEL_CLUSTER=DEBUG  # the level log for the cluster in pool
+    expose:
+      - "80"
     volumes:  # This should be removed in product env
       - ./app:/app
     links:
@@ -49,6 +53,7 @@ services:
   mongo:
     image: mongo:3.2
     hostname: mongo
+    container_name: mongo
     restart: unless-stopped
     mem_limit: 1024m
     ports:
@@ -64,6 +69,7 @@ services:
   nginx:
     image: yeasy/nginx
     hostname: nginx
+    container_name: nginx
     restart: always
     links:
       - app
@@ -72,8 +78,9 @@ services:
       #- /opt/poolmanager/nginx/log/:/var/log/nginx/
     ports:
       - "80:80"
+      - "8080:8080"
     environment:
-      - BACKEND=app
+      - BACKEND=admin
       - PORT=8080
-      - USERNAME=user
+      - USERNAME=admin
       - PASSWORD=pass

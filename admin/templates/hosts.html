@@ -2,6 +2,7 @@
 {% block title %}Clusters{% endblock %}
 {% block body %}
 {{ super() }}
+     <!-- Glyphicon in a H1 tag -->
     <h1 class="page-header">Hosts: {{items_count}} <button
             type="button" class="btn btn-primary btn-success btn-default pull-sm-right" data-toggle="modal" data-target="#newHostModal">Add Host</button></h1>
 
@@ -38,12 +39,14 @@
                     <button type="button" data-id="{{item.id}}" class="btn
                     btn-xs btn-sm
                     btn-primary btn-info btn-default edit_host_button">
-                        Edit
+                    <span class="glyphicon glyphicon-cog"
+                              aria-hidden="true"></span>
                     </button>
                     <button type="button" data-id="{{item.id}}"
                             class="btn btn-xs btn-sm btn-danger
-                            delete_host_button" >
-                        Delete
+                            delete_host_button"  aria-label="Left Align">
+                    <span class="glyphicon glyphicon-trash"
+                              aria-hidden="true"></span>
                     </button>
                 </td>
                 </tr>

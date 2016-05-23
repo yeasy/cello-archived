@@ -314,6 +314,23 @@ $(document).ready(function() {
 
     }));
 
+    
+    function request_hosts() {
+        $.ajax({
+            url: '/_stat?res=hosts',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                // add the point
+                chart_hosts_type.series[0].setData(response.type);
+                chart_hosts_status.series[0].setData(response.status);
+
+                // call it again after one second
+                setTimeout(request_hosts, 30000);    
+            },
+            cache: false
+        });
+    }
     var chart_hosts_type = new Highcharts.Chart({
             chart: {
                 renderTo: 'monitor_hosts_type',
@@ -323,7 +340,7 @@ $(document).ready(function() {
                 plotShadow: false,
                 type: 'pie',
                 events: {
-                    load: request_hosts_type
+                    load: request_hosts
                 }
             },
             title: {
@@ -337,7 +354,7 @@ $(document).ready(function() {
                     allowPointSelect: true,
                     cursor: 'pointer',
                     dataLabels: {
-                        enabled: true
+                        enabled: false
                     },
                     showInLegend: true
                 }
@@ -356,23 +373,6 @@ $(document).ready(function() {
                 }]
             }]
     });
-
-    function request_hosts_type() {
-        $.ajax({
-            url: '/_stat?res=hosts_type',
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-                // add the point
-                chart_hosts_type.series[0].setData(response.data);
-                console.log(response.data)
-
-                // call it again after one second
-                setTimeout(request_hosts_type, 5000);    
-            },
-            cache: false
-        });
-    }
     var chart_hosts_status = new Highcharts.Chart({
             chart: {
                 renderTo: 'monitor_hosts_status',
@@ -382,7 +382,7 @@ $(document).ready(function() {
                 plotShadow: false,
                 type: 'pie',
                 events: {
-                    load: request_hosts_status
+                    load: request_hosts
                 }
             },
             title: {
@@ -396,7 +396,7 @@ $(document).ready(function() {
                     allowPointSelect: true,
                     cursor: 'pointer',
                     dataLabels: {
-                        enabled: true
+                        enabled: false
                     },
                     showInLegend: true
                 }
@@ -415,21 +415,104 @@ $(document).ready(function() {
                 }]
             }]
         });
-
-    function request_hosts_status() {
+    function request_clusters() {
         $.ajax({
-            url: '/_stat?res=hosts_status',
+            url: '/_stat?res=clusters',
             type: 'GET',
             dataType: 'json',
             success: function(response) {
                 // add the point
-                chart_hosts_status.series[0].setData(response.data);
-                console.log(response.data)
+                chart_clusters_type.series[0].setData(response.type);
+                chart_clusters_status.series[0].setData(response.status);
 
                 // call it again after one second
-                setTimeout(request_hosts_status, 5000);    
+                setTimeout(request_clusters, 30000);    
             },
             cache: false
         });
     }
+    var chart_clusters_type = new Highcharts.Chart({
+            chart: {
+                renderTo: 'monitor_clusters_type',
+                defaultSeriesType: 'spline',
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie',
+                events: {
+                    load: request_clusters
+                }
+            },
+            title: {
+                text: 'Type'
+            },
+            tooltip: {
+                pointFormat: '<b>{point.y}</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: true
+                }
+            },
+            legend: {
+                labelFormatter: function() {
+                    return this.name + ': ' + this.y;
+                },
+            },
+            series: [{
+                name: 'Number',
+                colorByPoint: true,
+                data: [{
+                    name: '',
+                    y: 100
+                }]
+            }]
+    });
+    var chart_clusters_status = new Highcharts.Chart({
+            chart: {
+                renderTo: 'monitor_clusters_status',
+                defaultSeriesType: 'spline',
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie',
+                events: {
+                    load: request_clusters
+                }
+            },
+            title: {
+                text: 'Status'
+            },
+            tooltip: {
+                pointFormat: '<b>{point.y}</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: true
+                }
+            },
+            legend: {
+                labelFormatter: function() {
+                    return this.name + ': ' + this.y;
+                },
+            },
+            series: [{
+                name: 'Number',
+                colorByPoint: true,
+                data: [{
+                    name: '',
+                    y: 100
+                }]
+            }]
+        });
 });
