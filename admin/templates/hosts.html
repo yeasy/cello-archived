@@ -25,7 +25,7 @@
                 {% for item in items %}
                     {% if item.status != "active" %}
                         <tr bgcolor="#add8e6">
-                            {% else %}
+                    {% else %}
                         <tr>
                     {% endif %}
                 <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
@@ -39,13 +39,13 @@
                     <button type="button" data-id="{{item.id}}" class="btn
                     btn-xs btn-sm
                     btn-primary btn-info btn-default edit_host_button">
-                    <span class="glyphicon glyphicon-cog"
+                        <span class="glyphicon glyphicon-cog"
                               aria-hidden="true"></span>
                     </button>
                     <button type="button" data-id="{{item.id}}"
                             class="btn btn-xs btn-sm btn-danger
                             delete_host_button"  aria-label="Left Align">
-                    <span class="glyphicon glyphicon-trash"
+                        <span class="glyphicon glyphicon-trash"
                               aria-hidden="true"></span>
                     </button>
                 </td>
@@ -128,8 +128,10 @@
         </div>
 
         <div class="form-group">
-                <button type="button" id="save_host_button" class="btn btn-primary
-        btn-default">Save</button>
+            <div class="col-sm-offset-2 pull-xs-right">
+                <button type="button" id="save_host_button" class="btn btn-primary btn-default">Save</button>
+                <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+            </div>
         </div>
     </form>
 
