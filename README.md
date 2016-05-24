@@ -101,7 +101,7 @@ $ bash ./scripts/restart.sh
 ## TODO
 * ~~Add default 404 and 500 error page.~~
 * ~~Add doc for all methods and classes~~.
-* Admin: Add authentication for user login.
+* ~~Admin: Add authentication for user login~~.
 * Admin: Update api definitions yml files (optional).
 * ~~Admin: Add host module to add cluster in batch (optional).~~
 * ~~Use async operation for container management (optional)~~.
@@ -114,3 +114,4 @@ $ bash ./scripts/restart.sh
 * Support metadata field from user apply cluster.
 * Support monitor.
 * Support fill-to-full operation on given host.
+* Support detect host info when adding as swarm type.

@@ -21,6 +21,10 @@
     <link href="../static/css/dashboard.css" rel="stylesheet">
     <link href="../static/css/paginate.css" rel="stylesheet">
 
+<!--
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+-->
+
 
 <!-- Latest compiled and minified CSS -->
 
@@ -51,18 +55,18 @@
     </nav>
 
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
+    <div class="row" style="position:relative">
+        <div class="col-sm-2 col-md-2 sidebar">
             <ul class="nav nav-sidebar nav-list">
                 {{ nav_link("index.show", "Overview") }}
-                {{ nav_link("monitor.show", "System Status") }}
+                {{ nav_link("stat.show", "System Status") }}
                 {{ nav_link("host.hosts_show", "Hosts") }}
                 {{ nav_link("cluster.clusters_show", "Running Clusters", col_name="active") }}
                 {{ nav_link("cluster.clusters_show", "Release History", col_name="released") }}
                 {{ nav_link("index.about", "About") }}
             </ul>
         </div>
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <div class="col-sm-8 col-sm-offset-3 col-md-8 col-md-offset-3">
             {% block body %}
             {% endblock %}
         </div>

@@ -29,12 +29,16 @@ def show():
                   and len(e["clusters"]) < e["capacity"], hosts))
     clusters_active = len(list(cluster_handler.list(collection="active")))
     clusters_released = len(list(cluster_handler.list(collection="released")))
+    clusters_free = len(list(cluster_handler.list(collection="active",
+                                                  filter_data={"user_id": ""})))
+
 
     #return render_template("test.html")
     return render_template("index.html", hosts=hosts,
                            available_hosts=available_hosts,
                            clusters_active=clusters_active,
                            clusters_released=clusters_released,
+                           clusters_free=clusters_free,
                            consensus_types=CONSENSUS_TYPES,
                            host_types=HOST_TYPES)
 

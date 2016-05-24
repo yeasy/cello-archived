@@ -9,7 +9,7 @@ BIND_ADDR=0.0.0.0
 echo "Access port 8081 for the mongo-express UI".
 
 docker run -it --rm \
-    --link poolmanager_mongo_1:mongo \
+    --link mongo:mongo \
     --net poolmanager_default \
     -p ${BIND_ADDR}:8081:8081 \
     mongo-express:0.30

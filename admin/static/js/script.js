@@ -333,7 +333,7 @@ $(document).ready(function() {
     }
     var chart_hosts_type = new Highcharts.Chart({
             chart: {
-                renderTo: 'monitor_hosts_type',
+                renderTo: 'stat_hosts_type',
                 defaultSeriesType: 'spline',
                 plotBackgroundColor: null,
                 plotBorderWidth: null,
@@ -344,7 +344,7 @@ $(document).ready(function() {
                 }
             },
             title: {
-                text: 'Type'
+                text: 'Host Type'
             },
             tooltip: {
                 pointFormat: '<b>{point.y}</b>'
@@ -375,7 +375,7 @@ $(document).ready(function() {
     });
     var chart_hosts_status = new Highcharts.Chart({
             chart: {
-                renderTo: 'monitor_hosts_status',
+                renderTo: 'stat_hosts_status',
                 defaultSeriesType: 'spline',
                 plotBackgroundColor: null,
                 plotBorderWidth: null,
@@ -386,7 +386,7 @@ $(document).ready(function() {
                 }
             },
             title: {
-                text: 'Status'
+                text: 'Host Status'
             },
             tooltip: {
                 pointFormat: '<b>{point.y}</b>'
@@ -433,7 +433,7 @@ $(document).ready(function() {
     }
     var chart_clusters_type = new Highcharts.Chart({
             chart: {
-                renderTo: 'monitor_clusters_type',
+                renderTo: 'stat_clusters_type',
                 defaultSeriesType: 'spline',
                 plotBackgroundColor: null,
                 plotBorderWidth: null,
@@ -444,7 +444,7 @@ $(document).ready(function() {
                 }
             },
             title: {
-                text: 'Type'
+                text: 'Cluster Type'
             },
             tooltip: {
                 pointFormat: '<b>{point.y}</b>'
@@ -475,7 +475,7 @@ $(document).ready(function() {
     });
     var chart_clusters_status = new Highcharts.Chart({
             chart: {
-                renderTo: 'monitor_clusters_status',
+                renderTo: 'stat_clusters_status',
                 defaultSeriesType: 'spline',
                 plotBackgroundColor: null,
                 plotBorderWidth: null,
@@ -486,7 +486,7 @@ $(document).ready(function() {
                 }
             },
             title: {
-                text: 'Status'
+                text: 'Cluster Status'
             },
             tooltip: {
                 pointFormat: '<b>{point.y}</b>'

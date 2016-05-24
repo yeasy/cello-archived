@@ -16,28 +16,29 @@ logger.addHandler(log_handler)
 
 from modules import cluster_handler, host_handler, stat_handler
 
-monitor = Blueprint('monitor', __name__)
+stat = Blueprint('stat', __name__)
 
 
-@monitor.route('/monitor', methods=['GET'])
+@stat.route('/stat', methods=['GET'])
 def show():
     logger.info("path={}, action={}".format(r.path, r.method))
 
-    return render_template("monitor.html")
+    return render_template("stat.html")
 
 
-@monitor.route('/_health', methods=['GET'])
+@stat.route('/_health', methods=['GET'])
 def health():
     logger.info("path={}, action={}".format(r.path, r.method))
     result = {
-        'health': 'OK'
+        'health': 'OK',
+        'version': version
     }
 
     return jsonify(result), CODE_OK
 
 
-@monitor.route('/_stat', methods=['GET'])
-def stat():
+@stat.route('/_stat', methods=['GET'])
+def get():
     logger.info("path={}, action={}".format(r.path, r.method))
     for k in r.args:
         logger.debug("Arg: {0}:{1}".format(k, r.args[k]))

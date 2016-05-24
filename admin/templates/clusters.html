@@ -4,18 +4,18 @@
 {{ super() }}
     {% if col_name == "active" %}
 
-    {% if available_hosts|length > 0 %}
-        <h1 class="page-header">Active Clusters: {{items_count}} <button
-            type="button" class="btn btn-primary btn-success btn-default pull-sm-right" data-toggle="modal"
-            data-target="#newClusterModal">Add Cluster</button></h1>
-    {% else %}
-        <h1 class="page-header">Active Clusters: {{items_count}} <button
-                type="button" class="btn btn-primary btn-success btn-default
+        {% if available_hosts|length > 0 %}
+            <h2 class="page-header">Running Clusters: {{items_count}} <button
+                    type="button" class="btn btn-primary btn-success btn-default pull-sm-right" data-toggle="modal"
+                    data-target="#newClusterModal">Add Cluster</button></h2>
+        {% else %}
+            <h2 class="page-header">Running Clusters: {{items_count}} <button
+                    type="button" class="btn btn-primary btn-success btn-default
                  pull-sm-right" data-toggle="modal" data-target="#newClusterModal"
-                disabled>Add Cluster</button></h1>
-    {% endif %}
+                    disabled>Add Cluster</button></h2>
+        {% endif %}
     {% else %}
-        <h1 class="page-header">Released Clusters: {{items_count}}</h1>
+        <h2 class="page-header">Released Clusters: {{items_count}}</h2>
     {% endif %}
 
     {% if items_count > 0 %}
@@ -24,11 +24,11 @@
                 <thead>
                 <tr>
                     <th>Name</th>
-                    <th>user_id</th>
-                    <th>api_url</th>
-                    <th>consensus_type</th>
-                    <th>host_id</th>
-                    <th>create_ts</th>
+                    <th>User</th>
+                    <th>API</th>
+                    <th>Type</th>
+                    <th>Host</th>
+                    <th>Created</th>
                     <th></th>
                 </tr>
                 </thead>

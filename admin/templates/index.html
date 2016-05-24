@@ -2,15 +2,15 @@
 {% block title %}PoolManager Admin{% endblock %}
 {% block body %}
     {{ super() }}
-    <h2 class="sub-header">System Overview</h2>
-    <div class="container">
-        <ul class="list-group col-sm-4 col-md-3">
+    <h3 class="page-header">System Overview</h3>
+    <div class="container-fluid">
+        <ul class="list-group col-sm-6 col-md-4">
             <li class="list-group-item  list-group-item-info">
                 <button type="button" class="btn btn-sm btn-success
             btn-default pull-xs-right" data-toggle="modal"
                         data-target="#newHostModal">+</button>
-                <a href="/hosts"><span class="label label-default label-pill pull-xs-left
-                 ">{{hosts|length}}</span> Joined Hosts</a>
+                <a href="/hosts"><span class="label label-default label-pill
+                 ">{{hosts|length}}</span> Deployed Hosts</a>
 
             </li>
             <li class="list-group-item  list-group-item-success">
@@ -26,6 +26,16 @@
                 <a href="/clusters?col_name=released"><span class="label label-default label-pill">{{clusters_released}}</span> Released Clusters</a>
             </li>
         </ul>
+    </div>
+    <h3 class="page-header">Health Status</h3>
+    <div class="container-fluid">
+        {% if clusters_free <= 0 %}
+            Status: <font color="red">All clusters are occupied!</font>
+        {% elif available_hosts|length > 0 %}
+            Status: <font color="#ff8c00">All hosts are fulfilled!</font>
+        {% else %}
+            Status: <font color="green">Excellent</font>
+        {% endif %}
     </div>
 
     <p></p>
