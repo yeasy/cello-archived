@@ -3,7 +3,8 @@ import os
 
 from common import log_handler, LOG_LEVEL
 from flask import Flask, render_template
-from resources import index, cluster, host
+from resources import index, cluster, host, stat
+from resources.stat import stat
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -16,6 +17,7 @@ app.logger.addHandler(log_handler)
 app.register_blueprint(index)
 app.register_blueprint(host)
 app.register_blueprint(cluster)
+app.register_blueprint(stat)
 
 
 @app.errorhandler(404)

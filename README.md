@@ -1,10 +1,21 @@
 # PoolManager
+Designed by [Baohua Yang](baohyang@cn.ibm.com), 2016-05-08
 
-Manager who maintains a pool of hyperledger clusters, and mainly provides:
+Maintain a pool of hyperledger clusters, and mainly provides:
 
- * REST API for front end services, e.g., apply or release a cluster.
- * Admin dashbord to manage clusters in the pool, e.g., create,
- delete and query the cluster.
+ * REST API for front users, e.g., apply or release a cluster.
+ * Admin dashbord to manage clusters in the pool, e.g., create/delete host,
+ maintain clusters.
+
+## Features
+
+* Provide REST API for user and dashboard for operators.
+* Support most kind of IaaS, including bare-metal or virtual machine.
+* Provide dedicated cluster to user instantly after request arrives.
+* User can select what kind of cluster he want.
+* Support naive docker host or swarm cluster API.
+* Automatically maintain clusters resources in pool when error happens.
+* Support monitor functionality with additional components.
 
 ## Docs
 *I highly recommend carefully reading these documentation before taking any
@@ -21,7 +32,7 @@ other action.*
 
 *TODO: We may need a setup script.*
 
-All services are setup through Docker containers by default.
+All services are recommended to setup through Docker containers by default.
 
 ### Master Requirement
 * docker engine: >=1.10.0
@@ -38,12 +49,13 @@ All services are setup through Docker containers by default.
     - let daemon listen on port 2375, and make sure Master can reach Node from port 2375.
 ```sh
 # Add this into /etc/default/docker
-DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock"
+DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*'"
 ```
 * docker images:
-    - yeasy/hyperledger (After pulling, rename to openblockchain/baseimage)
-    - yeasy/hyperledger-peer (match with the [compose](admin/common/compose-defaults.yml) file)
-    - yeasy/hyperledger-membersrvc (optional, only when need the authentication service)
+    - `yeasy/hyperledger:latest` (After pulling, rename it to `hyperledger/fabric-baseimage:latest`)
+    - `yeasy/hyperledger-peer:pbft` (match with the [compose](admin/common/compose-defaults.yml) file)
+    - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the
+    authentication service)
 * SSH (Optionally ): Open for Master to monitor.
 
 ### Configuration
@@ -89,15 +101,17 @@ $ bash ./scripts/restart.sh
 ## TODO
 * ~~Add default 404 and 500 error page.~~
 * ~~Add doc for all methods and classes~~.
-* Admin: Add authentication for user login.
-* Admin: Update api definitions in yml files (optional).
+* ~~Admin: Add authentication for user login~~.
+* Admin: Update api definitions yml files (optional).
 * ~~Admin: Add host module to add cluster in batch (optional).~~
 * ~~Use async operation for container management (optional)~~.
 * Support multiple version in API.
 * ~~Support pagination~~.
 * ~~Support updating the host config~~.
-* Support user defined cluster configuration.
+* ~~Support user defined cluster configuration.~~
 * ~~Add form validation~~.
-* Support auto fresh.
+* Support auto fresh based on websocket.
 * Support metadata field from user apply cluster.
 * Support monitor.
+* Support fill-to-full operation on given host.
+* Support detect host info when adding as swarm type.

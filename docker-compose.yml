@@ -11,6 +11,7 @@ services:
   admin:
     build: admin
     image: poolmanager-admin
+    container_name: admin
     hostname: poolmanager-admin
     restart: unless-stopped
     environment:
@@ -18,10 +19,11 @@ services:
       - PASS=pass
       - MONGO_URL=mongodb://mongo:27017
       - MONGO_DB=dev
-      - DEBUG=True
-      - LOG_LEVEL=DEBUG
-    ports:
-      - "0.0.0.0:8080:8080"
+      - DEBUG=True    # in debug mode, service will auto-restart
+      - LOG_LEVEL=DEBUG  # what level log will be output
+      - LOG_LEVEL_CLUSTER=DEBUG  # the level log for the cluster in pool
+    expose:
+      - "8080"
     volumes:  # This should be removed in product env
       - ./admin:/app
     links:
@@ -31,13 +33,17 @@ services:
   app:
     build: app
     image: poolmanager-app
+    container_name: app
     hostname: poolmanager-app
     restart: unless-stopped
     environment:
       - MONGO_URL=mongodb://mongo:27017
       - MONGO_DB=dev
-      - DEBUG=True
-      - LOG_LEVEL=DEBUG
+      - DEBUG=True    # in debug mode, service will auto-restart
+      - LOG_LEVEL=DEBUG  # what level log will be output
+      - LOG_LEVEL_CLUSTER=DEBUG  # the level log for the cluster in pool
+    expose:
+      - "80"
     volumes:  # This should be removed in product env
       - ./app:/app
     links:
@@ -47,9 +53,11 @@ services:
   mongo:
     image: mongo:3.2
     hostname: mongo
+    container_name: mongo
     restart: unless-stopped
     mem_limit: 1024m
     ports:
+      #- "27017:27017"  # use follow line instead in production env
       - "127.0.0.1:27017:27017"
       - "127.0.0.1:27018:27018"
     environment:
@@ -61,6 +69,7 @@ services:
   nginx:
     image: yeasy/nginx
     hostname: nginx
+    container_name: nginx
     restart: always
     links:
       - app
@@ -69,8 +78,9 @@ services:
       #- /opt/poolmanager/nginx/log/:/var/log/nginx/
     ports:
       - "80:80"
+      - "8080:8080"
     environment:
-      - BACKEND=app
+      - BACKEND=admin
       - PORT=8080
-      - USERNAME=user
+      - USERNAME=admin
       - PASSWORD=pass

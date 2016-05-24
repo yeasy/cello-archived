@@ -2,36 +2,46 @@
 {% block title %}PoolManager Admin{% endblock %}
 {% block body %}
     {{ super() }}
-    <h2 class="sub-header">System Overview</h2>
-    <div class="container">
-        <ul class="list-group col-sm-4 col-md-3">
+    <h3 class="page-header">System Overview</h3>
+    <div class="container-fluid">
+        <ul class="list-group col-sm-6 col-md-4">
             <li class="list-group-item  list-group-item-info">
-                <span class="label label-default label-pill
-                pull-xs-right">{{hosts|length}}</span>
-                <a href="/hosts">Hosts</a>
+                <button type="button" class="btn btn-sm btn-success
+            btn-default pull-xs-right" data-toggle="modal"
+                        data-target="#newHostModal">+</button>
+                <a href="/hosts"><span class="label label-default label-pill
+                 ">{{hosts|length}}</span> Deployed Hosts</a>
+
             </li>
             <li class="list-group-item  list-group-item-success">
-                <span class="label label-default label-pill pull-xs-right">{{clusters_active}}</span>
-                <a href="/clusters?col_name=active">Active Clusters</a>
+                {% if available_hosts|length > 0 %}
+                    <button type="button" class="btn btn-sm btn-success
+                    btn-default pull-xs-right" data-toggle="modal" data-target="#newClusterModal">+</button>
+                {% else %}
+                    <button type="button" class="btn btn-sm btn-success btn-default pull-xs-right" data-toggle="modal" data-target="#newClusterModal" disabled>+</button>
+                {% endif %}
+                <a href="/clusters?col_name=active"><span class="label label-default label-pill ">{{clusters_active}}</span> Active Clusters</a>
             </li>
             <li class="list-group-item list-group-item-warning">
-                <span class="label label-default label-pill pull-xs-right">{{clusters_released}}</span>
-                <a href="/clusters?col_name=released">Released Clusters</a>
+                <a href="/clusters?col_name=released"><span class="label label-default label-pill">{{clusters_released}}</span> Released Clusters</a>
             </li>
         </ul>
     </div>
+    <h3 class="page-header">Health Status</h3>
+    <div class="container-fluid">
+        {% if clusters_free <= 0 %}
+            Status: <font color="red">All clusters are occupied!</font>
+        {% elif available_hosts|length > 0 %}
+            Status: <font color="#ff8c00">All hosts are fulfilled!</font>
+        {% else %}
+            Status: <font color="green">Excellent!</font>
+        {% endif %}
+    </div>
 
-    <h2 class="sub-header"></h2>
-    <!-- Trigger the modal with a button -->
-<button type="button" class="btn btn-primary btn-info btn-default" data-toggle="modal" data-target="#newHostModal">Add Host</button>
+    <p></p>
 
-    {% if hosts|length > 0 %}
-    <button type="button" class="btn btn-primary btn-info btn-default" data-toggle="modal" data-target="#newClusterModal">Add Cluster</button>
-    {% else %}
-    <button type="button" class="btn btn-primary btn-info btn-default" data-toggle="modal" data-target="#newClusterModal" disabled>Add Cluster</button>
-    {% endif %}
 
-    <!-- Modal -->
+<!-- Modal -->
 <div id="newHostModal" class="modal fade" role="dialog">
   <div class="modal-dialog">
     <!-- Modal content-->
@@ -56,14 +66,29 @@
                          data-error="That address is invalid" required>
               </div>
               <div class="form-group">
-                  <label for="host_capacity">Capacity (1~100)</label>
+                  <label for="host_capacity">Capacity (1~1000)</label>
                   <input id="host_capacity" type="number" name="capacity"
-                         class="form-control" min="1" max="100" value=2
-                         required>
+                         class="form-control" min="1" max="1000" value=2 required>
               </div>
+              {% if host_types|length > 0 %}
+                  <!--
+                    <div class="form-group">
+                        <label for="host_type">Type</label>
+                        <select id="host_type" class="c-select" name="type"
+                                required>
+                            <option selected
+                                    value="{{host_types[0]}}">{{host_types[0]|upper }}</option>
+                            {% for c in host_types[1:] %}
+                                    <option value="{{c}}">{{c|upper}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    -->
+                {% endif %}
               <div class="form-group">
                   <label for="host_status">Status</label>
-                  <select class="c-select" name="status" required>
+                  <select id="host_status" class="c-select" name="status"
+                          required>
                       <option selected value="active">Active</option>
                       <option value="inactive">Inactive</option>
                   </select>
@@ -88,25 +113,39 @@
             </div>
             <div class="modal-body">
                 <form class="form" id="add_new_cluster_form" data-toggle="validator">
-                    <div class="form-group">
-                        <select class="c-select" name="host_id"
-                                required>
-                            <option selected>Select a Host</option>
-                            {% for h in hosts %}
-                                {% if h.status == "active" and h.clusters|length < h.capacity %}
-                                    <option value="{{h.id}}">{{h.name}}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
 
                     <div class="form-group">
-                        <label for="cluster_name">*Name (less than 16 cahrs)
-                        </label>
+                        <label for="cluster_name">*Name (less than 16 chars) </label>
                         <input id="cluster_name" name="name" type="text"
                                class="form-control" pattern="^[-_A-z0-9]{1,}$"
                                placeholder="Cluster Name" data-error="A name is required" max-length="16" required >
                     </div>
+                {% if available_hosts|length > 0 %}
+                    <div class="form-group">
+                        <label for="host"> Select a Host</label>
+                        <select id="host" class="c-select" name="host_id" required>
+                            <option selected value="{{ available_hosts[0].id}}">{{ available_hosts[0].name }}</option>
+                            {% for h in available_hosts[1:] %}
+                                <option value="{{h.id}}">{{h.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+
+                {% if consensus_types|length > 0 %}
+                    <div class="form-group">
+                        <label for="consensus_type"> Select a Type</label>
+                        <select id="consensus_type" class="c-select"
+                                name="consensus_type"
+                                 required>
+                            <option selected
+                                    value="{{consensus_types[0]}}">{{consensus_types[0]|upper }}</option>
+                            {% for c in consensus_types[1:] %}
+                                    <option value="{{c}}">{{c|upper}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
                 </form>
             </div>
             <div class="modal-footer">

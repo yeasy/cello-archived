@@ -3,9 +3,19 @@
 {% block body %}
 {{ super() }}
     {% if col_name == "active" %}
-        <h1 class="page-header">Active Clusters ({{items_count}})</h1>
+
+        {% if available_hosts|length > 0 %}
+            <h2 class="page-header">Running Clusters: {{items_count}} <button
+                    type="button" class="btn btn-primary btn-success btn-default pull-sm-right" data-toggle="modal"
+                    data-target="#newClusterModal">Add Cluster</button></h2>
+        {% else %}
+            <h2 class="page-header">Running Clusters: {{items_count}} <button
+                    type="button" class="btn btn-primary btn-success btn-default
+                 pull-sm-right" data-toggle="modal" data-target="#newClusterModal"
+                    disabled>Add Cluster</button></h2>
+        {% endif %}
     {% else %}
-        <h1 class="page-header">Released Clusters ({{items_count}})</h1>
+        <h2 class="page-header">Released Clusters: {{items_count}}</h2>
     {% endif %}
 
     {% if items_count > 0 %}
@@ -14,10 +24,11 @@
                 <thead>
                 <tr>
                     <th>Name</th>
-                    <th>user_id</th>
-                    <th>api_url</th>
-                    <th>host_id</th>
-                    <th>create_ts</th>
+                    <th>User</th>
+                    <th>API</th>
+                    <th>Type</th>
+                    <th>Host</th>
+                    <th>Created</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -28,9 +39,14 @@
                             {% else %}
                         <tr>
                     {% endif %}
-                <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
+                {% if col_name == "active" %}
+                    <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
+                {% else %}
+                    <td><a href="/cluster_info/{{item.id}}?released=1">{{item.name}}</a></td>
+                {% endif %}
                 <td>{{item.user_id}}</td>
                 <td>{{item.api_url}}</td>
+                <td>{{item.consensus_type}}</td>
                 <td>{{item.host_id}}</td>
                 <td>{{item.create_ts}}</td>
                 <td><input value="Delete" type="button"
@@ -46,4 +62,56 @@
         </div>
     {% endif %}
 
+ <div id="newClusterModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Create a cluster</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form" id="add_new_cluster_form" data-toggle="validator">
+
+                    <div class="form-group">
+                        <label for="cluster_name">*Name (less than 16 chars) </label>
+                        <input id="cluster_name" name="name" type="text"
+                               class="form-control" pattern="^[-_A-z0-9]{1,}$"
+                               placeholder="Cluster Name" data-error="A name is required" max-length="16" required >
+                    </div>
+                {% if available_hosts|length > 0 %}
+                    <div class="form-group">
+                        <label for="host"> Select a Host</label>
+                        <select id="host" class="c-select" name="host_id" required>
+                            <option selected value="{{ available_hosts[0].id}}">{{ available_hosts[0].name }}</option>
+                            {% for h in available_hosts[1:] %}
+                                <option value="{{h.id}}">{{h.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+
+                {% if consensus_types|length > 0 %}
+                    <div class="form-group">
+                        <label for="consensus_type"> Select a Type</label>
+                        <select id="consensus_type" class="c-select"
+                                name="consensus_type"
+                                 required>
+                            <option selected
+                                    value="{{consensus_types[0]}}">{{consensus_types[0]|upper }}</option>
+                            {% for c in consensus_types[1:] %}
+                                    <option value="{{c}}">{{c|upper}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-success btn-sm btn-default create_cluster_button" type="button">Create</button>
+                <button class="btn btn-default btn-sm" data-dismiss="modal" type="button">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

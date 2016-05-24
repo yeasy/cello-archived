@@ -11,6 +11,7 @@ from compose.container import Container
 from docker import Client
 
 from .log import log_handler, LOG_LEVEL
+from .utils import HOST_TYPES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -49,7 +50,7 @@ def clean_exited_containers(daemon_url):
         client.remove_container(_)
 
 
-def check_daemon_url(daemon_url, timeout=2):
+def test_daemon(daemon_url, timeout=2):
     """ Check if the daemon is active
 
     Only wait for 2 seconds.
@@ -58,12 +59,61 @@ def check_daemon_url(daemon_url, timeout=2):
     :param timeout: Time to wait for the response
     :return: True for active, False for inactive
     """
+    if not daemon_url or not daemon_url.startswith("tcp://"):
+        return False
+    segs = daemon_url.split(":")
+    if len(segs) != 3:
+        logger.error("Invalid daemon url = ", daemon_url)
+        return False
     try:
         client = Client(base_url=daemon_url, timeout=timeout)
         return client.ping() == 'OK'
     except:
         return False
 
+
+def detect_daemon_type(daemon_url, timeout=2):
+    """ Try to detect the daemon type
+
+    Only wait for 2 seconds.
+
+    :param daemon_url: Docker daemon url
+    :param timeout: Time to wait for the response
+    :return: host type info
+    """
+    if not daemon_url or not daemon_url.startswith("tcp://"):
+        return None
+    segs = daemon_url.split(":")
+    if len(segs) != 3:
+        logger.error("Invalid daemon url = ", daemon_url)
+        return None
+    try:
+        client = Client(base_url=daemon_url, timeout=timeout)
+        server_version = client.info()['ServerVersion']
+        if server_version.startswith('swarm'):
+            return 'swarm'
+        else:
+            return 'single'
+    except:
+        return None
+
+
+def detect_container_host(swarm_url, container_name, timeout=2):
+    """
+    Detect the host ip where the given container locate in the swarm cluster
+
+    :param swarm_url: Swarm cluster api url
+    :param container_name: The container name
+    :param timeout: Time to wait for the response
+    :return: host ip
+    """
+    try:
+        client = Client(base_url=swarm_url, timeout=timeout)
+        info = client.inspect_container(container_name)
+        return info['NetworkSettings']['Ports']['5000/tcp'][0]['HostIp']
+    except:
+        return ''
+    pass
 
 def get_project(template_path):
     """ Get compose project with given template file path

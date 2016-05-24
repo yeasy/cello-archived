@@ -41,8 +41,6 @@ $(document).ready(function() {
         });
     });
     $('.create_cluster_button').click(function() {
-        //var name = $(this).parents('form:first').find('[name="name"]').val();
-        //var daemon_url = $(this).parents('form:first').find('[name="daemon_url"]').val();
         var form_data = $('#add_new_cluster_form').serialize();
         
         $.ajax({
@@ -92,6 +90,7 @@ $(document).ready(function() {
             var name    = $form.find('[name="name"]').val();
             var status    = $form.find('[name="status"]').val();
             var capacity    = $form.find('[name="capacity"]').val();
+            var type    = $form.find('[name="type"]').val();
 
             // The url and method might be different in your application
             $.ajax({
@@ -101,7 +100,8 @@ $(document).ready(function() {
                     "id": id,
                     "name": name,
                     "status": status,
-                    "capacity": capacity
+                    "capacity": capacity,
+                    "type": type
                 }
             }).success(function(response) {
                 // Get the cells
@@ -131,7 +131,6 @@ $(document).ready(function() {
                 location.reload(); 
             });
         });
-
     $('.edit_host_button').on('click', function() {
         // Get the record's ID via attribute
         var id = $(this).attr('data-id');
@@ -148,6 +147,7 @@ $(document).ready(function() {
                 .find('[name="id"]').val(response.id).end()
                 .find('[name="name"]').val(response.name).end()
                 .find('[name="daemon_url"]').val(response.daemon_url).end()
+                .find('[name="type"]').val(response.type).end()
                 .find('[name="capacity"]').val(response.capacity).end()
                 .find('[name="status"]').val(response.status).end()
                 .find('[name="create_ts"]').val(response.create_ts).end()
@@ -173,6 +173,7 @@ $(document).ready(function() {
                 .modal('show');
         });
     });
+    
     Highcharts.setOptions({
         global : {
             useUTC : false
@@ -180,61 +181,338 @@ $(document).ready(function() {
     });
 
     // Create the chart
-    $('#container').highcharts('StockChart', {
-        chart : {
-            events : {
-                load : function () {
+    $('#container_test').highcharts({
+        chart: {
+            type: 'bar'
+        },
+        title: {
+            text: 'Fruit Consumption'
+        },
+        xAxis: {
+            categories: ['Apples', 'Bananas', 'Oranges']
+        },
+        yAxis: {
+            title: {
+                text: 'Fruit eaten'
+            }
+        },
+        series: [{
+            name: 'Jane',
+            data: [1, 0, 4]
+        }, {
+            name: 'John',
+            data: [5, 7, 3]
+        }]
+    });
+    
+    var gaugeOptions = {
 
-                    // set up the updating of the chart each second
-                    var series = this.series[0];
-                    setInterval(function () {
-                        var x = (new Date()).getTime(), // current time
-                            y = Math.round(Math.random() * 100);
-                        series.addPoint([x, y], true, true);
-                    }, 1000);
-                }
+        chart: {
+            type: 'solidgauge'
+        },
+
+        title: null,
+
+        pane: {
+            center: ['50%', '85%'],
+            size: '140%',
+            startAngle: -90,
+            endAngle: 90,
+            background: {
+                backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+                innerRadius: '60%',
+                outerRadius: '100%',
+                shape: 'arc'
             }
         },
 
-        rangeSelector: {
-            buttons: [{
-                count: 1,
-                type: 'minute',
-                text: '1M'
-            }, {
-                count: 5,
-                type: 'minute',
-                text: '5M'
-            }, {
-                type: 'all',
-                text: 'All'
-            }],
-            inputEnabled: false,
-            selected: 0
-        },
-
-        title : {
-            text : 'Live random data'
-        },
-
-        exporting: {
+        tooltip: {
             enabled: false
         },
 
-        series : [{
-            name : 'Random data',
-            data : (function () {
-                // generate an array of random data
-                var data = [], time = (new Date()).getTime(), i;
+        // the value axis
+        yAxis: {
+            stops: [
+                [0.1, '#55BF3B'], // green
+                [0.5, '#DDDF0D'], // yellow
+                [0.9, '#DF5353'] // red
+            ],
+            lineWidth: 0,
+            minorTickInterval: null,
+            tickPixelInterval: 400,
+            tickWidth: 0,
+            title: {
+                y: -70
+            },
+            labels: {
+                y: 16
+            }
+        },
 
-                for (i = -999; i <= 0; i += 1) {
-                    data.push([
-                        time + i * 1000,
-                        Math.round(Math.random() * 100)
-                    ]);
+        plotOptions: {
+            solidgauge: {
+                dataLabels: {
+                    y: 5,
+                    borderWidth: 0,
+                    useHTML: true
                 }
-                return data;
-            }())
+            }
+        }
+    };
+
+    // The speed gauge
+    $('#container_host_utilization').highcharts(Highcharts.merge(gaugeOptions, {
+        yAxis: {
+            min: 0,
+            max: 200,
+            title: {
+                text: 'Utilization'
+            }
+        },
+
+        credits: {
+            enabled: false
+        },
+
+        series: [{
+            name: 'Utilization',
+            data: [80],
+            dataLabels: {
+                format: '<div style="text-align:center"><span style="font-size:25px;color:' +
+                    ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
+                       '<span style="font-size:12px;color:silver">km/h</span></div>'
+            },
+            tooltip: {
+                valueSuffix: ''
+            }
         }]
+
+    }));
+
+    // The RPM gauge
+    $('#container-rpm').highcharts(Highcharts.merge(gaugeOptions, {
+        yAxis: {
+            min: 0,
+            max: 5,
+            title: {
+                text: 'RPM'
+            }
+        },
+
+        series: [{
+            name: 'RPM',
+            data: [1],
+            dataLabels: {
+                format: '<div style="text-align:center"><span style="font-size:25px;color:' +
+                    ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y:.1f}</span><br/>' +
+                       '<span style="font-size:12px;color:silver">* 1000 / min</span></div>'
+            },
+            tooltip: {
+                valueSuffix: ' revolutions/min'
+            }
+        }]
+
+    }));
+
+    
+    function request_hosts() {
+        $.ajax({
+            url: '/_stat?res=hosts',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                // add the point
+                chart_hosts_type.series[0].setData(response.type);
+                chart_hosts_status.series[0].setData(response.status);
+
+                // call it again after one second
+                setTimeout(request_hosts, 30000);    
+            },
+            cache: false
+        });
+    }
+    var chart_hosts_type = new Highcharts.Chart({
+            chart: {
+                renderTo: 'stat_hosts_type',
+                defaultSeriesType: 'spline',
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie',
+                events: {
+                    load: request_hosts
+                }
+            },
+            title: {
+                text: 'Host Type'
+            },
+            tooltip: {
+                pointFormat: '<b>{point.y}</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: true
+                }
+            },
+            legend: {
+                labelFormatter: function() {
+                    return this.name + ': ' + this.y;
+                },
+            },
+            series: [{
+                name: 'Number',
+                colorByPoint: true,
+                data: [{
+                    name: '',
+                    y: 100
+                }]
+            }]
     });
+    var chart_hosts_status = new Highcharts.Chart({
+            chart: {
+                renderTo: 'stat_hosts_status',
+                defaultSeriesType: 'spline',
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie',
+                events: {
+                    load: request_hosts
+                }
+            },
+            title: {
+                text: 'Host Status'
+            },
+            tooltip: {
+                pointFormat: '<b>{point.y}</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: true
+                }
+            },
+            legend: {
+                labelFormatter: function() {
+                    return this.name + ': ' + this.y;
+                },
+            },
+            series: [{
+                name: 'Number',
+                colorByPoint: true,
+                data: [{
+                    name: '',
+                    y: 100
+                }]
+            }]
+        });
+    function request_clusters() {
+        $.ajax({
+            url: '/_stat?res=clusters',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                // add the point
+                chart_clusters_type.series[0].setData(response.type);
+                chart_clusters_status.series[0].setData(response.status);
+
+                // call it again after one second
+                setTimeout(request_clusters, 30000);    
+            },
+            cache: false
+        });
+    }
+    var chart_clusters_type = new Highcharts.Chart({
+            chart: {
+                renderTo: 'stat_clusters_type',
+                defaultSeriesType: 'spline',
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie',
+                events: {
+                    load: request_clusters
+                }
+            },
+            title: {
+                text: 'Cluster Type'
+            },
+            tooltip: {
+                pointFormat: '<b>{point.y}</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: true
+                }
+            },
+            legend: {
+                labelFormatter: function() {
+                    return this.name + ': ' + this.y;
+                },
+            },
+            series: [{
+                name: 'Number',
+                colorByPoint: true,
+                data: [{
+                    name: '',
+                    y: 100
+                }]
+            }]
+    });
+    var chart_clusters_status = new Highcharts.Chart({
+            chart: {
+                renderTo: 'stat_clusters_status',
+                defaultSeriesType: 'spline',
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie',
+                events: {
+                    load: request_clusters
+                }
+            },
+            title: {
+                text: 'Cluster Status'
+            },
+            tooltip: {
+                pointFormat: '<b>{point.y}</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: true
+                }
+            },
+            legend: {
+                labelFormatter: function() {
+                    return this.name + ': ' + this.y;
+                },
+            },
+            series: [{
+                name: 'Number',
+                colorByPoint: true,
+                data: [{
+                    name: '',
+                    y: 100
+                }]
+            }]
+        });
 });
