@@ -35,7 +35,7 @@ other action.*
 All services are recommended to setup through Docker containers by default.
 
 ### Master Requirement
-* docker engine: >=1.10.0
+* docker engine: >=1.11.1
 * docker-compose: >=1.7.0
 * docker images:
     - python:3.5
@@ -46,7 +46,8 @@ All services are recommended to setup through Docker containers by default.
 
 * docker engine:
     - >=1.10.0,
-    - let daemon listen on port 2375, and make sure Master can reach Node from port 2375.
+    - Let daemon listen on port 2375, and make sure Master can reach Node from port 2375.
+
 ```sh
 # Add this into /etc/default/docker
 DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*'"
@@ -115,3 +116,4 @@ $ bash ./scripts/restart.sh
 * Support monitor.
 * Support fill-to-full operation on given host.
 * Support detect host info when adding as swarm type.
+* Add limitation on the running containers.*

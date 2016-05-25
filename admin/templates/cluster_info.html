@@ -17,9 +17,15 @@
         <dt>Node Containers<dt> <dd> {{item.node_containers}} </dd>
     </dl>
     <div class="container-fluid">
+        {% if item.release_ts %}
         <input value="Delete" type="button"
                class="btn btn-danger btn-default btn-primary delete_cluster_button"
-               data-id="{{item.id}}"/>
+               data-id="{{item.id}}" release="1"/>
+        {% else %}
+            <input value="Delete" type="button"
+                   class="btn btn-danger btn-default btn-primary delete_cluster_button"
+                   data-id="{{item.id}}"/>
+        {% endif %}
     </div>
 </div>
 

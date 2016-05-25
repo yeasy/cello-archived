@@ -41,7 +41,8 @@ class ClusterHandler(object):
         """
         logger.debug("Start compose project with logging_level={}, "
                      "consensus={}".format(logging_level, consensus_type))
-        os.environ['DOCKER_HOST'] = daemon_url
+        os.environ['DOCKER_HOST'] = daemon_url   # start compose at which host
+        os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
         os.environ['PEER_NETWORKID'] = name
@@ -63,6 +64,7 @@ class ClusterHandler(object):
         """
         logger.debug("Stop compose project "+name)
         os.environ['DOCKER_HOST'] = daemon_url
+        os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
         os.environ['COMPOSE_PROJECT_NAME'] = name
         os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
         os.environ['PEER_NETWORKID'] = name
@@ -92,34 +94,34 @@ class ClusterHandler(object):
         logger.debug("Clean chaincode images")
         clean_chaincode_images(daemon_url, name_prefix)
 
-    def list(self, filter_data={}, collection="active"):
+    def list(self, filter_data={}, col_name="active"):
         """ List clusters with given criteria
 
         :param filter_data: Image with the filter properties
-        :param collection: Use data in which collection
+        :param col_name: Use data in which col_name
         :return: iteration of serialized doc
         """
-        if collection == "active":
+        if col_name == "active":
             logger.debug("List all active clusters")
             result = map(self._serialize, self.col_active.find(filter_data))
-        elif collection == "released":
+        elif col_name == "released":
             logger.debug("List all released clusters")
             result = map(self._serialize, self.col_released.find(
                 filter_data))
         else:
-            logger.warn("Unknown cluster collection="+collection)
+            logger.warn("Unknown cluster col_name=" + col_name)
             return None
         return result
 
-    def get(self, id, serialization=False, collection="active"):
+    def get(self, id, serialization=False, col_name="active"):
         """ Get a cluster
 
         :param id: id of the doc
         :param serialization: whether to get serialized result or object
-        :param collection: collection to check
+        :param col_name: collection to check
         :return: serialized result or obj
         """
-        if collection != "released":
+        if col_name != "released":
             logger.debug("Get a cluster with id=" + id)
             ins = self.col_active.find_one({"id": id})
         else:
@@ -376,6 +378,8 @@ class ClusterHandler(object):
         daemon_url, host_type = host.get('daemon_url'), host.get('type')
         logger.debug("daemon_url={}, port={}".format(daemon_url,api_port))
         if api_port <= 0 or host_type not in HOST_TYPES:
+            logger.warn("Invalid input: api_port=%d, host_type=%s".format(
+                api_port, host_type))
             return ""
         # we should diff with simple host and swarm host here
         if host_type == HOST_TYPES[0]:  # single
@@ -385,7 +389,7 @@ class ClusterHandler(object):
                 return ""
             host_ip = segs[1][2:]
         elif host_type == HOST_TYPES[1]:  # swarm
-            host_ip = detect_container_host(daemon_url, cluster_name+'_'+'vp3')
+            host_ip = detect_container_host(daemon_url, cluster_name+'_'+'vp0')
         else:
             return ""
         return "http://{0}:{1}".format(host_ip, api_port)

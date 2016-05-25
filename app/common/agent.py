@@ -107,6 +107,8 @@ def detect_container_host(swarm_url, container_name, timeout=2):
     :param timeout: Time to wait for the response
     :return: host ip
     """
+    logger.debug("Detect container={} with swarm_url={}".format(
+        container_name, swarm_url))
     try:
         client = Client(base_url=swarm_url, timeout=timeout)
         info = client.inspect_container(container_name)

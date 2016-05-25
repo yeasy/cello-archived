@@ -27,9 +27,9 @@ def show():
     available_hosts = list(filter(
         lambda e: e["status"] == "active"
                   and len(e["clusters"]) < e["capacity"], hosts))
-    clusters_active = len(list(cluster_handler.list(collection="active")))
-    clusters_released = len(list(cluster_handler.list(collection="released")))
-    clusters_free = len(list(cluster_handler.list(collection="active",
+    clusters_active = len(list(cluster_handler.list(col_name="active")))
+    clusters_released = len(list(cluster_handler.list(col_name="released")))
+    clusters_free = len(list(cluster_handler.list(col_name="active",
                                                   filter_data={"user_id": ""})))
 
 

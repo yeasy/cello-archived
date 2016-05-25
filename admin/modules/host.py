@@ -130,26 +130,27 @@ class HostHandler(object):
             return_document=ReturnDocument.AFTER)
 
         #  auto full to capacity
-        def create_cluster_work(port):
-            cid = cluster_handler.create(
-                "{}_{}".format(hname, (port-CLUSTER_API_PORT_START)),
-                str(hid), port)
-            if cid:
-                logger.debug("Create cluster with id={}".format(cid))
-            else:
-                logger.warn("Create cluster failed")
-        cap_new = int(d.get("capacity", cap_old))
-        if cap_new != cap_old and h_new.get("status") == "active":  #
-            # something is changed
-            free_ports = cluster_handler.find_free_api_ports(
-                str(hid), cap_new - len(clusters_old))
-            i = 0
-            for p in free_ports:
-                t = Thread(target=create_cluster_work, args=(p,))
-                t.start()
-                i += 1
-                if i % 10 == 0:
-                    time.sleep(1)
+        if False:
+            def create_cluster_work(port):
+                cid = cluster_handler.create(
+                    "{}_{}".format(hname, (port-CLUSTER_API_PORT_START)),
+                    str(hid), port)
+                if cid:
+                    logger.debug("Create cluster with id={}".format(cid))
+                else:
+                    logger.warn("Create cluster failed")
+            cap_new = int(d.get("capacity", cap_old))
+            if cap_new != cap_old and h_new.get("status") == "active":  #
+                # something is changed
+                free_ports = cluster_handler.find_free_api_ports(
+                    str(hid), cap_new - len(clusters_old))
+                i = 0
+                for p in free_ports:
+                    t = Thread(target=create_cluster_work, args=(p,))
+                    t.start()
+                    i += 1
+                    if i % 10 == 0:
+                        time.sleep(1)
 
         if serialization:
             return self._serialize(h_new)

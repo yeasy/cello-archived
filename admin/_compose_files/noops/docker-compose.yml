@@ -15,6 +15,8 @@ services:
     labels:
       - monitor=true
       - hyperledger=true
+    hostname: vp0
+    container_name: ${COMPOSE_PROJECT_NAME}_vp0
     environment:
       - CORE_PEER_ADDRESSAUTODETECT=true
       - CORE_PEER_NETWORKID=${PEER_NETWORKID}
@@ -23,13 +25,17 @@ services:
       - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=noops  # noops, pbft, sieve
       - CORE_PEER_ID=vp
       - CORE_NOOPS_BLOCK_TIMEOUT=10
+      - CORE_VM_ENDPOINT=${DAEMON_URL}
     expose:
       - "30303"
       - "30304"
       - "31315"
     ports:
       - "${API_PORT}:5000"
-    volumes: # docker.sock is mapped as the default CORE_VM_ENDPOINT
-      - /var/run/docker.sock:/var/run/docker.sock
+    #volumes: # docker.sock is mapped as the default CORE_VM_ENDPOINT
+    #  - /var/run/docker.sock:/var/run/docker.sock
+    mem_limit: 500000000
+    memswap_limit: 1000000000
+    cpu_quota: 50000
     command: peer node start
 
