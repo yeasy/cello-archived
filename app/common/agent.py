@@ -165,14 +165,11 @@ def setup_container_host(host_type, daemon_url, timeout=2):
             if net_names:
                 logger.warn("Network {} already exists, try using "
                             "it!".format(net_name))
-                return True
             else:
                 if host_type == HOST_TYPES[0]:  # single
                     client.create_network(net_name, driver='bridge')
-                    return True
                 elif host_type == HOST_TYPES[1]:  # swarm
                     client.create_network(net_name, driver='overlay')
-                    return True
                 else:
                     logger.error("No-supported host_type={}".format(host_type))
                     return False
@@ -180,6 +177,7 @@ def setup_container_host(host_type, daemon_url, timeout=2):
         logger.error("Exception happens!")
         logger.error(e)
         return False
+    return True
 
 def cleanup_container_host(host_type, daemon_url, timeout=2):
     """
