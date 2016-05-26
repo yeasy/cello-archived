@@ -8,14 +8,14 @@ from threading import Thread
 from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import db, log_handler, LOG_LEVEL, get_project, \
-    clean_exited_containers, clean_chaincode_images, test_daemon,  \
-    detect_daemon_type, CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, HOST_TYPES
+from common import db, cleanup_container_host, LOG_LEVEL, setup_container_host, \
+    test_daemon, detect_daemon_type, CLUSTER_API_PORT_START
 
 from modules import cluster_handler
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
+
 
 class HostHandler(object):
     """ Main handler to operate the Docker hosts
@@ -49,6 +49,10 @@ class HostHandler(object):
             logger.warn("{} already existed in db".format(daemon_url))
             return False
 
+        if not setup_container_host(detected_type, daemon_url):
+            logger.warn("{} cannot be setup".format(name))
+            return False
+
         h = {
             'name': name,
             'daemon_url': daemon_url,
@@ -63,8 +67,8 @@ class HostHandler(object):
 
         def create_cluster_work(port):
             cluster_name = "{}_{}".format(name, (port-CLUSTER_API_PORT_START))
-            cid = cluster_handler.create(
-                name=cluster_name, host_id=str(hid), api_port=port)
+            cid = cluster_handler.create(name=cluster_name, host_id=str(hid),
+                                         api_port=port)
             if not cid:
                 logger.debug("Create cluster with id={}".format(cid))
 
@@ -174,13 +178,14 @@ class HostHandler(object):
         """
         logger.debug("Delete a host with id={0}".format(id))
 
-        ins = self.col.find_one({"id": id})
-        if not ins:
+        h = self.col.find_one({"id": id})
+        if not h:
             logger.warn("Cannot delete non-existed host")
             return False
-        if ins.get("clusters", ""):
+        if h.get("clusters", ""):
             logger.warn("There are clusters on that host, cannot delete.")
             return False
+        cleanup_container_host(h.get("type"),h.get("daemon_url"))
         self.col.delete_one({"id": id})
         return True
 

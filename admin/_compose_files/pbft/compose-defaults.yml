@@ -17,6 +17,7 @@ services:
     labels:
       - monitor=true
       - hyperledger=true
+      - com.docker.swarm.reschedule-policy=["on-node-failure"]
     environment:
       - CORE_PEER_ADDRESSAUTODETECT=true
       - CORE_PEER_NETWORKID=${PEER_NETWORKID}

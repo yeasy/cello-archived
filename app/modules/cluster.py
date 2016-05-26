@@ -8,11 +8,11 @@ from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, LOG_LEVEL, get_project, col_host, \
-    clean_exited_containers, clean_chaincode_images, test_daemon, \
-    detect_container_host
+    clean_project_containers, clean_chaincode_images, test_daemon, \
+    detect_container_host, compose_start, compose_stop
 
 from common import CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, CONSENSUS_TYPES,\
-    HOST_TYPES
+    HOST_TYPES, CLUSTER_NETWORK
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -26,73 +26,6 @@ class ClusterHandler(object):
     def __init__(self):
         self.col_active = db["cluster_active"]
         self.col_released = db["cluster_released"]
-
-    def _compose_start(self, name, port, daemon_url,
-                       logging_level="debug",
-                       consensus_type=CONSENSUS_TYPES[0]):
-        """ Start a compose project
-
-        :param name: The name of the cluster
-        :param port: The port of the cluster API
-        :param daemon_url: Docker host daemon
-        :param logging_level: Logging level
-        :param consensus_type: Cluster consensus type
-        :return: The name list of the started peer containers
-        """
-        logger.debug("Start compose project with logging_level={}, "
-                     "consensus={}".format(logging_level, consensus_type))
-        os.environ['DOCKER_HOST'] = daemon_url   # start compose at which host
-        os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
-        os.environ['COMPOSE_PROJECT_NAME'] = name
-        os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
-        os.environ['PEER_NETWORKID'] = name
-        os.environ['API_PORT'] = str(port)
-        project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
-        containers = project.up(detached=True)
-        return [c.get('Id') for c in containers]
-
-    def _compose_stop(self, name, port, daemon_url,
-                      logging_level="debug",
-                      consensus_type=CONSENSUS_TYPES[0]):
-        """ Stop a compose project and remove the service containers
-
-        :param name: The name of the cluster
-        :param port: The port of the cluster API
-        :param daemon_url: Docker host daemon
-        :param consensus_type: Cluster consensus type
-        :return:
-        """
-        logger.debug("Stop compose project "+name)
-        os.environ['DOCKER_HOST'] = daemon_url
-        os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
-        os.environ['COMPOSE_PROJECT_NAME'] = name
-        os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
-        os.environ['PEER_NETWORKID'] = name
-        os.environ['API_PORT'] = str(port)
-        project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
-        project.stop()
-        project.remove_stopped()
-
-    def _clean_containers(self, daemon_url):
-        """
-
-        :param daemon_url: Docker host daemon
-        :return:
-        """
-        logger.debug("Clean exited containers")
-        clean_exited_containers(daemon_url)
-
-    def _clean_images(self, daemon_url, name_prefix):
-        """ Clean unused images.
-
-        Image with given name prefix will be removed.
-
-        :param daemon_url:
-        :param name_prefix:
-        :return:
-        """
-        logger.debug("Clean chaincode images")
-        clean_chaincode_images(daemon_url, name_prefix)
 
     def list(self, filter_data={}, col_name="active"):
         """ List clusters with given criteria
@@ -189,10 +122,9 @@ class ClusterHandler(object):
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
         try:
             logger.debug("Start compose project with name={}".format(str(cid)))
-            containers = self._compose_start(name=str(cid),
-                                             port=api_port,
-                                             daemon_url=daemon_url,
-                                             consensus_type=consensus_type)
+            containers = compose_start(name=str(cid), port=api_port,
+                                       daemon_url=daemon_url,
+                                       consensus_type=consensus_type)
         except Exception as e:
             logger.warn(e)
             logger.warn("Compose start error, then remove failed clusters")
@@ -217,7 +149,7 @@ class ClusterHandler(object):
                                     {"$set": {"clusters": clusters}}),
             self.col_active.update_one(
                 {"_id": cid},
-                {"$set": {"node_containers": containers, "user_id": user_id,
+                {"$set": {"containers": containers, "user_id": user_id,
                           'api_url': api_url}})
 
             logger.debug("Create cluster OK, id={}".format(str(cid)))
@@ -257,12 +189,13 @@ class ClusterHandler(object):
             if h:
                 daemon_url = h.get("daemon_url")
                 try:
-                    self._compose_stop(name=id,
-                                       port=api_url.split(":")[-1],
-                                       daemon_url=daemon_url,
-                                       consensus_type=consensus_type)
-                    self._clean_containers(daemon_url)
-                    self._clean_images(daemon_url=daemon_url, name_prefix=id)
+                    compose_stop(name=id, port=api_url.split(":")[-1],
+                                 daemon_url=daemon_url,
+                                 consensus_type=consensus_type)
+                    clean_project_containers(daemon_url=daemon_url,
+                                             name_prefix=id)
+                    clean_chaincode_images(daemon_url=daemon_url,
+                                           name_prefix=id)
                 except Exception as e:
                     logger.warn("Wrong in clean compose project and containers")
                     logger.warn(e)
@@ -353,7 +286,7 @@ class ClusterHandler(object):
     def _serialize(self, doc, keys=['id', 'name', 'user_id', 'host_id',
                                     'api_url', 'consensus_type',
                                     'create_ts', 'apply_ts', 'release_ts',
-                                    'node_containers']):
+                                    'containers']):
         """ Serialize an obj
 
         :param doc: doc to serialize

@@ -58,3 +58,8 @@ services:
     environment:
       - CORE_PEER_ID=vp3
       - CORE_PEER_DISCOVERY_ROOTNODE=${COMPOSE_PROJECT_NAME}_vp0:30303
+
+networks:
+  default:
+    external:
+      name: ${CLUSTER_NETWORK}

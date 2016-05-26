@@ -15,6 +15,7 @@ services:
     labels:
       - monitor=true
       - hyperledger=true
+      - com.docker.swarm.reschedule-policy=["on-node-failure"]
     hostname: vp0
     container_name: ${COMPOSE_PROJECT_NAME}_vp0
     environment:
@@ -39,3 +40,7 @@ services:
     cpu_quota: 50000
     command: peer node start
 
+networks:
+  default:
+    external:
+      name: ${CLUSTER_NETWORK}
