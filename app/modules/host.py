@@ -185,7 +185,7 @@ class HostHandler(object):
         if h.get("clusters", ""):
             logger.warn("There are clusters on that host, cannot delete.")
             return False
-        cleanup_container_host(h.get("type"),h.get("daemon_url"))
+        cleanup_container_host(h.get("daemon_url"))
         self.col.delete_one({"id": id})
         return True
 

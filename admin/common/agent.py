@@ -149,7 +149,7 @@ def setup_container_host(host_type, daemon_url, timeout=2):
     :param host_type: Docker host type
     :param daemon_url: Docker daemon url
     :param timeout: timeout to wait
-    :return:
+    :return: True or False
     """
     if not daemon_url or not daemon_url.startswith("tcp://"):
         logger.error("Invalid daemon_url={}".format(daemon_url))
@@ -179,7 +179,8 @@ def setup_container_host(host_type, daemon_url, timeout=2):
         return False
     return True
 
-def cleanup_container_host(host_type, daemon_url, timeout=2):
+
+def cleanup_container_host(daemon_url, timeout=2):
     """
     Cleanup a container host when use removes the host
 
@@ -190,7 +191,25 @@ def cleanup_container_host(host_type, daemon_url, timeout=2):
     :param timeout: timeout to wait
     :return:
     """
-    pass
+    if not daemon_url or not daemon_url.startswith("tcp://"):
+        logger.error("Invalid daemon_url={}".format(daemon_url))
+        return False
+    try:
+        client = Client(base_url=daemon_url, timeout=timeout)
+        for cs_type in CONSENSUS_TYPES:
+            net_name = CLUSTER_NETWORK+"_{}".format(cs_type)
+            net_names = client.networks(names=[net_name])
+            if net_names:
+                logger.debug("Remove network {}".format(net_name))
+                client.remove_network(net_name)
+            else:
+                logger.warn("Network {} not exists!".format(net_name))
+    except Exception as e:
+        logger.error("Exception happens!")
+        logger.error(e)
+        return False
+    return True
+
 
 def get_project(template_path):
     """ Get compose project with given template file path
