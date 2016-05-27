@@ -53,7 +53,11 @@ All services are recommended to setup through Docker containers by default.
 DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*'"
 ```
 * docker images:
-    - `yeasy/hyperledger:latest` (After pulling, rename it to `hyperledger/fabric-baseimage:latest`)
+    - `yeasy/hyperledger:latest`
+
+        ```sh
+        $ docker tag yeasy/hyperledger:latest hyperledger/fabric-baseimage:latest
+        ```
     - `yeasy/hyperledger-peer:pbft` (match with the [compose](admin/common/compose-defaults.yml) file)
     - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the
     authentication service)
