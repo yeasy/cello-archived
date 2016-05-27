@@ -29,12 +29,16 @@
     </div>
     <h3 class="page-header">Health Status</h3>
     <div class="container-fluid">
-        {% if clusters_free <= 0 %}
-            Status: <font color="red">All clusters are occupied!</font>
-        {% elif available_hosts|length > 0 %}
-            Status: <font color="#ff8c00">All hosts are fulfilled!</font>
+        {% if available_hosts|length <= 0 %}
+            Host: <font color="#ff8c00">All fulfilled!</font>
         {% else %}
-            Status: <font color="green">Excellent!</font>
+            Host: <font color="green"> {{ available_hosts|length }} free!</font>
+        {% endif %}
+    <p></p>
+        {% if clusters_free <= 0 %}
+            Cluster: <font color="red">No available!</font>
+        {% else %}
+            Cluster: <font color="green">{{ clusters_free }} available!</font>
         {% endif %}
     </div>
 

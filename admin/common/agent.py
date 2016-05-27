@@ -2,6 +2,7 @@
 
 
 import logging
+import os
 
 from compose.cli.command import get_project as compose_get_project, \
     get_config_path_from_options as compose_get_config_path_from_options
@@ -11,7 +12,7 @@ from compose.container import Container
 from docker import Client
 
 from .log import log_handler, LOG_LEVEL
-from .utils import HOST_TYPES
+from .utils import HOST_TYPES, CLUSTER_API_PORT_START, CLUSTER_NETWORK, COMPOSE_FILE_PATH, CONSENSUS_TYPES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -25,6 +26,7 @@ def clean_chaincode_images(daemon_url, name_prefix):
     :param name_prefix: image name prefix
     :return: None
     """
+    logger.debug("clean chaincode images with prefix={}".format(name_prefix))
     client = Client(base_url=daemon_url)
     images = client.images()
     id_removes = [e['Id'] for e in images if e['RepoTags'][0].startswith(
@@ -34,8 +36,30 @@ def clean_chaincode_images(daemon_url, name_prefix):
         client.remove_image(_)
 
 
+def clean_project_containers(daemon_url, name_prefix):
+    """
+    Clean cluster node containers and chaincode containers
+
+    All containers with the name prefix will be removed.
+
+    :param daemon_url: Docker daemon url
+    :param name_prefix: image name prefix
+    :return: None
+    """
+    logger.debug("Clean project related containers")
+    client = Client(base_url=daemon_url)
+    containers = client.containers(all=True)
+    id_removes = [e['Id'] for e in containers if e['Names'][0][
+                                                 1:].startswith(name_prefix)]
+    for _ in id_removes:
+        logger.debug("Remove container "+_)
+        client.remove_container(_)
+
 def clean_exited_containers(daemon_url):
     """ Clean those containers with exited status
+
+    This is dangerous, as it may delete temporary containers.
+    Only trigger this when no one else uses the system.
 
     :param daemon_url: Docker daemon url
     :return: None
@@ -107,6 +131,8 @@ def detect_container_host(swarm_url, container_name, timeout=2):
     :param timeout: Time to wait for the response
     :return: host ip
     """
+    logger.debug("Detect container={} with swarm_url={}".format(
+        container_name, swarm_url))
     try:
         client = Client(base_url=swarm_url, timeout=timeout)
         info = client.inspect_container(container_name)
@@ -114,6 +140,76 @@ def detect_container_host(swarm_url, container_name, timeout=2):
     except:
         return ''
     pass
+
+
+def setup_container_host(host_type, daemon_url, timeout=2):
+    """
+    Setup a container host for deploying cluster on it
+
+    :param host_type: Docker host type
+    :param daemon_url: Docker daemon url
+    :param timeout: timeout to wait
+    :return: True or False
+    """
+    if not daemon_url or not daemon_url.startswith("tcp://"):
+        logger.error("Invalid daemon_url={}".format(daemon_url))
+        return False
+    if host_type not in HOST_TYPES:
+        logger.error("Invalid host_type={}".format(host_type))
+        return False
+    try:
+        client = Client(base_url=daemon_url, timeout=timeout)
+        for cs_type in CONSENSUS_TYPES:
+            net_name = CLUSTER_NETWORK+"_{}".format(cs_type)
+            net_names = client.networks(names=[net_name])
+            if net_names:
+                logger.warn("Network {} already exists, try using "
+                            "it!".format(net_name))
+            else:
+                if host_type == HOST_TYPES[0]:  # single
+                    client.create_network(net_name, driver='bridge')
+                elif host_type == HOST_TYPES[1]:  # swarm
+                    client.create_network(net_name, driver='overlay')
+                else:
+                    logger.error("No-supported host_type={}".format(host_type))
+                    return False
+    except Exception as e:
+        logger.error("Exception happens!")
+        logger.error(e)
+        return False
+    return True
+
+
+def cleanup_container_host(daemon_url, timeout=2):
+    """
+    Cleanup a container host when use removes the host
+
+    Maybe we will remove the networks?
+
+    :param host_type: Docker host type
+    :param daemon_url: Docker daemon url
+    :param timeout: timeout to wait
+    :return:
+    """
+    if not daemon_url or not daemon_url.startswith("tcp://"):
+        logger.error("Invalid daemon_url={}".format(daemon_url))
+        return False
+    try:
+        client = Client(base_url=daemon_url, timeout=timeout)
+        for cs_type in CONSENSUS_TYPES:
+            net_name = CLUSTER_NETWORK+"_{}".format(cs_type)
+            net_names = client.networks(names=[net_name])
+            if net_names:
+                logger.debug("Remove network {}".format(net_name))
+                client.remove_network(net_name)
+            else:
+                logger.warn("Network {} not exists!".format(net_name))
+    except Exception as e:
+        logger.error("Exception happens!")
+        logger.error(e)
+        return False
+    return True
+
 
 def get_project(template_path):
     """ Get compose project with given template file path
@@ -150,6 +246,55 @@ def compose_ps(project):
              containers]
 
     return items
+
+
+def compose_start(name, port, daemon_url, logging_level="info",
+                  consensus_type=CONSENSUS_TYPES[0]):
+    """ Start a cluster by compose
+
+    :param name: The name of the cluster
+    :param port: The port of the cluster API
+    :param daemon_url: Docker host daemon
+    :param logging_level: Logging level for the cluster output
+    :param consensus_type: Cluster consensus type
+    :return: The name list of the started peer containers
+    """
+    logger.debug("Start compose project with logging_level={}, "
+                 "consensus={}".format(logging_level, consensus_type))
+    os.environ['DOCKER_HOST'] = daemon_url   # start compose at which host
+    os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
+    os.environ['COMPOSE_PROJECT_NAME'] = name
+    os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
+    os.environ['PEER_NETWORKID'] = name
+    os.environ['API_PORT'] = str(port)
+    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
+    project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
+    containers = project.up(detached=True)
+    return [c.get('Id') for c in containers]
+
+
+def compose_stop(name, port, daemon_url, logging_level="info",
+                 consensus_type=CONSENSUS_TYPES[0]):
+    """ Stop the cluster and remove the service containers
+
+    :param name: The name of the cluster
+    :param port: The port of the cluster API
+    :param daemon_url: Docker host daemon
+    :param logging_level: logging level for the cluster output
+    :param consensus_type: Cluster consensus type
+    :return:
+    """
+    logger.debug("Stop compose project "+name)
+    os.environ['DOCKER_HOST'] = daemon_url
+    os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
+    os.environ['COMPOSE_PROJECT_NAME'] = name
+    os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
+    os.environ['PEER_NETWORKID'] = name
+    os.environ['API_PORT'] = str(port)
+    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
+    project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
+    project.stop()
+    project.remove_stopped()
 
 
 # no used

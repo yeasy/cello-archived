@@ -8,11 +8,11 @@ from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, LOG_LEVEL, get_project, col_host, \
-    clean_exited_containers, clean_chaincode_images, test_daemon, \
-    detect_container_host
+    clean_project_containers, clean_chaincode_images, test_daemon, \
+    detect_container_host, compose_start, compose_stop
 
 from common import CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, CONSENSUS_TYPES,\
-    HOST_TYPES
+    HOST_TYPES, CLUSTER_NETWORK
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -27,99 +27,34 @@ class ClusterHandler(object):
         self.col_active = db["cluster_active"]
         self.col_released = db["cluster_released"]
 
-    def _compose_start(self, name, port, daemon_url,
-                       logging_level="debug",
-                       consensus_type=CONSENSUS_TYPES[0]):
-        """ Start a compose project
-
-        :param name: The name of the cluster
-        :param port: The port of the cluster API
-        :param daemon_url: Docker host daemon
-        :param logging_level: Logging level
-        :param consensus_type: Cluster consensus type
-        :return: The name list of the started peer containers
-        """
-        logger.debug("Start compose project with logging_level={}, "
-                     "consensus={}".format(logging_level, consensus_type))
-        os.environ['DOCKER_HOST'] = daemon_url
-        os.environ['COMPOSE_PROJECT_NAME'] = name
-        os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
-        os.environ['PEER_NETWORKID'] = name
-        os.environ['API_PORT'] = str(port)
-        project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
-        containers = project.up(detached=True)
-        return [c.get('Id') for c in containers]
-
-    def _compose_stop(self, name, port, daemon_url,
-                      logging_level="debug",
-                      consensus_type=CONSENSUS_TYPES[0]):
-        """ Stop a compose project and remove the service containers
-
-        :param name: The name of the cluster
-        :param port: The port of the cluster API
-        :param daemon_url: Docker host daemon
-        :param consensus_type: Cluster consensus type
-        :return:
-        """
-        logger.debug("Stop compose project "+name)
-        os.environ['DOCKER_HOST'] = daemon_url
-        os.environ['COMPOSE_PROJECT_NAME'] = name
-        os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
-        os.environ['PEER_NETWORKID'] = name
-        os.environ['API_PORT'] = str(port)
-        project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
-        project.stop()
-        project.remove_stopped()
-
-    def _clean_containers(self, daemon_url):
-        """
-
-        :param daemon_url: Docker host daemon
-        :return:
-        """
-        logger.debug("Clean exited containers")
-        clean_exited_containers(daemon_url)
-
-    def _clean_images(self, daemon_url, name_prefix):
-        """ Clean unused images.
-
-        Image with given name prefix will be removed.
-
-        :param daemon_url:
-        :param name_prefix:
-        :return:
-        """
-        logger.debug("Clean chaincode images")
-        clean_chaincode_images(daemon_url, name_prefix)
-
-    def list(self, filter_data={}, collection="active"):
+    def list(self, filter_data={}, col_name="active"):
         """ List clusters with given criteria
 
         :param filter_data: Image with the filter properties
-        :param collection: Use data in which collection
+        :param col_name: Use data in which col_name
         :return: iteration of serialized doc
         """
-        if collection == "active":
+        if col_name == "active":
             logger.debug("List all active clusters")
             result = map(self._serialize, self.col_active.find(filter_data))
-        elif collection == "released":
+        elif col_name == "released":
             logger.debug("List all released clusters")
             result = map(self._serialize, self.col_released.find(
                 filter_data))
         else:
-            logger.warn("Unknown cluster collection="+collection)
+            logger.warn("Unknown cluster col_name=" + col_name)
             return None
         return result
 
-    def get(self, id, serialization=False, collection="active"):
+    def get(self, id, serialization=False, col_name="active"):
         """ Get a cluster
 
         :param id: id of the doc
         :param serialization: whether to get serialized result or object
-        :param collection: collection to check
+        :param col_name: collection to check
         :return: serialized result or obj
         """
-        if collection != "released":
+        if col_name != "released":
             logger.debug("Get a cluster with id=" + id)
             ins = self.col_active.find_one({"id": id})
         else:
@@ -187,10 +122,9 @@ class ClusterHandler(object):
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
         try:
             logger.debug("Start compose project with name={}".format(str(cid)))
-            containers = self._compose_start(name=str(cid),
-                                             port=api_port,
-                                             daemon_url=daemon_url,
-                                             consensus_type=consensus_type)
+            containers = compose_start(name=str(cid), port=api_port,
+                                       daemon_url=daemon_url,
+                                       consensus_type=consensus_type)
         except Exception as e:
             logger.warn(e)
             logger.warn("Compose start error, then remove failed clusters")
@@ -215,7 +149,7 @@ class ClusterHandler(object):
                                     {"$set": {"clusters": clusters}}),
             self.col_active.update_one(
                 {"_id": cid},
-                {"$set": {"node_containers": containers, "user_id": user_id,
+                {"$set": {"containers": containers, "user_id": user_id,
                           'api_url': api_url}})
 
             logger.debug("Create cluster OK, id={}".format(str(cid)))
@@ -255,12 +189,13 @@ class ClusterHandler(object):
             if h:
                 daemon_url = h.get("daemon_url")
                 try:
-                    self._compose_stop(name=id,
-                                       port=api_url.split(":")[-1],
-                                       daemon_url=daemon_url,
-                                       consensus_type=consensus_type)
-                    self._clean_containers(daemon_url)
-                    self._clean_images(daemon_url=daemon_url, name_prefix=id)
+                    compose_stop(name=id, port=api_url.split(":")[-1],
+                                 daemon_url=daemon_url,
+                                 consensus_type=consensus_type)
+                    clean_project_containers(daemon_url=daemon_url,
+                                             name_prefix=id)
+                    clean_chaincode_images(daemon_url=daemon_url,
+                                           name_prefix=id)
                 except Exception as e:
                     logger.warn("Wrong in clean compose project and containers")
                     logger.warn(e)
@@ -351,7 +286,7 @@ class ClusterHandler(object):
     def _serialize(self, doc, keys=['id', 'name', 'user_id', 'host_id',
                                     'api_url', 'consensus_type',
                                     'create_ts', 'apply_ts', 'release_ts',
-                                    'node_containers']):
+                                    'containers']):
         """ Serialize an obj
 
         :param doc: doc to serialize
@@ -376,6 +311,8 @@ class ClusterHandler(object):
         daemon_url, host_type = host.get('daemon_url'), host.get('type')
         logger.debug("daemon_url={}, port={}".format(daemon_url,api_port))
         if api_port <= 0 or host_type not in HOST_TYPES:
+            logger.warn("Invalid input: api_port=%d, host_type=%s".format(
+                api_port, host_type))
             return ""
         # we should diff with simple host and swarm host here
         if host_type == HOST_TYPES[0]:  # single
@@ -385,7 +322,7 @@ class ClusterHandler(object):
                 return ""
             host_ip = segs[1][2:]
         elif host_type == HOST_TYPES[1]:  # swarm
-            host_ip = detect_container_host(daemon_url, cluster_name+'_'+'vp3')
+            host_ip = detect_container_host(daemon_url, cluster_name+'_'+'vp0')
         else:
             return ""
         return "http://{0}:{1}".format(host_ip, api_port)

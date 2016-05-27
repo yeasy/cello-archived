@@ -30,7 +30,7 @@ def clusters_show():
                       key != "col_name" and key != "page")
     col_name = r.args.get("col_name", "active")
     clusters = list(cluster_handler.list(filter_data=col_filter,
-                                         collection=col_name))
+                                         col_name=col_name))
     total_items = len(clusters)
 
     search = False
@@ -110,8 +110,7 @@ def cluster_api():
                 logger.debug("cluster POST failed")
                 return jsonify(status_response_fail), CODE_BAD_REQUEST
     elif r.method == 'DELETE':
-        if "id" not in r.form or "col_name" not in r.form or not \
-                r.form["id"] or not r.form["col_name"]:
+        if not r.form["id"] or not r.form["col_name"]:
             logger.warn("cluster operation post without enough data")
             status_response_fail["error"] = "cluster delete without " \
                                             "enough data"
@@ -141,4 +140,4 @@ def cluster_info(cluster_id):
             cluster_id, serialization=True)), CODE_OK
     else:
         return render_template("cluster_info.html", item=cluster_handler.get(
-            cluster_id, serialization=True, collection="released")), CODE_OK
+            cluster_id, serialization=True, col_name="released")), CODE_OK

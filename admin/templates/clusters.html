@@ -3,7 +3,6 @@
 {% block body %}
 {{ super() }}
     {% if col_name == "active" %}
-
         {% if available_hosts|length > 0 %}
             <h2 class="page-header">Running Clusters: {{items_count}} <button
                     type="button" class="btn btn-primary btn-success btn-default pull-sm-right" data-toggle="modal"
