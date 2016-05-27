@@ -43,7 +43,7 @@ All services are recommended to setup through Docker containers by default.
     - yeasy/nginx
 
 ### Node Requirement
-
+* aufs-tools: required on ubuntu 14.04
 * docker engine:
     - >=1.10.0,
     - Let daemon listen on port 2375, and make sure Master can reach Node from port 2375.

@@ -12,7 +12,11 @@
         <dt>Capacity<dt> <dd>{{item.capacity|string}}</dd>
         <dt>Host URL<dt> <dd>{{item.daemon_url}}</dd>
         <dt>Create Time<dt> <dd>{{item.create_ts}}</dd>
-        <dt>Clusters<dt> <dd> {{item.clusters}} </dd>
+        <dt>Clusters<dt> <dd>
+        {% for c in item.clusters %}
+           <a href="/cluster_info/{{ c }}">{{ c }}</a><br>
+        {% endfor %}
+    </dd>
     </dl>
     <!--
     <div class="container-fluid">

@@ -9,6 +9,7 @@ from compose.cli.command import get_project as compose_get_project, \
 from compose.config.config import get_default_config_files
 from compose.config.environment import Environment
 from compose.container import Container
+from compose.project import OneOffFilter
 from docker import Client
 
 from .log import log_handler, LOG_LEVEL
@@ -54,6 +55,7 @@ def clean_project_containers(daemon_url, name_prefix):
     for _ in id_removes:
         logger.debug("Remove container "+_)
         client.remove_container(_)
+
 
 def clean_exited_containers(daemon_url):
     """ Clean those containers with exited status
@@ -248,12 +250,12 @@ def compose_ps(project):
     return items
 
 
-def compose_start(name, port, daemon_url, logging_level="info",
+def compose_start(name, api_port, daemon_url, logging_level="info",
                   consensus_type=CONSENSUS_TYPES[0]):
     """ Start a cluster by compose
 
     :param name: The name of the cluster
-    :param port: The port of the cluster API
+    :param api_port: The port of the cluster API
     :param daemon_url: Docker host daemon
     :param logging_level: Logging level for the cluster output
     :param consensus_type: Cluster consensus type
@@ -266,20 +268,24 @@ def compose_start(name, port, daemon_url, logging_level="info",
     os.environ['COMPOSE_PROJECT_NAME'] = name
     os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
     os.environ['PEER_NETWORKID'] = name
-    os.environ['API_PORT'] = str(port)
+    os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
     project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
     containers = project.up(detached=True)
-    return [c.get('Id') for c in containers]
+    result = {}
+    for c in containers:
+        result[c.name] = c.id
+    logger.debug("compose started with containers={}".format(result))
+    return result
 
 
-def compose_stop(name, port, daemon_url, logging_level="info",
-                 consensus_type=CONSENSUS_TYPES[0]):
+def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
+                 logging_level="info", consensus_type=CONSENSUS_TYPES[0]):
     """ Stop the cluster and remove the service containers
 
     :param name: The name of the cluster
-    :param port: The port of the cluster API
     :param daemon_url: Docker host daemon
+    :param api_port: The port of the cluster API
     :param logging_level: logging level for the cluster output
     :param consensus_type: Cluster consensus type
     :return:
@@ -290,11 +296,11 @@ def compose_stop(name, port, daemon_url, logging_level="info",
     os.environ['COMPOSE_PROJECT_NAME'] = name
     os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
     os.environ['PEER_NETWORKID'] = name
-    os.environ['API_PORT'] = str(port)
+    os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
     project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
     project.stop()
-    project.remove_stopped()
+    project.remove_stopped(one_off=OneOffFilter.include)
 
 
 # no used

@@ -112,53 +112,55 @@ class ClusterHandler(object):
 
         c = {
             'name': name,
-            'user_id': user_id or "__NOT_READY_FOR_APPLY__",
+            'user_id': user_id or "__NOT_READY_FOR_APPLY__",  # avoid applied
             'host_id': host_id,
             'consensus_type': consensus_type,
             'create_ts': datetime.datetime.now(),
             'release_ts': "",
+            'api_url': "",
         }
         cid = self.col_active.insert_one(c).inserted_id  # object type
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
+
+        # generate api url
+        api_url = self._gen_api_url(str(cid), h, api_port)
+        if not api_url:  # not valid api_url
+            logger.error("Error to gen api_url, cleanup the record and quit")
+            self.col_active.delete_one({"_id": cid})
+            return None
+
+        # start compose project
         try:
             logger.debug("Start compose project with name={}".format(str(cid)))
-            containers = compose_start(name=str(cid), port=api_port,
+            containers = compose_start(name=str(cid), api_port=api_port,
                                        daemon_url=daemon_url,
                                        consensus_type=consensus_type)
         except Exception as e:
             logger.warn(e)
-            logger.warn("Compose start error, then remove failed clusters")
+            logger.warn("Compose start error, then cleanup project and record")
             self.delete(id=str(cid), col_name="active", record=False,
                         forced=True)
             return None
 
         if not containers:
-            logger.warn("containers empty, then stop the project cluster")
+            logger.warn("containers empty, then cleanup project and record")
             self.delete(id=str(cid), col_name="active", record=False,
                         forced=True)
             return None
 
-        api_url = self._gen_api_url(str(cid), h, api_port)
-        if api_url:
-            logger.debug("api_url={}".format(api_url))
-            if h:  # this part may miss some element with concurrency
-                logger.debug("Add cluster to host collection")
-                clusters = col_host.find_one({"id": host_id}).get("clusters")
-                clusters.append(str(cid))
-                col_host.update_one({"id": host_id},
-                                    {"$set": {"clusters": clusters}}),
-            self.col_active.update_one(
-                {"_id": cid},
-                {"$set": {"containers": containers, "user_id": user_id,
-                          'api_url': api_url}})
+        if h:  # this part may miss some element with concurrency; dont care
+            logger.debug("Add cluster to host collection")
+            clusters = col_host.find_one({"id": host_id}).get("clusters")
+            clusters.append(str(cid))
+            col_host.update_one({"id": host_id},
+                                {"$set": {"clusters": clusters}}),
+        self.col_active.update_one(
+            {"_id": cid},
+            {"$set": {"containers": containers, "user_id": user_id,
+                      'api_url': api_url}})
 
-            logger.debug("Create cluster OK, id={}".format(str(cid)))
-            return str(cid)
-        else:
-            logger.error("Error to generate api_url, remove the cluster")
-            self.delete(id=str(cid), col_name="active", record=False,
-                        forced=True)
-            return None
+        logger.debug("Create cluster OK, id={}".format(str(cid)))
+        return str(cid)
 
     def delete(self, id, col_name="active", record=False, forced=False):
         """ Delete a cluster instance, clean containers, remove db entry
@@ -171,55 +173,47 @@ class ClusterHandler(object):
         """
         logger.debug("Delete cluster: id={}, col_name={}".format(id, col_name))
         if col_name == "active":
-            collection = self.col_active
+            col = self.col_active
         else:
-            collection = self.col_released
+            col = self.col_released
         if col_name == "active" and not forced:
-            c = collection.find_one({"id": id, "user_id": ""})  # only unused
+            c = col.find_one({"id": id, "user_id": ""})  # only unused
         else:
-            c = collection.find_one({"id": id})
-
+            c = col.find_one({"id": id})
         if not c:
-            logger.warn("Cannot delete non-existed cluster instance")
+            logger.warn("Cannot find cluster {} in {}".format(id, col_name))
             return False
-        if col_name == "active":  # stop running containers when active
-            api_url = c.get("api_url", "")
-            consensus_type = c.get("consensus_type", CONSENSUS_TYPES[0])
-            h = col_host.find_one({"id": c.get("host_id")})
-            if h:
-                daemon_url = h.get("daemon_url")
-                try:
-                    compose_stop(name=id, port=api_url.split(":")[-1],
-                                 daemon_url=daemon_url,
-                                 consensus_type=consensus_type)
-                    clean_project_containers(daemon_url=daemon_url,
-                                             name_prefix=id)
-                    clean_chaincode_images(daemon_url=daemon_url,
-                                           name_prefix=id)
-                except Exception as e:
-                    logger.warn("Wrong in clean compose project and containers")
-                    logger.warn(e)
-            else:
-                logger.warn("No host found for cluster="+id)
-            if record:
-                if not c.get("release_ts"):
-                    c["release_ts"] = datetime.datetime.now()
-                logger.debug("Record the cluster info into released collection")
-                try:
-                    self.col_released.insert_one(c)
-                except Exception as e:
-                    logger.warn("Wrong to insert into released collection")
-                    logger.warn(e)
+        if col_name != "active":  # released col only removes record
+            col.delete_one({"id": id})
+            return True
         h = col_host.find_one({"id": c.get("host_id")})
-        if h:
-            logger.debug("Remove cluster from host collection")
+        if h:  # clean up host collection
+            daemon_url = h.get("daemon_url")
+            api_url = c.get("api_url", "")
+            port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
+            consensus_type = c.get("consensus_type", CONSENSUS_TYPES[0])
+            try:
+                compose_stop(name=id, daemon_url=daemon_url, api_port=port,
+                             consensus_type=consensus_type)
+                clean_project_containers(daemon_url=daemon_url,
+                                         name_prefix=id)
+                clean_chaincode_images(daemon_url=daemon_url,
+                                       name_prefix=id)
+            except Exception as e:
+                logger.warn("Wrong in clean compose project and containers")
+                logger.warn(e)
             clusters = h.get("clusters")
             if id in clusters:
                 clusters.remove(id)
             col_host.update_one({"id": c.get("host_id")},
                                 {"$set": {"clusters": clusters}}),
-
-        collection.delete_one({"id": id})
+        else:
+            logger.warn("No host found for cluster="+id)
+        if record:  # record to release collection
+            logger.debug("Record the cluster info into released collection")
+            c["release_ts"] = datetime.datetime.now()
+            self.col_released.insert_one(c)
+        col.delete_one({"id": id})
         return True
 
     def apply_cluster(self, user_id, consensus_type=CONSENSUS_TYPES[0]):

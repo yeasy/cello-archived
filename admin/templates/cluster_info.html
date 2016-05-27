@@ -9,12 +9,17 @@
         <dt>Name<dt> <dd>{{item.name}}</dd>
         <dt>API URL<dt> <dd>{{item.api_url}}</dd>
         <dt>Consensus Type<dt> <dd>{{item.consensus_type}}</dd>
-        <dt>Docker Host<dt> <dd>{{item.host_id}}</dd>
+        <dt>Docker Host<dt> <dd><a href="/host_info/{{item.host_id}}">{{item
+        .host_id}}</a></dd>
         <dt>Create Time<dt> <dd>{{item.create_ts}}</dd>
         <dt>Apply Time<dt> <dd>{{item.apply_ts}}</dd>
         <dt>User Id<dt> <dd>{{item.user_id}}</dd>
         <dt>Release Time<dt> <dd>{{item.release_ts}}</dd>
-        <dt>Containers<dt> <dd> {{item.containers}} </dd>
+        <dt>Containers<dt> <dd>
+        {% for c in item.containers.keys()%}
+            <a href="">{{ c }}</a><br>
+        {% endfor %}
+    </dd>
     </dl>
     <div class="container-fluid">
         {% if item.release_ts %}
