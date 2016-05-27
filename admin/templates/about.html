@@ -2,15 +2,14 @@
 {% block title %}About Pool Manager{% endblock %}
 {% block body %}
 {{ super() }}
-<h2 class="page-header">About</h2>
-<h3>Introduction</h3>
+<h3 class="page-header">About</h3>
 <div class="container-fluid">
     A powerful PaaS that can manage clustered applications, and targets automating deployment, operations, and scaling.
 </div>
 <p></p>
-<h3>Release Information</h3>
+<h3 class="page-header">Release Information</h3>
 <div class="container-fluid">
-<p>Written-By: {{ author }}</p>
+<p>Written-By: <a href="{{ homepage }}">{{ author }}</a></p>
 <p>Version: {{ version }}</p>
 </div>
 {% endblock %}

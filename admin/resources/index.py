@@ -7,7 +7,7 @@ from flask import request as r
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, CONSENSUS_TYPES, HOST_TYPES
-from version import version, version_info, author
+from version import version, homepage, author
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -46,4 +46,5 @@ def show():
 @index.route('/about', methods=['GET'])
 def about():
     logger.info("path={}, action={}".format(r.path, r.method))
-    return render_template("about.html", author=author, version=version)
+    return render_template("about.html", author=author, version=version,
+                           homepage=homepage)
