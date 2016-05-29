@@ -118,6 +118,7 @@ class ClusterHandler(object):
             'create_ts': datetime.datetime.now(),
             'release_ts': "",
             'api_url': "",
+            'daemon_url': daemon_url,
         }
         cid = self.col_active.insert_one(c).inserted_id  # object type
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
@@ -186,22 +187,19 @@ class ClusterHandler(object):
         if col_name != "active":  # released col only removes record
             col.delete_one({"id": id})
             return True
+        daemon_url, api_url = c.get("daemon_url"), c.get("api_url", "")
+        port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
+        consensus_type = c.get("consensus_type", CONSENSUS_TYPES[0])
+        try:
+            compose_stop(name=id, daemon_url=daemon_url, api_port=port,
+                         consensus_type=consensus_type)
+            clean_project_containers(daemon_url=daemon_url, name_prefix=id)
+            clean_chaincode_images(daemon_url=daemon_url, name_prefix=id)
+        except Exception as e:
+            logger.warn("Wrong in clean compose project and containers")
+            logger.warn(e)
         h = col_host.find_one({"id": c.get("host_id")})
         if h:  # clean up host collection
-            daemon_url = h.get("daemon_url")
-            api_url = c.get("api_url", "")
-            port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
-            consensus_type = c.get("consensus_type", CONSENSUS_TYPES[0])
-            try:
-                compose_stop(name=id, daemon_url=daemon_url, api_port=port,
-                             consensus_type=consensus_type)
-                clean_project_containers(daemon_url=daemon_url,
-                                         name_prefix=id)
-                clean_chaincode_images(daemon_url=daemon_url,
-                                       name_prefix=id)
-            except Exception as e:
-                logger.warn("Wrong in clean compose project and containers")
-                logger.warn(e)
             clusters = h.get("clusters")
             if id in clusters:
                 clusters.remove(id)
@@ -240,9 +238,9 @@ class ClusterHandler(object):
             logger.info("Now have cluster {} for user {}".format(c.get("id"),
                                                                  user_id))
             result = self._serialize(c, keys=['id', 'name', 'user_id',
+                                              'daemon_url',
                                               'api_url', 'consensus_type'])
             h = col_host.find_one({"id": c.get("host_id")})
-            result['daemon_url'] = h.get('daemon_url')
             return result
         else:  # Failed to find available one
             logger.warn("Not find available cluster for " + user_id)
@@ -278,7 +276,7 @@ class ClusterHandler(object):
         return True
 
     def _serialize(self, doc, keys=['id', 'name', 'user_id', 'host_id',
-                                    'api_url', 'consensus_type',
+                                    'api_url', 'consensus_type', 'daemon_url',
                                     'create_ts', 'apply_ts', 'release_ts',
                                     'containers']):
         """ Serialize an obj

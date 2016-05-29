@@ -141,7 +141,6 @@ def detect_container_host(swarm_url, container_name, timeout=2):
         return info['NetworkSettings']['Ports']['5000/tcp'][0]['HostIp']
     except:
         return ''
-    pass
 
 
 def setup_container_host(host_type, daemon_url, timeout=2):

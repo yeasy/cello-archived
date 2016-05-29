@@ -121,3 +121,4 @@ $ bash ./scripts/restart.sh
 * Support fill-to-full operation on given host.
 * Support detect host info when adding as swarm type.
 * Add limitation on the running containers.*
+* Security option and log option (rotate).

@@ -34,5 +34,6 @@ if __name__ == '__main__':
     app.run(
         host='0.0.0.0',
         port=8080,
-        debug=os.environ.get('DEBUG', app.config.get("DEBUG", True))
+        debug=os.environ.get('DEBUG', app.config.get("DEBUG", True)),
+        threaded=True
     )
