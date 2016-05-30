@@ -38,4 +38,8 @@ services:
     memswap_limit: 1000000000
     cpu_quota: 50000
     command: peer node start
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
 

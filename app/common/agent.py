@@ -20,24 +20,25 @@ logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 
-def clean_chaincode_images(daemon_url, name_prefix):
+def clean_chaincode_images(daemon_url, name_prefix, timeout=5):
     """ Clean chaincode images, whose name should have cluster id as prefix
 
     :param daemon_url: Docker daemon url
     :param name_prefix: image name prefix
+    :param timeout: Time to wait for the response
     :return: None
     """
     logger.debug("clean chaincode images with prefix={}".format(name_prefix))
-    client = Client(base_url=daemon_url)
+    client = Client(base_url=daemon_url, timeout=timeout)
     images = client.images()
     id_removes = [e['Id'] for e in images if e['RepoTags'][0].startswith(
         name_prefix)]
     logger.debug("chaincode image id to removes=" + ", ".join(id_removes))
     for _ in id_removes:
-        client.remove_image(_)
+        client.remove_image(_, force=True)
 
 
-def clean_project_containers(daemon_url, name_prefix):
+def clean_project_containers(daemon_url, name_prefix, timeout=5):
     """
     Clean cluster node containers and chaincode containers
 
@@ -45,18 +46,21 @@ def clean_project_containers(daemon_url, name_prefix):
 
     :param daemon_url: Docker daemon url
     :param name_prefix: image name prefix
+    :param timeout: Time to wait for the response
     :return: None
     """
     logger.debug("Clean project related containers")
-    client = Client(base_url=daemon_url)
+    client = Client(base_url=daemon_url, timeout=timeout)
     containers = client.containers(all=True)
     id_removes = [e['Id'] for e in containers if e['Names'][0][
                                                  1:].startswith(name_prefix)]
     for _ in id_removes:
         logger.debug("Remove container "+_)
-        client.remove_container(_)
+        client.remove_container(_, force=True)
 
 
+#  Deprecated
+#  Normal chaincode container may also become exited temporarily
 def clean_exited_containers(daemon_url):
     """ Clean those containers with exited status
 

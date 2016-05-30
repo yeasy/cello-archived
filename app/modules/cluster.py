@@ -172,7 +172,8 @@ class ClusterHandler(object):
         :param forced: Whether to force removing user-using cluster
         :return:
         """
-        logger.debug("Delete cluster: id={}, col_name={}".format(id, col_name))
+        logger.debug("Delete cluster: id={}, col_name={}, forced={}".format(
+            id, col_name, forced))
         if col_name == "active":
             col = self.col_active
         else:
@@ -193,11 +194,11 @@ class ClusterHandler(object):
         try:
             compose_stop(name=id, daemon_url=daemon_url, api_port=port,
                          consensus_type=consensus_type)
-            clean_project_containers(daemon_url=daemon_url, name_prefix=id)
-            clean_chaincode_images(daemon_url=daemon_url, name_prefix=id)
         except Exception as e:
-            logger.warn("Wrong in clean compose project and containers")
-            logger.warn(e)
+            logger.error("Error in stop compose project, do best to cleanup")
+            logger.error(e)
+        clean_project_containers(daemon_url=daemon_url, name_prefix=id)
+        clean_chaincode_images(daemon_url=daemon_url, name_prefix=id)
         h = col_host.find_one({"id": c.get("host_id")})
         if h:  # clean up host collection
             clusters = h.get("clusters")
