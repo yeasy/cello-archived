@@ -56,11 +56,12 @@ DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -
     - `yeasy/hyperledger:latest`
 
         ```sh
+        $ docker pull yeasy/hyperledger:latest
         $ docker tag yeasy/hyperledger:latest hyperledger/fabric-baseimage:latest
         ```
-    - `yeasy/hyperledger-peer:pbft` (match with the [compose](admin/common/compose-defaults.yml) file)
-    - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the
-    authentication service)
+    - `yeasy/hyperledger-peer:noops`
+    - `yeasy/hyperledger-peer:pbft`
+    - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the authentication service)
 * SSH (Optionally ): Open for Master to monitor.
 
 ### Configuration
@@ -121,4 +122,4 @@ $ bash ./scripts/restart.sh
 * Support fill-to-full operation on given host.
 * ~~Support detect host info when adding as swarm type.~~
 * ~~Add limitation on the running containers.~~
-* Security option and log option (rotate).
+* ~~Security option and log option (rotate)~~.

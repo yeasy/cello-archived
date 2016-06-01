@@ -123,13 +123,6 @@ class ClusterHandler(object):
         cid = self.col_active.insert_one(c).inserted_id  # object type
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
 
-        # generate api url
-        api_url = self._gen_api_url(str(cid), h, api_port)
-        if not api_url:  # not valid api_url
-            logger.error("Error to gen api_url, cleanup the record and quit")
-            self.col_active.delete_one({"_id": cid})
-            return None
-
         # start compose project
         try:
             logger.debug("Start compose project with name={}".format(str(cid)))
@@ -147,6 +140,13 @@ class ClusterHandler(object):
             logger.warn("containers empty, then cleanup project and record")
             self.delete(id=str(cid), col_name="active", record=False,
                         forced=True)
+            return None
+
+        # generate api url, when swarm, this must be put after compose startup
+        api_url = self._gen_api_url(str(cid), h, api_port)
+        if not api_url:  # not valid api_url
+            logger.error("Error to gen api_url, cleanup the record and quit")
+            self.col_active.delete_one({"_id": cid})
             return None
 
         if h:  # this part may miss some element with concurrency; dont care
@@ -314,9 +314,12 @@ class ClusterHandler(object):
                 logger.error("Invalid daemon url = ", daemon_url)
                 return ""
             host_ip = segs[1][2:]
+            logger.debug("single host, ip = {}".format(host_ip))
         elif host_type == HOST_TYPES[1]:  # swarm
             host_ip = detect_container_host(daemon_url, cluster_name+'_'+'vp0')
+            logger.debug("swarm host, ip = {}".format(host_ip))
         else:
+            logger.error("Unknown host type = {}".format(host_type))
             return ""
         return "http://{0}:{1}".format(host_ip, api_port)
 
