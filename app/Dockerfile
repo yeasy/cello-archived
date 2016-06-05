@@ -5,7 +5,7 @@ ENV TZ Asia/Shanghai
 WORKDIR /app
 COPY ./requirements.txt /app
 RUN pip install  -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com -r requirements.txt
-#ENTRYPOINT ["python"]
+
 COPY . /app
 
 # use this in development
