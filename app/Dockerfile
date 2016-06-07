@@ -9,7 +9,7 @@ RUN pip install  -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.co
 COPY . /app
 
 # use this in development
-CMD ["python", "app.py"]
+#CMD ["python", "app.py"]
 
 # use this in product
-#CMD ["gunicorn", "-w", "8", "-b", "0.0.0.0:8080", "app:app"]
+CMD ["gunicorn", "-w", "8", "-b", "0.0.0.0:80", "app:app"]
