@@ -41,6 +41,7 @@ All services are recommended to setup through Docker containers by default.
     - python:3.5
     - mongo:3.2
     - yeasy/nginx
+    - mongo-express:0.30 (optional)
 
 ### Node Requirement
 * aufs-tools: required on ubuntu 14.04
