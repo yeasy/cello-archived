@@ -42,10 +42,6 @@ services:
       - SYSLOG_SERVER=tcp://192.168.7.60:5000   #container logs to send
     expose:
       - "80"
-    links:
-      - mongo
-    #volumes:  # This should be removed in product env
-    #  - ./app:/app
 
   # mongo database, may use cluster in future
   mongo:
