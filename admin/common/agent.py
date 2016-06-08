@@ -253,23 +253,22 @@ def compose_ps(project):
     return items
 
 
-def compose_start(name, api_port, daemon_url, logging_level="info",
+def compose_start(name, api_port, daemon_url,
                   consensus_type=CONSENSUS_TYPES[0]):
     """ Start a cluster by compose
 
     :param name: The name of the cluster
     :param api_port: The port of the cluster API
     :param daemon_url: Docker host daemon
-    :param logging_level: Logging level for the cluster output
     :param consensus_type: Cluster consensus type
     :return: The name list of the started peer containers
     """
     logger.debug("Start compose project with logging_level={}, "
-                 "consensus={}".format(logging_level, consensus_type))
+                 "consensus={}".format(os.environ['LOGGING_LEVEL_CLUSTER'],
+                                       consensus_type))
     os.environ['DOCKER_HOST'] = daemon_url   # start compose at which host
     os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
     os.environ['COMPOSE_PROJECT_NAME'] = name
-    os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
@@ -283,7 +282,7 @@ def compose_start(name, api_port, daemon_url, logging_level="info",
 
 
 def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
-                 logging_level="info", consensus_type=CONSENSUS_TYPES[0]):
+                 consensus_type=CONSENSUS_TYPES[0]):
     """ Stop the cluster and remove the service containers
 
     :param name: The name of the cluster
@@ -293,11 +292,12 @@ def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
     :param consensus_type: Cluster consensus type
     :return:
     """
-    logger.debug("Stop compose project "+name)
+    logger.debug("Stop compose project {} with logging_level={}, "
+                 "consensus={}".format(name, os.environ[
+        'LOGGING_LEVEL_CLUSTER'], consensus_type))
     os.environ['DOCKER_HOST'] = daemon_url
     os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
     os.environ['COMPOSE_PROJECT_NAME'] = name
-    os.environ['LOGGING_LEVEL_CLUSTER'] = logging_level
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
