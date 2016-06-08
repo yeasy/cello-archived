@@ -38,11 +38,11 @@ services:
     memswap_limit: 1000000000
     cpu_quota: 50000
     command: peer node start
-    #logging:
-    #  driver: syslog
-    #  options:
-    #    syslog-address: "tcp://192.168.7.60:5000"
-    #    tag: "{{.Name}}/{{.ID}}"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: ${SYSLOG_SERVER}
+        tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
     #logging:
     #  driver: json-file
     #  options:

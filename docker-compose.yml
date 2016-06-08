@@ -22,12 +22,13 @@ services:
       - DEBUG=True    # in debug mode, service will auto-restart
       - LOG_LEVEL=DEBUG  # what level log will be output
       - LOG_LEVEL_CLUSTER=DEBUG  # the level log for the cluster in pool
+      - SYSLOG_SERVER=tcp://192.168.7.60:5000   #container logs to send
     expose:
       - "8080"
     volumes:  # This should be removed in product env
       - ./admin:/app
-    links:
-      - mongo
+    #links:
+    #  - mongo
 
   # poolmanager app service
   app:
@@ -42,12 +43,13 @@ services:
       - DEBUG=True    # in debug mode, service will auto-restart
       - LOG_LEVEL=DEBUG  # what level log will be output
       - LOG_LEVEL_CLUSTER=DEBUG  # the level log for the cluster in pool
+      - SYSLOG_SERVER=tcp://192.168.7.60:5000   #container logs to send
     expose:
       - "80"
     volumes:  # This should be removed in product env
       - ./app:/app
-    links:
-      - mongo
+    #links:
+    #  - mongo
 
   # mongo database, may use cluster in future
   mongo:

@@ -40,9 +40,10 @@ services:
     cpu_quota: 50000
     command: peer node start
     logging:
-      driver: json-file
+      driver: syslog
       options:
-        max-size: 10m
+        syslog-address: ${SYSLOG_SERVER}
+        tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
 
 networks:
   default:

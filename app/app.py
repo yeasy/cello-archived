@@ -1,4 +1,3 @@
-import logging
 from flask import Flask
 
 from common import log_handler, LOG_LEVEL
