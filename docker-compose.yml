@@ -22,7 +22,7 @@ services:
       - DEBUG=False    # in debug mode, service will auto-restart
       - LOG_LEVEL=INFO  # what level log will be output
       - LOGGING_LEVEL_CLUSTER=INFO  # the level log for the cluster in pool
-      - SYSLOG_SERVER=tcp://192.168.7.60:5000   #container logs to send
+      - SYSLOG_SERVER=tcp://192.168.35.129:5000   #container logs to send
     expose:
       - "8080"
 
@@ -39,7 +39,7 @@ services:
       - DEBUG=False    # in debug mode, service will auto-restart
       - LOG_LEVEL=INFO  # what level log will be output
       - LOGGING_LEVEL_CLUSTER=INFO  # the level log for the cluster in pool
-      - SYSLOG_SERVER=tcp://192.168.7.60:5000   #container logs to send
+      - SYSLOG_SERVER=tcp://192.168.35.129:5000   #container logs to send
     expose:
       - "80"
 
