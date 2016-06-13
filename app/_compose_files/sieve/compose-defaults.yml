@@ -34,7 +34,7 @@ services:
       - "31315"
     #volumes: # docker.sock is mapped as the default CORE_VM_ENDPOINT
     #  - /var/run/docker.sock:/var/run/docker.sock
-    mem_limit: 500000000
+    mem_limit: 512000000
     memswap_limit: 1000000000
     cpu_quota: 50000
     command: peer node start
