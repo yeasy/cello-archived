@@ -54,8 +54,6 @@ services:
       #- "27017:27017"  # use follow line instead in production env
       - "127.0.0.1:27017:27017"
       - "127.0.0.1:27018:27018"
-    environment:
-      - NO_USED=0
     volumes:
       - /opt/poolmanager/mongo:/data/db
 
