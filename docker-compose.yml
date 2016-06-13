@@ -57,7 +57,7 @@ services:
     hostname: mongo
     container_name: mongo
     restart: unless-stopped
-    mem_limit: 1024m
+    mem_limit: 2048m
     ports:
       #- "27017:27017"  # use follow line instead in production env
       - "127.0.0.1:27017:27017"

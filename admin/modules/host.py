@@ -69,20 +69,22 @@ class HostHandler(object):
             cluster_name = "{}_{}".format(name, (port-CLUSTER_API_PORT_START))
             cid = cluster_handler.create(name=cluster_name, host_id=str(hid),
                                          api_port=port)
-            if not cid:
-                logger.debug("Create cluster with id={}".format(cid))
+            if cid:
+                logger.debug("Create cluster %s with id={}".format(
+                    cluster_name, cid))
 
         if status == "active":  # active means should fullfill it
             logger.debug("Init with {} clusters in host".format(capacity))
             free_ports = cluster_handler.find_free_api_ports(str(
                 hid), capacity)
+            logger.debug("Free_ports = {}".format(free_ports))
             i = 0
             for p in free_ports:
                 t = Thread(target=create_cluster_work, args=(p,))
                 t.start()
                 i += 1
                 if i % 10 == 0:
-                    time.sleep(1)
+                    time.sleep(0.1)
 
         return True
 

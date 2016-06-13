@@ -31,6 +31,7 @@ def clusters_show():
     col_name = r.args.get("col_name", "active")
     clusters = list(cluster_handler.list(filter_data=col_filter,
                                          col_name=col_name))
+    clusters.sort(key=lambda x: x["name"])
     total_items = len(clusters)
 
     search = False
