@@ -191,12 +191,8 @@ class ClusterHandler(object):
         daemon_url, api_url = c.get("daemon_url"), c.get("api_url", "")
         port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
         consensus_type = c.get("consensus_type", CONSENSUS_TYPES[0])
-        try:
-            compose_stop(name=id, daemon_url=daemon_url, api_port=port,
-                         consensus_type=consensus_type)
-        except Exception as e:
-            logger.error("Error in stop compose project, do best to cleanup")
-            logger.error(e)
+        compose_stop(name=id, daemon_url=daemon_url, api_port=port,
+                     consensus_type=consensus_type)
         clean_project_containers(daemon_url=daemon_url, name_prefix=id)
         clean_chaincode_images(daemon_url=daemon_url, name_prefix=id)
         h = col_host.find_one({"id": c.get("host_id")})

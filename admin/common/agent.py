@@ -35,7 +35,11 @@ def clean_chaincode_images(daemon_url, name_prefix, timeout=5):
         name_prefix)]
     logger.debug("chaincode image id to removes=" + ", ".join(id_removes))
     for _ in id_removes:
-        client.remove_image(_, force=True)
+        try:
+            client.remove_image(_, force=True)
+        except Exception as e:
+            logger.error("Exception in clean_chaincode_images")
+            logger.error(e)
 
 
 def clean_project_containers(daemon_url, name_prefix, timeout=5):
@@ -56,7 +60,11 @@ def clean_project_containers(daemon_url, name_prefix, timeout=5):
                                                  1:].startswith(name_prefix)]
     for _ in id_removes:
         logger.debug("Remove container "+_)
-        client.remove_container(_, force=True)
+        try:
+            client.remove_container(_, force=True)
+        except Exception as e:
+            logger.error("Exception in clean_project_containers")
+            logger.error(e)
 
 
 #  Deprecated
@@ -77,7 +85,11 @@ def clean_exited_containers(daemon_url):
     id_removes = [e['Id'] for e in containers]
     for _ in id_removes:
         logger.debug("exited container id to removes="+_)
-        client.remove_container(_)
+        try:
+            client.remove_container(_)
+        except Exception as e:
+            logger.error("Exception in clean_exited_containers")
+            logger.error(e)
 
 
 def test_daemon(daemon_url, timeout=2):
@@ -302,8 +314,12 @@ def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
     os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
     project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
-    project.stop()
-    project.remove_stopped(one_off=OneOffFilter.include)
+    try:
+        project.stop()
+        project.remove_stopped(one_off=OneOffFilter.include)
+    except Exception as e:
+        logger.error("Error in stop compose project, do best to cleanup")
+        logger.error(e)
 
 
 # no used
