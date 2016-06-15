@@ -18,13 +18,23 @@
         {% endfor %}
     </dd>
     </dl>
-    <!--
     <div class="container-fluid">
-        <input value="Delete" type="button"
-               class="btn btn-danger btn-default btn-primary delete_cluster_button"
+        {% if item.clusters|length >= item.capacity %}
+        <input value="Fillup" type="button" title="Fill up this host to its
+        capacity = {{ item.capacity|string }}" disabled
+               class="btn btn-default btn-primary fillup_host_button"
                data-id="{{item.id}}"/>
+        {% else %}
+            <input value="Fillup" type="button" title="Fill up this host to its
+        capacity = {{ item.capacity|string }}"
+                   class="btn btn-default btn-primary fillup_host_button"
+                   data-id="{{item.id}}"/>
+        {% endif%}
+    <input value="Clean" type="button" title="Clean unused blockchains at
+     this host"
+           class="btn btn-danger btn-default btn-primary clean_host_button"
+           data-id="{{item.id}}"/>
     </div>
-    -->
 </div>
 
 {% endblock %}

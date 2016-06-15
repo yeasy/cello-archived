@@ -72,8 +72,10 @@ class HostHandler(object):
             if cid:
                 logger.debug("Create cluster %s with id={}".format(
                     cluster_name, cid))
+            else:
+                logger.warn("Create cluster failed")
 
-        if status == "active":  # active means should fullfill it
+        if status == "active":  # active means should fillupl it
             logger.debug("Init with {} clusters in host".format(capacity))
             free_ports = cluster_handler.find_free_api_ports(str(
                 hid), capacity)
@@ -115,14 +117,10 @@ class HostHandler(object):
         :return: serialized result or obj
         """
         logger.debug("Get a host with id=" + id)
-        h_old = self.col.find_one({"id": id})
+        h_old = self._get_active_host(id)
         if not h_old:
-            logger.warn("No host found with id=" + id)
             return {}
-        cap_old = h_old.get("capacity")
-        hid = h_old.get("id")
-        hname = h_old.get("name")
-        clusters_old = h_old.get("clusters")
+
         daemon_url = d.get('daemon_url', h_old.get("daemon_url"))
 
         if "capacity" in d:
@@ -134,29 +132,6 @@ class HostHandler(object):
             {"id": id},
             {"$set": d},
             return_document=ReturnDocument.AFTER)
-
-        #  auto full to capacity
-        if False:
-            def create_cluster_work(port):
-                cid = cluster_handler.create(
-                    "{}_{}".format(hname, (port-CLUSTER_API_PORT_START)),
-                    str(hid), port)
-                if cid:
-                    logger.debug("Create cluster with id={}".format(cid))
-                else:
-                    logger.warn("Create cluster failed")
-            cap_new = int(d.get("capacity", cap_old))
-            if cap_new != cap_old and h_new.get("status") == "active":  #
-                # something is changed
-                free_ports = cluster_handler.find_free_api_ports(
-                    str(hid), cap_new - len(clusters_old))
-                i = 0
-                for p in free_ports:
-                    t = Thread(target=create_cluster_work, args=(p,))
-                    t.start()
-                    i += 1
-                    if i % 10 == 0:
-                        time.sleep(1)
 
         if serialization:
             return self._serialize(h_new)
@@ -190,6 +165,102 @@ class HostHandler(object):
         cleanup_container_host(h.get("daemon_url"))
         self.col.delete_one({"id": id})
         return True
+
+    def fillup(self, id):
+        """
+        Fullfil a host with clusters to its capacity limit
+
+        :param id: host id
+        :return: True or False
+        """
+        logger.debug("fillup host with id = {}".format(id))
+        host = self._get_active_host(id)
+        if not host:
+            return False
+        num_new = host.get("capacity") - len(host.get("clusters"))
+        if num_new <= 0:
+            logger.warn("host already full")
+            return True
+
+        free_ports = cluster_handler.find_free_api_ports(str(id), num_new)
+        logger.debug("Free_ports = {}".format(free_ports))
+
+        def create_cluster_work(port):
+            cluster_name = "{}_{}".format(host.get("name"),
+                                          (port-CLUSTER_API_PORT_START))
+            cid = cluster_handler.create(name=cluster_name, host_id=str(id),
+                                         api_port=port)
+            if cid:
+                logger.debug("Create cluster %s with id={}".format(
+                    cluster_name, cid))
+            else:
+                logger.warn("Create cluster failed")
+        i = 0
+        for p in free_ports:
+            t = Thread(target=create_cluster_work, args=(p,))
+            t.start()
+            i += 1
+            if i % 10 == 0:
+                time.sleep(0.1)
+
+        return True
+
+    def clean(self, id):
+        """
+        Clean a host's free clusters.
+
+        :param id: host id
+        :return: True or False
+        """
+        logger.debug("clean host with id = {}".format(id))
+        host = self._get_active_host(id)
+        if not host:
+            return False
+        if len(host.get("clusters")) <= 0:
+            return True
+
+        host = self.col.find_one_and_update(
+            {"id": id},
+            {"$set": {"status": "inactive"}},
+            return_document=ReturnDocument.AFTER)
+
+        def delete_cluster_work(cid):
+            cluster_handler.delete(cid),
+
+        i = 0
+        for cid in host.get("clusters"):
+            t = Thread(target=delete_cluster_work, args=(cid,))
+            t.start()
+            i += 1
+            if i % 10 == 0:
+                time.sleep(0.1)
+
+        self.col.find_one_and_update(
+            {"id": id},
+            {"$set": {"status": "active"}},
+            return_document=ReturnDocument.AFTER)
+        return True
+
+    def _get_active_host(self, id):
+        """
+        Check if id exists, and status is active. Otherwise update to inactive.
+
+        :param id: host id
+        :return: host or None
+        """
+        logger.debug("check host with id = {}".format(id))
+        host = self.col.find_one({"id": id})
+        if not host:
+            logger.warn("No host found with id=" + id)
+            return None
+        if not test_daemon(host.get("daemon_url")):
+            logger.warn("Host {} is inactive".format(id))
+            host = self.col.find_one_and_update(
+                {"id": id},
+                {"$set": {"status": "inactive"}},
+                return_document=ReturnDocument.AFTER)
+            return None
+        return host
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
                                     'type','create_ts', 'status', 'clusters']):

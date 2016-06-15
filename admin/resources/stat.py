@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
-from modules import cluster_handler, host_handler, stat_handler
+from modules import host_handler, stat_handler
 
 stat = Blueprint('stat', __name__)
 
@@ -22,8 +22,9 @@ stat = Blueprint('stat', __name__)
 @stat.route('/stat', methods=['GET'])
 def show():
     logger.info("path={}, action={}".format(r.path, r.method))
+    hosts = list(host_handler.list())
 
-    return render_template("stat.html")
+    return render_template("stat.html",hosts=hosts)
 
 
 @stat.route('/_health', methods=['GET'])
