@@ -64,8 +64,6 @@ services:
     container_name: nginx
     restart: unless-stopped
     mem_limit: 1024m
-    links:
-      - app
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.default.conf
       #- /opt/poolmanager/nginx/log/:/var/log/nginx/

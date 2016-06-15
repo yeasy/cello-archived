@@ -35,8 +35,8 @@ other action.*
 All services are recommended to setup through Docker containers by default.
 
 ### Master Requirement
-* docker engine: >=1.11.1
-* docker-compose: >=1.7.0
+* docker engine: 1.11.1+
+* docker-compose: 1.7.0+
 * docker images:
     - python:3.5
     - mongo:3.2
@@ -46,7 +46,7 @@ All services are recommended to setup through Docker containers by default.
 ### Node Requirement
 * aufs-tools: required on ubuntu 14.04
 * docker engine:
-    - >=1.10.0,
+    - 1.11.1+,
     - Let daemon listen on port 2375, and make sure Master can reach Node from port 2375.
 
 ```sh
@@ -91,6 +91,30 @@ and app.
 * Backup: Enable automatic data backup.
 * Monitoring: Enable monitoring services.
 
+### Optimization
+Reference system configuration.
+
+`/etc/sysctl.conf`
+
+```sh
+fs.file-max = 2000000
+net.ipv4.ip_local_port_range = 1025 65535
+net.ipv4.tcp_tw_reuse = 0
+net.ipv4.tcp_tw_recycle = 0
+net.ipv4.tcp_max_tw_buckets = 5000
+net.ipv4.tcp_fin_timeout = 30
+net.ipv4.tcp_max_syn_backlog = 8192
+```
+
+`/etc/security/limits.conf`
+
+```sh
+* hard nofile 1000000
+* soft nofile 1000000
+```
+
+check with `ulimit -n`.
+
 ### Start
 After all required images and tools are prepared in all nodes, you can (re)
 start the poolmanager service by running
@@ -119,8 +143,8 @@ $ bash ./scripts/restart.sh
 * ~~Add form validation~~.
 * Support auto fresh based on websocket.
 * Support metadata field from user apply cluster.
-* Support monitor.
-* Support fill-to-full operation on given host.
+* ~~Support monitor.~~
+* ~~Support host fillup and clean buttons.~~
 * ~~Support detect host info when adding as swarm type.~~
 * ~~Add limitation on the running containers.~~
 * ~~Security option and log option (rotate)~~.

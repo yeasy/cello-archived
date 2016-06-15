@@ -40,6 +40,53 @@ $(document).ready(function() {
             }
         });
     });
+    $('.fillup_host_button').click(function() {
+        // Confirm
+        var id = $(this).attr('data-id');
+
+        $.ajax({
+            url: "/host_action",
+            type: 'POST',
+            dataType: 'json',
+            data:{
+                "id": id,
+                "action": "fillup"
+            },
+            success: function(response) {
+                console.log(response);
+                //setTimeout(location.reload, 2000);
+                setTimeout("location.reload(true);",2000);
+            },
+            error: function(error) {
+                console.log(error);
+                setTimeout(location.reload, 2000);
+            }
+        });
+    });
+    $('.clean_host_button').click(function() {
+        // Confirm
+        var id = $(this).attr('data-id');
+
+        $.ajax({
+            url: "/host_action",
+            type: 'POST',
+            dataType: 'json',
+            data:{
+                "id": id,
+                "action": "clean"
+            },
+            success: function(response) {
+                console.log(response);
+                //setTimeout(location.reload, 2000);
+                setTimeout("location.reload(true);",2000);
+                //location.reload();
+            },
+            error: function(error) {
+                console.log(error);
+                setTimeout("location.reload(true);",2000);
+            }
+        });
+    });
     $('.create_cluster_button').click(function() {
         var form_data = $('#add_new_cluster_form').serialize();
         
