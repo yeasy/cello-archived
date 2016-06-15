@@ -73,8 +73,6 @@ services:
     hostname: nginx
     container_name: nginx
     restart: always
-    links:
-      - app
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.default.conf
       #- /opt/poolmanager/nginx/log/:/var/log/nginx/

@@ -150,11 +150,13 @@ class ClusterHandler(object):
             return None
 
         if h:  # this part may miss some element with concurrency; dont care
-            logger.debug("Add cluster to host collection")
-            clusters = col_host.find_one({"id": host_id}).get("clusters")
-            clusters.append(str(cid))
             col_host.update_one({"id": host_id},
-                                {"$set": {"clusters": clusters}}),
+                                {"$addToSet": {"clusters": str(cid)}}),
+            #logger.debug("Add cluster to host collection")
+            #clusters = col_host.find_one({"id": host_id}).get("clusters")
+            #clusters.append(str(cid))
+            #col_host.update_one({"id": host_id},
+            #                    {"$set": {"clusters": clusters}}),
         self.col_active.update_one(
             {"_id": cid},
             {"$set": {"containers": containers, "user_id": user_id,
@@ -183,7 +185,8 @@ class ClusterHandler(object):
         else:
             c = col.find_one({"id": id})
         if not c:
-            logger.warn("Cannot find cluster {} in {}".format(id, col_name))
+            logger.warn("Cannot find deletable cluster {} in {}".format(id,
+                                                                  col_name))
             return False
         if col_name != "active":  # released col only removes record
             col.delete_one({"id": id})
@@ -202,11 +205,13 @@ class ClusterHandler(object):
             logger.error(e)
         h = col_host.find_one({"id": c.get("host_id")})
         if h:  # clean up host collection
-            clusters = h.get("clusters")
-            if id in clusters:
-                clusters.remove(id)
             col_host.update_one({"id": c.get("host_id")},
-                                {"$set": {"clusters": clusters}}),
+                                {"$pull": {"clusters": id}}),
+            #clusters = h.get("clusters")
+            #if id in clusters:
+            #    clusters.remove(id)
+            #col_host.update_one({"id": c.get("host_id")},
+            #                    {"$set": {"clusters": clusters}}),
         else:
             logger.warn("No host found for cluster="+id)
         if record:  # record to release collection
@@ -259,7 +264,8 @@ class ClusterHandler(object):
             {"$set": {"release_ts": datetime.datetime.now()}},
             return_document=ReturnDocument.AFTER)
         if not c or not c.get("release_ts"):  # not have one
-            logger.warn("cluster release fail for user {}".format(user_id))
+            logger.warn("No cluster can be released for user {}".format(
+                user_id))
             return False
 
         def delete_recreate_work():

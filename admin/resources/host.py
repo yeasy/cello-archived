@@ -33,7 +33,7 @@ def hosts_show():
 
 @host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def host_api():
-    logger.info("/host action=" + r.method)
+    logger.info("/host method=" + r.method)
     for k in r.args:
         logger.debug("Arg: {0}:{1}".format(k, r.args[k]))
     for k in r.form:
@@ -113,3 +113,35 @@ def host_info(host_id):
     logger.debug("/ host_info/{0} action={1}".format(host_id, r.method))
     return render_template("host_info.html", item=host_handler.get(
         host_id, serialization=True)), CODE_OK
+
+
+@host.route('/host_action', methods=['POST'])
+def host_action():
+    logger.info("/host_action, method=" + r.method)
+    for k in r.args:
+        logger.debug("Arg: {0}:{1}".format(k, r.args[k]))
+    for k in r.form:
+        logger.debug("Form: {0}:{1}".format(k, r.form[k]))
+
+    host_id, action = r.form['id'], r.form['action']
+    logger.debug("host id={}, action={}".format(host_id, action))
+    if not host_id or not action:
+        logger.warn("host post without enough data")
+        status_response_fail["error"] = "host POST without enough data"
+        status_response_fail["data"] = r.form
+        return jsonify(status_response_fail), CODE_BAD_REQUEST
+    else:
+        if action == "fillup":
+            if host_handler.fillup(host_id):
+                logger.debug("fillup successfully")
+                return jsonify(status_response_ok), CODE_OK
+        elif action == "clean":
+            if host_handler.clean(host_id):
+                logger.debug("clean successfully")
+                return jsonify(status_response_ok), CODE_OK
+        else:
+            logger.warn("unknown host action={}".format(action))
+
+    status_response_fail["error"] = "unknown operation method"
+    status_response_fail["data"] = r.form
+    return jsonify(status_response_fail), CODE_BAD_REQUEST
