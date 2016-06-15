@@ -92,7 +92,7 @@ def clean_exited_containers(daemon_url):
             logger.error(e)
 
 
-def test_daemon(daemon_url, timeout=2):
+def test_daemon(daemon_url, timeout=5):
     """ Check if the daemon is active
 
     Only wait for 2 seconds.
@@ -114,7 +114,7 @@ def test_daemon(daemon_url, timeout=2):
         return False
 
 
-def detect_daemon_type(daemon_url, timeout=2):
+def detect_daemon_type(daemon_url, timeout=5):
     """ Try to detect the daemon type
 
     Only wait for 2 seconds.
@@ -140,7 +140,7 @@ def detect_daemon_type(daemon_url, timeout=2):
         return None
 
 
-def detect_container_host(swarm_url, container_name, timeout=2):
+def detect_container_host(swarm_url, container_name, timeout=5):
     """
     Detect the host ip where the given container locate in the swarm cluster
 
@@ -159,7 +159,7 @@ def detect_container_host(swarm_url, container_name, timeout=2):
         return ''
 
 
-def setup_container_host(host_type, daemon_url, timeout=2):
+def setup_container_host(host_type, daemon_url, timeout=5):
     """
     Setup a container host for deploying cluster on it
 
@@ -197,7 +197,7 @@ def setup_container_host(host_type, daemon_url, timeout=2):
     return True
 
 
-def cleanup_container_host(daemon_url, timeout=2):
+def cleanup_container_host(daemon_url, timeout=5):
     """
     Cleanup a container host when use removes the host
 
