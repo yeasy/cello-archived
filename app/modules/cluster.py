@@ -131,7 +131,7 @@ class ClusterHandler(object):
                                        consensus_type=consensus_type)
         except Exception as e:
             logger.warn(e)
-            logger.warn("Compose start error, then cleanup project and record")
+            logger.warn("Compose start error, then delete project and record")
             self.delete(id=str(cid), col_name="active", record=False,
                         forced=True)
             return None
@@ -191,10 +191,15 @@ class ClusterHandler(object):
         daemon_url, api_url = c.get("daemon_url"), c.get("api_url", "")
         port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
         consensus_type = c.get("consensus_type", CONSENSUS_TYPES[0])
-        compose_stop(name=id, daemon_url=daemon_url, api_port=port,
-                     consensus_type=consensus_type)
-        clean_project_containers(daemon_url=daemon_url, name_prefix=id)
-        clean_chaincode_images(daemon_url=daemon_url, name_prefix=id)
+        try:
+            compose_stop(name=id, daemon_url=daemon_url, api_port=port,
+                         consensus_type=consensus_type)
+            clean_project_containers(daemon_url=daemon_url, name_prefix=id)
+            clean_chaincode_images(daemon_url=daemon_url, name_prefix=id)
+        except Exception as e:
+            logger.error("Error in stop and cleanup compose project, "
+                         "will remove records however")
+            logger.error(e)
         h = col_host.find_one({"id": c.get("host_id")})
         if h:  # clean up host collection
             clusters = h.get("clusters")
@@ -263,9 +268,10 @@ class ClusterHandler(object):
             host_id, api_url = c.get("host_id"), c.get("api_url")
             if not self.delete(cluster_id, record=True, forced=True):
                 logger.warn("Delete cluster error with id=" + cluster_id)
-            if not self.create(name=cluster_name, host_id=host_id,
-                               api_port=int(api_url.split(":")[-1])):
-                logger.warn("ReCreate cluster error with name=" + cluster_name)
+            else:
+                if not self.create(name=cluster_name, host_id=host_id,
+                                   api_port=int(api_url.split(":")[-1])):
+                    logger.warn("ReCreate cluster error with name=" + cluster_name)
 
         t = Thread(target=delete_recreate_work, args=())
         t.start()
