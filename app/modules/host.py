@@ -225,7 +225,7 @@ class HostHandler(object):
             return_document=ReturnDocument.AFTER)
 
         def delete_cluster_work(cid):
-            cluster_handler.delete(cid),
+            cluster_handler.delete(cid)  # can delete unused or in-deleting
 
         i = 0
         for cid in host.get("clusters"):
@@ -255,10 +255,8 @@ class HostHandler(object):
             return None
         if not test_daemon(host.get("daemon_url")):
             logger.warn("Host {} is inactive".format(id))
-            host = self.col.find_one_and_update(
-                {"id": id},
-                {"$set": {"status": "inactive"}},
-                return_document=ReturnDocument.AFTER)
+            self.col.update_one({"id": id},
+                                {"$set": {"status": "inactive"}})
             return None
         return host
 
