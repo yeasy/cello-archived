@@ -10,3 +10,6 @@ APP_API_VERSION = "v1"
 CONSENSUS_TYPES = ['pbft', 'sieve', 'noops']  # first one is the default one
 
 HOST_TYPES = ['single', 'swarm']
+
+SYS_CREATOR = "__SYSTEM__CREATING__"
+SYS_DELETER = "__SYSTEM__DELETING__"
