@@ -23,7 +23,7 @@ index = Blueprint('index', __name__)
 @index.route('/index', methods=['GET'])
 def show():
     logger.info("path={}, action={}".format(r.path, r.method))
-    hosts = list(host_handler.list())
+    hosts = list(host_handler.list(filter_data={}, validate=False))
     available_hosts = list(filter(
         lambda e: e["status"] == "active"
                   and len(e["clusters"]) < e["capacity"], hosts))
@@ -32,6 +32,9 @@ def show():
     clusters_free = len(list(cluster_handler.list(col_name="active",
                                                   filter_data={"user_id": ""})))
 
+    clusters_temp = len(list(cluster_handler.list(col_name="active",
+                                                  filter_data={"user_id":
+                                                                   "/^__/"})))
 
     #return render_template("test.html")
     return render_template("index.html", hosts=hosts,
@@ -39,6 +42,7 @@ def show():
                            clusters_active=clusters_active,
                            clusters_released=clusters_released,
                            clusters_free=clusters_free,
+                           clusters_temp=clusters_temp,
                            consensus_types=CONSENSUS_TYPES,
                            host_types=HOST_TYPES)
 

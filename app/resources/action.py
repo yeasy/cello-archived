@@ -44,7 +44,8 @@ def cluster_apply():
             status_response_fail["data"] = request.args
             return jsonify(status_response_fail), CODE_BAD_REQUEST
         else:
-            return jsonify(c), CODE_OK
+            status_response_ok["data"] = c
+            return jsonify(status_response_ok), CODE_OK
 
 
 @action.route('/cluster_release', methods=['GET'])
@@ -64,8 +65,8 @@ def cluster_release():
         status_response_fail["data"] = request.args
         return jsonify(status_response_fail), CODE_BAD_REQUEST
     else:
-        c = cluster_handler.release_cluster(user_id)
-        if not c:
+        result = cluster_handler.release_cluster(user_id)
+        if not result:
             logger.warn("cluster_release failed")
             status_response_fail["error"] = "release fail for "+user_id
             status_response_fail["data"] = request.args

@@ -30,6 +30,7 @@ def query_value(chaincode_name, arg_list):
     :return: A list of values.
     """
     result, resp = [], {}
+    print("Query value will try at most 20 times.")
     for arg in arg_list:
         for i in range(20):
             try:
@@ -64,18 +65,22 @@ if __name__ == '__main__':
 
     c = Client(base_url=API_URL)
 
+    print("Checking cluster at {}".format(API_URL))
+
     if not chaincode_name:
-        print(">>>Test: deploy a new chaincode")
-        res = c.chaincode_deploy()
+        print(">>>Test: deploy the default chaincode")
+        res = c.chaincode_deploy(args=["a", "10000", "b", "20000"])
         chaincode_name = res['result']['message']
         assert res['result']['status'] == 'OK'
         print("Successfully deploy chaincode with returned name = " +
               chaincode_name)
-        print("Wait 10 seconds to make sure deployment is done.")
-        time.sleep(10)
+        print("Wait 15 seconds to make sure deployment is done.")
+        time.sleep(15)
 
     print(">>>Check the initial value: a, b")
-    print(query_value(chaincode_name, ["a", "b"]))
+    values = query_value(chaincode_name, ["a", "b"])
+    print(values)
+    assert values == ['10000', '20000']
 
     print(">>>Test: invoke a chaincode: a-->b 1")
     res = c.chaincode_invoke(chaincode_name=chaincode_name, function="invoke",
@@ -84,17 +89,21 @@ if __name__ == '__main__':
     transaction_uuid = res["result"]["message"]
     print("Transaction id = {0}".format(transaction_uuid))
 
-    # TODO: sleep 2 seconds till invoke done.
-    print("Wait 2 seconds to make sure invoke is done.")
-    time.sleep(2)
+    # TODO: sleep 3 seconds till invoke done.
+    print("Wait 5 seconds to make sure invoke is done.")
+    time.sleep(5)
+
+    print(">>>Check the after value: a, b")
+    values = query_value(chaincode_name, ["a", "b"])
+    print(values)
+    assert values == ['9999', '20001']
+    time.sleep(5)
 
     print(">>>Test: Check the transaction content")
     res = c.transaction_get(transaction_uuid)
     # res["chaincodeID"] = base64.b64decode(res["chaincodeID"])
     print(json.dumps(res, sort_keys=True, indent=4))
-
-    print(">>>Check the after value: a, b")
-    print(query_value(chaincode_name, ["a", "b"]))
+    assert res["uuid"] == transaction_uuid
 
     print(">>>Test: list the peers")
     res = c.peer_list()
