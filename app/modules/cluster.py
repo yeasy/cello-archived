@@ -176,27 +176,37 @@ class ClusterHandler(object):
         if col_name != "active":  # released col only removes record
             self.col_released.find_one_and_delete({"id": id})
             return True
-        c = self.col_active.find_one({"id": id})
+        c = self.col_active.find_one_and_update(
+            {"id": id},
+            {"$set": {"user_id": SYS_DELETER}},
+            return_document=ReturnDocument.BEFORE)  # db has new user_id
         if not c:
             logger.warn("Cannot find cluster {} in {}".format(id, col_name))
             return False
-        user_id = c.get("user_id")
+        # we are safe from applying now
+        user_id = c.get("user_id")  # original user_id
         logger.debug("user_id={}".format(user_id))
         if not forced and user_id != "" and \
                 not user_id.startswith(SYS_DELETER):
-            # not force, then only process unused or in-deleting
+            # not forced, then only process unused or in-deleting
             logger.warn("Cannot find deletable cluster {} in {} by "
-                        "user {}".format(id, col_name, c.get("user_id")))
+                        "user {}".format(id, col_name, user_id))
+            self.col_active.update_one({"id": id},
+                                       {"$set": {"user_id": user_id}})
             return False
-        # add deleting flag to the cluster
+
+        #  0. in db, user_id = SYS_DELETER
+        #  1. forced, user_id="", user_id='xxx', or user_id=^SYS_DELETER
+        #  2. not forced, user_id == "" or user_id=^SYS_DELETER
+        #  Then, add deleting flag to the db, and start deleting
         if not user_id.startswith(SYS_DELETER):
             self.col_active.update_one(
                 {"id": id},
-                {"$set": {"user_id": SYS_DELETER+user_id}})
-        host_id, daemon_url, api_url = c.get("host_id"), c.get("daemon_url"), \
-                                        c.get("api_url", "")
+                {"$set": {"user_id": SYS_DELETER+user_id}})  # keep user info
+        host_id, daemon_url, api_url, consensus_type = \
+            c.get("host_id"), c.get("daemon_url"), c.get("api_url", ""), \
+            c.get("consensus_type", CONSENSUS_TYPES[0])
         port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
-        consensus_type = c.get("consensus_type", CONSENSUS_TYPES[0])
         h = self._get_active_host(host_id)
         if not h:  # clean up host collection
             return False

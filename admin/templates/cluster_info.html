@@ -9,7 +9,7 @@
         <dt>Name<dt> <dd>{{item.name}}</dd>
         <dt>API URL<dt> <dd>{{item.api_url}}</dd>
         <dt>Consensus Type<dt> <dd>{{item.consensus_type}}</dd>
-        <dt>Docker Host<dt> <dd><a href="/host_info/{{item.host_id}}">{{item
+        <dt>Host<dt> <dd><a href="/host_info/{{item.host_id}}">{{item
         .host_id}}</a></dd>
         <dt>Create Time<dt> <dd>{{item.create_ts}}</dd>
         <dt>Apply Time<dt> <dd>{{item.apply_ts}}</dd>
@@ -21,17 +21,18 @@
         {% endfor %}
     </dd>
     </dl>
+<!--
     <div class="container-fluid">
-        {% if item.release_ts %}
-        <input value="Delete" type="button"
-               class="btn btn-danger btn-default btn-primary delete_cluster_button"
-               data-id="{{item.id}}" release="1"/>
+        {% if item.user_id %}
+        <input value="Release" type="button" class="btn btn-danger btn-default btn-primary
+               release_cluster_button"
+               data-id="{{item.user_id}}"/>
         {% else %}
-            <input value="Delete" type="button"
-                   class="btn btn-danger btn-default btn-primary delete_cluster_button"
-                   data-id="{{item.id}}"/>
+            <input value="Release" type="button" class="btn btn-danger btn-default btn-primary release_cluster_button" disabled
+                   data-id="{{item.user_id}}"/>
         {% endif %}
     </div>
+-->
 </div>
 
 {% endblock %}

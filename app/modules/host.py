@@ -138,13 +138,17 @@ class HostHandler(object):
         else:
             return h_new
 
-    def list(self, filter_data={}):
+    def list(self, filter_data={}, validate=False):
         """ List hosts with given criteria
 
         :param filter_data: Image with the filter properties
         :return: iteration of serialized doc
         """
-        result = map(self._serialize, self.col.find(filter_data))
+        if not validate:
+            hosts = self.col.find(filter_data)
+        if validate:
+            hosts = map(self._update_status, self.col.find(filter_data))
+        result = map(self._serialize, hosts)
         return result
 
     def delete(self, id):
@@ -241,6 +245,30 @@ class HostHandler(object):
             return_document=ReturnDocument.AFTER)
         return True
 
+    def _update_status(self, host):
+        """
+        Update status of the host
+
+        :param id:
+        :return: Updated host
+        """
+        if not host:
+            logger.warn("invalid host is given")
+            return None
+        host_id = host.get("id")
+        if not test_daemon(host.get("daemon_url")):
+            logger.warn("Host {} is inactive".format(host_id))
+            return self.col.find_one_and_update(
+                {"id": host_id},
+                {"$set": {"status": "inactive"}},
+                return_document=ReturnDocument.AFTER)
+        else:
+            return self.col.find_one_and_update(
+                {"id": host_id},
+                {"$set": {"status": "active"}},
+                return_document=ReturnDocument.AFTER)
+
+
     def _get_active_host(self, id):
         """
         Check if id exists, and status is active. Otherwise update to inactive.
@@ -253,12 +281,7 @@ class HostHandler(object):
         if not host:
             logger.warn("No host found with id=" + id)
             return None
-        if not test_daemon(host.get("daemon_url")):
-            logger.warn("Host {} is inactive".format(id))
-            self.col.update_one({"id": id},
-                                {"$set": {"status": "inactive"}})
-            return None
-        return host
+        return self._update_status(host)
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
                                     'type','create_ts', 'status', 'clusters']):

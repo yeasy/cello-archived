@@ -87,47 +87,6 @@ $(document).ready(function() {
             }
         });
     });
-    $('.create_cluster_button').click(function() {
-        var form_data = $('#add_new_cluster_form').serialize();
-        
-        $.ajax({
-            url: "/cluster",
-            type: 'POST',
-            dataType: 'json',
-            data: form_data,
-            success: function(response) {
-                console.log(response);
-                location.reload(); 
-            },
-            error: function(error) {
-                console.log(error);
-                location.reload(); 
-            }
-        });
-    });
-    $('.delete_cluster_button').click(function() {
-        // Confirm
-        var id_data = $(this).attr('id_data');
-        var col_name = $(this).attr('col_name');
-
-        $.ajax({
-            url: "/cluster",
-            type: 'DELETE',
-            dataType: 'json',
-            data:{
-                "id": id_data,
-                "col_name": col_name
-            },
-            success: function(response) {
-                console.log(response);
-                location.reload(); 
-            },
-            error: function(error) {
-                console.log(error);
-                location.reload(); 
-            }
-        });
-    });
     $('#save_host_button').click(function(e) {
             // Save the form data via an Ajax request
             e.preventDefault();
@@ -175,7 +134,7 @@ $(document).ready(function() {
                 // You can inform the user that the data is updated successfully
                 // by highlighting the row or showing a message box
                 bootbox.alert('The Host config is not saved!');
-                location.reload(); 
+                location.reload();
             });
         });
     $('.edit_host_button').on('click', function() {
@@ -220,6 +179,69 @@ $(document).ready(function() {
                 .modal('show');
         });
     });
+    $('.create_cluster_button').click(function() {
+        var form_data = $('#add_new_cluster_form').serialize();
+        
+        $.ajax({
+            url: "/cluster",
+            type: 'POST',
+            dataType: 'json',
+            data: form_data,
+            success: function(response) {
+                console.log(response);
+                location.reload(); 
+            },
+            error: function(error) {
+                console.log(error);
+                location.reload(); 
+            }
+        });
+    });
+    $('.delete_cluster_button').click(function() {
+        // Confirm
+        var id_data = $(this).attr('id_data');
+        var col_name = $(this).attr('col_name');
+
+        $.ajax({
+            url: "/cluster",
+            type: 'DELETE',
+            dataType: 'json',
+            data:{
+                "id": id_data,
+                "col_name": col_name
+            },
+            success: function(response) {
+                console.log(response);
+                location.reload(); 
+            },
+            error: function(error) {
+                console.log(error);
+                location.reload(); 
+            }
+        });
+    });
+    $('.release_cluster_button').click(function() {
+        var id_data = $(this).attr('id_data');
+
+        $.ajax({
+            url: "/cluster",
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                "id": id_data,
+                "col_name": col_name
+            },
+            success: function(response) {
+                console.log(response);
+                location.reload();
+            },
+            error: function(error) {
+                console.log(error);
+                location.reload();
+            }
+        });
+    });
+
     
     Highcharts.setOptions({
         global : {

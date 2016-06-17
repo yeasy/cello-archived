@@ -35,6 +35,7 @@ other action.*
 All services are recommended to setup through Docker containers by default.
 
 ### Master Requirement
+* system: 8c16g100g
 * docker engine: 1.11.1+
 * docker-compose: 1.7.0+
 * docker images:
@@ -44,7 +45,7 @@ All services are recommended to setup through Docker containers by default.
     - mongo-express:0.30 (optional)
 
 ### Node Requirement
-* aufs-tools: required on ubuntu 14.04
+* system: 8c16g100g
 * docker engine:
     - 1.11.1+,
     - Let daemon listen on port 2375, and make sure Master can reach Node from port 2375.
@@ -63,6 +64,7 @@ DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -
     - `yeasy/hyperledger-peer:noops`
     - `yeasy/hyperledger-peer:pbft`
     - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the authentication service)
+* aufs-tools: required on ubuntu 14.04.
 * SSH (Optionally ): Open for Master to monitor.
 
 ### Configuration
