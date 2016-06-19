@@ -147,6 +147,8 @@ $ bash ./scripts/restart.sh
 * Support metadata field from user apply cluster.
 * ~~Support monitor.~~
 * ~~Support host fillup and clean buttons.~~
+* ~~Support host reset buttons.~~
+* Support only show occupied clusters, or sort.
 * ~~Support detect host info when adding as swarm type.~~
 * ~~Add limitation on the running containers.~~
 * ~~Security option and log option (rotate)~~.

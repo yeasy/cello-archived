@@ -87,7 +87,7 @@ def clean_exited_containers(daemon_url):
 def test_daemon(daemon_url, timeout=5):
     """ Check if the daemon is active
 
-    Only wait for 2 seconds.
+    Only wait for timeout seconds.
 
     :param daemon_url: Docker daemon url
     :param timeout: Time to wait for the response
@@ -109,7 +109,7 @@ def test_daemon(daemon_url, timeout=5):
 def detect_daemon_type(daemon_url, timeout=5):
     """ Try to detect the daemon type
 
-    Only wait for 2 seconds.
+    Only wait for timeout seconds.
 
     :param daemon_url: Docker daemon url
     :param timeout: Time to wait for the response
@@ -132,6 +132,45 @@ def detect_daemon_type(daemon_url, timeout=5):
         return None
 
 
+def reset_container_host(daemon_url, timeout=15):
+    """ Try to detect the daemon type
+
+    Only wait for timeout seconds.
+
+    :param daemon_url: Docker daemon url
+    :param timeout: Time to wait for the response
+    :return: host type info
+    """
+    try:
+        client = Client(base_url=daemon_url, timeout=timeout)
+        containers = client.containers(quiet=True, all=True)
+        logger.debug(containers)
+        for c in containers:
+            client.remove_container(c['Id'], force=True)
+        logger.debug("cleaning all containers")
+    except Exception as e:
+        logger.error("Exception happens when reset host!")
+        logger.error(e)
+        return False
+    try:
+        images = client.images(all=True)
+        logger.debug(images)
+        for i in images:
+            if i["RepoTags"][0] == "<none>:<none>":
+                logger.debug(i)
+                try:
+                    client.remove_image(i['Id'])
+                except Exception as e:
+                    logger.error(e)
+                    continue
+        logger.debug("cleaning <none> images")
+        return True
+    except Exception as e:
+        logger.error("Exception happens when reset host!")
+        logger.error(e)
+        return False
+
+
 def detect_container_host(swarm_url, container_name, timeout=5):
     """
     Detect the host ip where the given container locate in the swarm cluster
@@ -149,7 +188,6 @@ def detect_container_host(swarm_url, container_name, timeout=5):
         return info['NetworkSettings']['Ports']['5000/tcp'][0]['HostIp']
     except:
         return ''
-
 
 def setup_container_host(host_type, daemon_url, timeout=5):
     """

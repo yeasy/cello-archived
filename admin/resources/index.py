@@ -24,6 +24,7 @@ index = Blueprint('index', __name__)
 def show():
     logger.info("path={}, action={}".format(r.path, r.method))
     hosts = list(host_handler.list(filter_data={}, validate=False))
+    hosts.sort(key=lambda x: str(x["name"]), reverse=False)
     available_hosts = list(filter(
         lambda e: e["status"] == "active"
                   and len(e["clusters"]) < e["capacity"], hosts))

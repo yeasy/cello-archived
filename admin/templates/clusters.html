@@ -1,116 +1,191 @@
 {% extends "layout.html" %}
 {% block title %}Clusters{% endblock %}
 {% block body %}
-{{ super() }}
-    {% if col_name == "active" %}
+    {{ super() }}
+    {% if type != "released" %}
         {% if available_hosts|length > 0 %}
-            <h2 class="page-header">Running Clusters: {{items_count}} <button
-                    type="button" class="btn btn-primary btn-success btn-default pull-sm-right" data-toggle="modal"
-                    data-target="#newClusterModal">Add Cluster</button></h2>
+            <h2 class="page-header">Clusters {{ type }}: {{items_count}}
+                <button
+                        type="button" class="btn btn-primary btn-success btn-default pull-sm-right" data-toggle="modal"
+                        data-target="#newClusterModal">Add Cluster</button></h2>
         {% else %}
-            <h2 class="page-header">Running Clusters: {{items_count}} <button
+            <h2 class="page-header">Clusters {{ type }}: {{items_count}} <button
                     type="button" class="btn btn-primary btn-success btn-default
                  pull-sm-right" data-toggle="modal" data-target="#newClusterModal"
                     disabled>Add Cluster</button></h2>
         {% endif %}
+
     {% else %}
-        <h2 class="page-header">Released Clusters: {{items_count}}</h2>
+        <h2 class="page-header">Clusters {{ type }}: {{items_count}}</h2>
     {% endif %}
 
-    {% if items_count > 0 %}
-        <div class="row">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>User</th>
-                    <th>API</th>
-                    <th>Type</th>
-                    <th>Host</th>
-                    <th>Created</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for item in items %}
-                    {% if item.user_id and col_name=="active" %}
-                        <tr bgcolor="#add8e6">
-                            {% else %}
+    {% if type=="active" %}
+        {% if items_count > 0 %}
+            <div class="row">
+                <table class="table">
+                    <thead align="center">
+                    <tr>
+                        <th>Name</th>
+                        <th>API</th>
+                        <th>Type</th>
+                        <th>Host</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in items %}
+                        {% if item.user_id%}
+                            <tr bgcolor="#add8e6">
+                                {% else %}
+                            <tr>
+                        {% endif %}
+                    <td><a href="/cluster_info/{{item.id}}?released=0">{{item.name}}</a></td>
+                    <td>{{item.api_url}}</td>
+                    <td>{{item.consensus_type}}</td>
+                    <td><a href="/host_info/{{item.host_id}}">{{item
+                    .host_id}}</a></td>
+                    <td>{{item.create_ts}}</td>
+
+                    <td><input value="Delete" type="button"
+                               class="btn btn-xs btn-small btn-danger delete_cluster_button"
+                               id_data="{{item.id}}" col_name="{{col_name}}"/>
+                    </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {{ pagination.info }}
+                {{ pagination.links }}
+            </div>
+        {% endif %}
+    {% elif type == "inused" %}
+        {% if items_count > 0 %}
+            <div class="row">
+                <table class="table">
+                    <thead align="center">
+                    <tr>
+                        <th>Name</th>
+                        <th>User</th>
+                        <th>Apply Time</th>
+                        <th>Type</th>
+                        <th>Host</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in items %}
                         <tr>
-                    {% endif %}
-                {% if col_name == "active" %}
-                    <td><a href="/cluster_info/{{item.id}}">{{item.name}}</a></td>
-                {% else %}
-                    <td><a href="/cluster_info/{{item.id}}?released=1">{{item.name}}</a></td>
-                {% endif %}
-                <td>{{item.user_id}}</td>
-                <td>{{item.api_url}}</td>
-                <td>{{item.consensus_type}}</td>
-                <td>{{item.host_id}}</td>
-                <td>{{item.create_ts}}</td>
-                <td><input value="Delete" type="button"
-                           class="btn btn-xs btn-small btn-danger delete_cluster_button"
-                           id_data="{{item.id}}" col_name="{{col_name}}"/>
-                </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            {{ pagination.info }}
-            {{ pagination.links }}
-        </div>
+                            <td><a href="/cluster_info/{{item.id}}?released=0">{{item.name}}</a></td>
+                            <td>{{item.user_id}}</td>
+                            <td>{{item.apply_ts}}</td>
+                            <td>{{item.consensus_type}}</td>
+                            <td><a href="/host_info/{{item.host_id}}">{{item
+                            .host_id}}</a></td>
+                            <td><input value="Delete" type="button"
+                                       class="btn btn-xs btn-small btn-danger delete_cluster_button"
+                                       id_data="{{item.id}}" col_name="{{col_name}}"/>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {{ pagination.info }}
+                {{ pagination.links }}
+            </div>
+        {% endif %}
+    {% elif type == "released" %}
+        {% if items_count > 0 %}
+            <div class="row">
+                <table class="table">
+                    <thead align="center">
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Host</th>
+                        {% if col_name != "active" %}
+                            <th>User</th>
+                        {% endif %}
+                        <th>Released</th>
+                        <th>Duration</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <td><a href="/cluster_info/{{item.id}}?released=1">{{item.name}}</a></td>
+                            <td>{{item.consensus_type}}</td>
+                            <td><a href="/host_info/{{item.host_id}}">{{item
+                            .host_id}}</a></td>
+                            <td>{{item.user_id}}</td>
+                            <td>{{item.release_ts}}</td>
+                            <td>{{item.duration}}</td>
+
+                            <td><input value="Delete" type="button"
+                                       class="btn btn-xs btn-small btn-danger delete_cluster_button"
+                                       id_data="{{item.id}}" col_name="{{col_name}}"/>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {{ pagination.info }}
+                {{ pagination.links }}
+            </div>
+        {% endif %}
     {% endif %}
 
- <div id="newClusterModal" class="modal fade" role="dialog">
-    <div class="modal-dialog">
-        <!-- Modal content-->
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Create a cluster</h4>
-            </div>
-            <div class="modal-body">
-                <form class="form" id="add_new_cluster_form" data-toggle="validator">
 
-                    <div class="form-group">
-                        <label for="cluster_name">*Name (less than 16 chars) </label>
-                        <input id="cluster_name" name="name" type="text"
-                               class="form-control" pattern="^[-_A-z0-9]{1,}$"
-                               placeholder="Cluster Name" data-error="A name is required" max-length="16" required >
-                    </div>
-                {% if available_hosts|length > 0 %}
-                    <div class="form-group">
-                        <label for="host"> Select a Host</label>
-                        <select id="host" class="c-select" name="host_id" required>
-                            <option selected value="{{ available_hosts[0].id}}">{{ available_hosts[0].name }}</option>
-                            {% for h in available_hosts[1:] %}
-                                <option value="{{h.id}}">{{h.name}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                {% endif %}
+    <div id="newClusterModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Create a cluster</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form" id="add_new_cluster_form" data-toggle="validator">
 
-                {% if consensus_types|length > 0 %}
-                    <div class="form-group">
-                        <label for="consensus_type"> Select a Type</label>
-                        <select id="consensus_type" class="c-select"
-                                name="consensus_type"
-                                 required>
-                            <option selected
-                                    value="{{consensus_types[0]}}">{{consensus_types[0]|upper }}</option>
-                            {% for c in consensus_types[1:] %}
-                                    <option value="{{c}}">{{c|upper}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                {% endif %}
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary btn-success btn-sm btn-default create_cluster_button" type="button">Create</button>
-                <button class="btn btn-default btn-sm" data-dismiss="modal" type="button">Cancel</button>
+                        <div class="form-group">
+                            <label for="cluster_name">*Name (less than 16 chars) </label>
+                            <input id="cluster_name" name="name" type="text"
+                                   class="form-control" pattern="^[-_A-z0-9]{1,}$"
+                                   placeholder="Cluster Name" data-error="A name is required" max-length="16" required >
+                        </div>
+                        {% if available_hosts|length > 0 %}
+                            <div class="form-group">
+                                <label for="host"> Select a Host</label>
+                                <select id="host" class="c-select" name="host_id" required>
+                                    <option selected value="{{ available_hosts[0].id}}">{{ available_hosts[0].name }}</option>
+                                    {% for h in available_hosts[1:] %}
+                                        <option value="{{h.id}}">{{h.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% endif %}
+
+                        {% if consensus_types|length > 0 %}
+                            <div class="form-group">
+                                <label for="consensus_type"> Select a Type</label>
+                                <select id="consensus_type" class="c-select"
+                                        name="consensus_type"
+                                        required>
+                                    <option selected
+                                            value="{{consensus_types[0]}}">{{consensus_types[0]|upper }}</option>
+                                    {% for c in consensus_types[1:] %}
+                                        <option value="{{c}}">{{c|upper}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary btn-success btn-sm btn-default create_cluster_button" type="button">Create</button>
+                    <button class="btn btn-default btn-sm" data-dismiss="modal" type="button">Cancel</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

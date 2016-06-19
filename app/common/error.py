@@ -8,16 +8,17 @@ CODE_METHOD_NOT_ALLOWED = 405
 CODE_NOT_ACCEPTABLE = 406
 CODE_CONFLICT = 409
 
-status_response_ok = {
+response_ok = {
     "status": "OK",
     "code": CODE_OK,
     "error": "",
     "data": "",
 }
 
-status_response_fail = {
+response_fail = {
     "status": "FAIL",
     "code": CODE_BAD_REQUEST,
+    "error": "",
     "data": "",
 }
 

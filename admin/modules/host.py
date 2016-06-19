@@ -9,7 +9,8 @@ from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, cleanup_container_host, LOG_LEVEL, setup_container_host, \
-    test_daemon, detect_daemon_type, CLUSTER_API_PORT_START
+    test_daemon, detect_daemon_type, reset_container_host, \
+    CLUSTER_API_PORT_START
 
 from modules import cluster_handler
 
@@ -23,7 +24,8 @@ class HostHandler(object):
     def __init__(self):
         self.col = db["host"]
 
-    def create(self, name, daemon_url, capacity=1, status="active"):
+    def create(self, name, daemon_url, capacity=1, status="active",
+               serialization=True):
         """ Create a new docker host node
 
         A docker host is potentially a single node or a swarm.
@@ -33,6 +35,7 @@ class HostHandler(object):
         :param daemon_url: daemon_url of the host
         :param capacity: The number of clusters to hold
         :param status: active for using, inactive for not using
+        :param serialization: whether to get serialized result or object
         :return: True or False
         """
         logger.debug("Create host: name={}, daemon_url={}, capacity={}"
@@ -47,11 +50,11 @@ class HostHandler(object):
 
         if self.col.find_one({"daemon_url": daemon_url}):
             logger.warn("{} already existed in db".format(daemon_url))
-            return False
+            return {}
 
         if not setup_container_host(detected_type, daemon_url):
             logger.warn("{} cannot be setup".format(name))
-            return False
+            return {}
 
         h = {
             'name': name,
@@ -63,7 +66,10 @@ class HostHandler(object):
             'type': detected_type
         }
         hid = self.col.insert_one(h).inserted_id  # object type
-        self.col.update_one({"_id": hid}, {"$set": {"id": str(hid)}})
+        host = self.col.find_one_and_update(
+            {"_id": hid},
+            {"$set": {"id": str(hid)}},
+            return_document=ReturnDocument.AFTER)
 
         def create_cluster_work(port):
             cluster_name = "{}_{}".format(name, (port-CLUSTER_API_PORT_START))
@@ -75,7 +81,7 @@ class HostHandler(object):
             else:
                 logger.warn("Create cluster failed")
 
-        if status == "active":  # active means should fillupl it
+        if status == "active" and capacity > 0:  # should fillup it
             logger.debug("Init with {} clusters in host".format(capacity))
             free_ports = cluster_handler.find_free_api_ports(str(
                 hid), capacity)
@@ -85,10 +91,13 @@ class HostHandler(object):
                 t = Thread(target=create_cluster_work, args=(p,))
                 t.start()
                 i += 1
-                if i % 10 == 0:
+                if i % 5 == 0:
                     time.sleep(0.1)
 
-        return True
+        if serialization:
+            return self._serialize(host)
+        else:
+            return host
 
     def get(self, id, serialization=False):
         """ Get a host
@@ -114,6 +123,7 @@ class HostHandler(object):
 
         :param id: id of the host
         :param d: dict to use as updated values
+        :param serialization: whether to serialize the result
         :return: serialized result or obj
         """
         logger.debug("Get a host with id=" + id)
@@ -125,6 +135,9 @@ class HostHandler(object):
 
         if "capacity" in d:
             d["capacity"] = int(d["capacity"])
+        if d["capacity"] < len(h_old.get("clusters")):
+            logger.warn("Cannot set cap smaller than running clusters")
+            return {}
         if "status" in d:
             if not test_daemon(daemon_url):
                 d["status"] = 'inactive'
@@ -204,7 +217,7 @@ class HostHandler(object):
             t = Thread(target=create_cluster_work, args=(p,))
             t.start()
             i += 1
-            if i % 10 == 0:
+            if i % 5 == 0:
                 time.sleep(0.1)
 
         return True
@@ -236,7 +249,7 @@ class HostHandler(object):
             t = Thread(target=delete_cluster_work, args=(cid,))
             t.start()
             i += 1
-            if i % 10 == 0:
+            if i % 5 == 0:
                 time.sleep(0.1)
 
         self.col.find_one_and_update(
@@ -244,6 +257,20 @@ class HostHandler(object):
             {"$set": {"status": "active"}},
             return_document=ReturnDocument.AFTER)
         return True
+
+    def reset(self, id):
+        """
+        Clean a host's free clusters.
+
+        :param id: host id
+        :return: True or False
+        """
+        logger.debug("clean host with id = {}".format(id))
+        host = self._get_active_host(id)
+        if not host or len(host.get("clusters")) > 0:
+            logger.warn("no resettable host is found with id ={}".format(id))
+            return False
+        return reset_container_host(daemon_url=host.get("daemon_url"))
 
     def _update_status(self, host):
         """
