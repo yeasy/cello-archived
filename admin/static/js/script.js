@@ -1,4 +1,16 @@
 $(document).ready(function() {
+    function alertMsg(title, message, type) {
+        $.notify({
+            title: '<strong>'+title+'</strong>',
+            message: message
+        },{
+            type: type,
+            delay: 2000,
+            placement: {
+                align: 'center'       
+            }
+        });  
+    }
     $('.create_host_button').click(function() {
         //var name = $(this).parents('form:first').find('[name="name"]').val();
         //var daemon_url = $(this).parents('form:first').find('[name="daemon_url"]').val();
@@ -11,11 +23,13 @@ $(document).ready(function() {
             data: form_data,
             success: function(response) {
                 console.log(response);
-                location.reload(); 
+                alertMsg('Success!', 'New host is created.', 'success');
+                setTimeout("location.reload(true);",2000);
             },
             error: function(error) {
                 console.log(error);
-                location.reload(); 
+                alertMsg('Failed!', error.responseJSON.error, 'danger');
+                setTimeout(location.reload, 2000);
             }
         });
     });
@@ -32,60 +46,43 @@ $(document).ready(function() {
             },
             success: function(response) {
                 console.log(response);
-                location.reload(); 
-            },
-            error: function(error) {
-                console.log(error);
-                location.reload(); 
-            }
-        });
-    });
-    $('.fillup_host_button').click(function() {
-        // Confirm
-        var id = $(this).attr('data-id');
-
-        $.ajax({
-            url: "/host_action",
-            type: 'POST',
-            dataType: 'json',
-            data:{
-                "id": id,
-                "action": "fillup"
-            },
-            success: function(response) {
-                console.log(response);
-                //setTimeout(location.reload, 2000);
+                alertMsg('Success!', 'The host is deleted.', 'success');
                 setTimeout("location.reload(true);",2000);
             },
             error: function(error) {
                 console.log(error);
+                alertMsg('Failed!', error.responseJSON.error, 'danger');
                 setTimeout(location.reload, 2000);
             }
         });
     });
-    $('.clean_host_button').click(function() {
-        // Confirm
-        var id = $(this).attr('data-id');
-
+    $('#delete_host_confirm').on('click', '.btn-ok', function(e) {
+        var $modalDiv = $(e.delegateTarget);
+        var id = $(this).data('hostId');
         $.ajax({
-            url: "/host_action",
-            type: 'POST',
+            url: "/host",
+            type: 'DELETE',
             dataType: 'json',
             data:{
-                "id": id,
-                "action": "clean"
+                "id": id
             },
             success: function(response) {
                 console.log(response);
-                //setTimeout(location.reload, 2000);
+                alertMsg('Success!', 'The host is deleted.', 'success');
                 setTimeout("location.reload(true);",2000);
-                //location.reload();
             },
             error: function(error) {
                 console.log(error);
+                alertMsg('Failed!', error.responseJSON.error, 'danger');
                 setTimeout("location.reload(true);",2000);
             }
         });
+        $modalDiv.modal('hide');
+    });
+    $('#delete_host_confirm').on('show.bs.modal', function(e) {
+        var data = $(e.relatedTarget).data();
+        $('#title', this).text(data.title);
+        $('.btn-ok', this).data('hostId', data.id);
     });
     $('#save_host_button').click(function(e) {
             // Save the form data via an Ajax request
@@ -123,18 +120,14 @@ $(document).ready(function() {
                 // Hide the dialog
                 $form.parents('.bootbox').modal('hide');
 
-                // You can inform the user that the data is updated successfully
-                // by highlighting the row or showing a message box
-                bootbox.alert('The Host config is updated');
-                location.reload();
+                //bootbox.alert('The Host config is updated');
+                alertMsg('Success!', 'The host info is updated.', 'success');
+                setTimeout("location.reload(true);",2000);
             }).error(function(response) {
                 // Hide the dialog
                 $form.parents('.bootbox').modal('hide');
-
-                // You can inform the user that the data is updated successfully
-                // by highlighting the row or showing a message box
-                bootbox.alert('The Host config is not saved!');
-                location.reload();
+                alertMsg('Failed!', error.responseJSON.error, 'danger');
+                setTimeout(location.reload, 2000);
             });
         });
     $('.edit_host_button').on('click', function() {
@@ -179,6 +172,89 @@ $(document).ready(function() {
                 .modal('show');
         });
     });
+    $('#fillup_host_button').click(function() {
+        // Confirm
+        var id = $(this).attr('data-id');
+
+        $.ajax({
+            url: "/host_action",
+            type: 'POST',
+            dataType: 'json',
+            data:{
+                "id": id,
+                "action": "fillup"
+            },
+            success: function(response) {
+                console.log(response);
+                setTimeout(function () {
+                    alertMsg('Success!', 'The host is fullfilled now.', 'success');
+                }, 1000);
+                
+                setTimeout("location.reload(true);",2000);
+            },
+            error: function(error) {
+                console.log(error);
+                alertMsg('Failed!', error.responseJSON.error, 'danger');
+                setTimeout(location.reload, 2000);
+            }
+        });
+    });
+    $('#clean_host_button').click(function() {
+        // Confirm
+        var id = $(this).attr('data-id');
+
+        $.ajax({
+            url: "/host_action",
+            type: 'POST',
+            dataType: 'json',
+            data:{
+                "id": id,
+                "action": "clean"
+            },
+            success: function(response) {
+                console.log(response);
+                alertMsg('Success!', 'The host is clean now.', 'success');
+                setTimeout("location.reload(true);",2000);
+            },
+            error: function(error) {
+                console.log(error);
+                alertMsg('Failed!', error.responseJSON.error, 'danger');
+                setTimeout("location.reload(true);",2000);
+            }
+        });
+    });
+    
+    $('#reset_host_confirm').on('click', '.btn-ok', function(e) {
+        var $modalDiv = $(e.delegateTarget);
+        var id = $(this).data('hostId');
+        // $.ajax({url: '/api/record/' + id, type: 'DELETE'})
+        // $.post('/api/record/' + id).then()
+        $.ajax({
+            url: "/host_action",
+            type: 'POST',
+            dataType: 'json',
+            data:{
+                "id": id,
+                "action": "reset"
+            },
+            success: function(response) {
+                console.log(response);
+                alertMsg('Success!', 'The host is reset now.', 'success');
+                setTimeout("location.reload(true);",2000);
+            },
+            error: function(error) {
+                console.log(error);
+                alertMsg('Failed!', error.responseJSON.error, 'danger');
+                setTimeout("location.reload(true);",2000);
+            }
+        });
+        $modalDiv.modal('hide');
+    });
+    $('#reset_host_confirm').on('show.bs.modal', function(e) {
+        var data = $(e.relatedTarget).data();
+        $('#title', this).text(data.title);
+        $('.btn-ok', this).data('hostId', data.id);
+    });
     $('.create_cluster_button').click(function() {
         var form_data = $('#add_new_cluster_form').serialize();
         
@@ -189,11 +265,15 @@ $(document).ready(function() {
             data: form_data,
             success: function(response) {
                 console.log(response);
-                location.reload(); 
+                alertMsg('Success!', 'New cluster is created.', 'success');
+                setTimeout("location.reload(true);",2000);
+                //location.reload();
             },
             error: function(error) {
                 console.log(error);
-                location.reload(); 
+                alertMsg('Failed!', error.responseJSON.error, 'danger');
+                setTimeout("location.reload(true);",2000);
+                //location.reload();
             }
         });
     });
@@ -212,14 +292,17 @@ $(document).ready(function() {
             },
             success: function(response) {
                 console.log(response);
-                location.reload(); 
+                alertMsg('Success!', 'The cluster is deleted.', 'success');
+                setTimeout("location.reload(true);",2000);
             },
             error: function(error) {
                 console.log(error);
-                location.reload(); 
+                alertMsg('Failed!', error.responseJSON.error, 'danger');
+                setTimeout("location.reload(true);",2000);
             }
         });
     });
+    //not used yet
     $('.release_cluster_button').click(function() {
         var id_data = $(this).attr('id_data');
 

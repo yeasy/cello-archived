@@ -61,12 +61,17 @@
                 {{ nav_link("index.show", "Overview") }}
                 {{ nav_link("stat.show", "System Status") }}
                 {{ nav_link("host.hosts_show", "Hosts") }}
-                {{ nav_link("cluster.clusters_show", "Running Clusters", col_name="active") }}
-                {{ nav_link("cluster.clusters_show", "Release History", col_name="released") }}
+                {{ nav_link("cluster.clusters_show", "Active Clusters", type="active") }}
+                {{ nav_link("cluster.clusters_show", "Inused Clusters", type="inused" ) }}
+                {{ nav_link("cluster.clusters_show", "Release History", type="released") }}
                 {{ nav_link("index.about", "About") }}
             </ul>
         </div>
         <div class="col-sm-8 col-sm-offset-3 col-md-8 col-md-offset-3">
+            <div class="alert alert-success col-sm-6" id="success-alert" hidden>
+                <button type="button" class="close" data-dismiss="alert">x</button>
+                <strong>Success! </strong>
+            </div>
             {% block body %}
             {% endblock %}
         </div>
@@ -88,6 +93,7 @@
 <!-- Placed at the end of the document so the pages load faster -->
 <script src="../static/js/jquery-2.2.3.min.js"> </script>
 <script src="../static/js/bootbox.min.js"></script>
+<script src="../static/js/bootstrap-notify.min.js"></script>
 <script src="../static/js/validator.js"></script>
 <script src="../static/js/bootstrap.min.js"></script>
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->

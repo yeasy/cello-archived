@@ -11,15 +11,20 @@
         <dt>Consensus Type<dt> <dd>{{item.consensus_type}}</dd>
         <dt>Host<dt> <dd><a href="/host_info/{{item.host_id}}">{{item
         .host_id}}</a></dd>
+        <dt>User Id<dt> <dd>{{item.user_id}}</dd>
         <dt>Create Time<dt> <dd>{{item.create_ts}}</dd>
         <dt>Apply Time<dt> <dd>{{item.apply_ts}}</dd>
-        <dt>User Id<dt> <dd>{{item.user_id}}</dd>
         <dt>Release Time<dt> <dd>{{item.release_ts}}</dd>
-        <dt>Containers<dt> <dd>
-        {% for c in item.containers.keys()%}
-            <a href="">{{ c }}</a><br>
-        {% endfor %}
-    </dd>
+        <dt>Duration<dt> <dd>{{item.duration}}</dd>
+        {% if item.containers %}
+            <dt>Containers<dt> <dd>
+            {% if item.containers|length >0 %}
+                {% for c in item.containers.keys()%}
+                    <a href="">{{ c }}</a><br>
+                {% endfor %}
+            {% endif %}
+        {% endif %}
+        </dd>
     </dl>
 <!--
     <div class="container-fluid">

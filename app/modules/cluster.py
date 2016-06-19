@@ -43,7 +43,7 @@ class ClusterHandler(object):
                 filter_data))
         else:
             logger.warn("Unknown cluster col_name=" + col_name)
-            return None
+            return []
         return result
 
     def get(self, id, serialization=False, col_name="active"):
@@ -109,8 +109,10 @@ class ClusterHandler(object):
             'consensus_type': consensus_type,
             'create_ts': datetime.datetime.now(),
             'release_ts': "",
+            'duration': "",
             'api_url': "",  # This will be generate later
             'daemon_url': daemon_url,
+            'containers': [],
         }
         cid = self.col_active.insert_one(c).inserted_id  # object type
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
@@ -239,8 +241,11 @@ class ClusterHandler(object):
         if record:  # record to release collection
             logger.debug("Record the cluster info into released collection")
             c["release_ts"] = datetime.datetime.now()
+            c["duration"] = str(c["release_ts"] - c["apply_ts"])
+            # seems mongo reject timedelta type
             if user_id.startswith(SYS_DELETER):
                 c["user_id"] = user_id[len(SYS_DELETER):]
+            logger.debug(c)
             self.col_released.insert_one(c)
         return True
 
@@ -331,7 +336,7 @@ class ClusterHandler(object):
     def _serialize(self, doc, keys=['id', 'name', 'user_id', 'host_id',
                                     'api_url', 'consensus_type', 'daemon_url',
                                     'create_ts', 'apply_ts', 'release_ts',
-                                    'containers']):
+                                    'duration', 'containers']):
         """ Serialize an obj
 
         :param doc: doc to serialize
