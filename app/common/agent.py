@@ -128,7 +128,8 @@ def detect_daemon_type(daemon_url, timeout=5):
             return 'swarm'
         else:
             return 'single'
-    except:
+    except Exception as e:
+        logger.error(e)
         return None
 
 
@@ -296,13 +297,14 @@ def compose_ps(project):
 
 
 def compose_start(name, api_port, daemon_url,
-                  consensus_type=CONSENSUS_TYPES[0]):
+                  consensus_type=CONSENSUS_TYPES[0],timeout=5):
     """ Start a cluster by compose
 
     :param name: The name of the cluster
     :param api_port: The port of the cluster API
     :param daemon_url: Docker host daemon
     :param consensus_type: Cluster consensus type
+    :param timeout: Docker client timeout value
     :return: The name list of the started peer containers
     """
     logger.debug("Start compose project with logging_level={}, "
@@ -315,7 +317,7 @@ def compose_start(name, api_port, daemon_url,
     os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
     project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
-    containers = project.up(detached=True)
+    containers = project.up(detached=True, timeout=timeout)
     result = {}
     for c in containers:
         result[c.name] = c.id
@@ -324,7 +326,7 @@ def compose_start(name, api_port, daemon_url,
 
 
 def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
-                 consensus_type=CONSENSUS_TYPES[0]):
+                 consensus_type=CONSENSUS_TYPES[0], timeout=5):
     """ Stop the cluster and remove the service containers
 
     :param name: The name of the cluster
@@ -332,6 +334,7 @@ def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
     :param api_port: The port of the cluster API
     :param logging_level: logging level for the cluster output
     :param consensus_type: Cluster consensus type
+    :param timeout: Docker client timeout
     :return:
     """
     logger.debug("Stop compose project {} with logging_level={}, "
@@ -344,8 +347,8 @@ def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
     os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
     project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
-    project.stop()
-    project.remove_stopped(one_off=OneOffFilter.include)
+    project.stop(timeout=timeout)
+    project.remove_stopped(one_off=OneOffFilter.include, force=True)
 
 
 # no used
