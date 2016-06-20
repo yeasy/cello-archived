@@ -256,32 +256,35 @@ class ClusterHandler(object):
         :param consensus_type: filter the cluster with consensus
         :return: serialized cluster or None
         """
-        h = col_host.find_one({"status": "active"})
-        if not h:
-            logger.warn("No active host exist for cluster applying")
-            return None
         # TODO: should check already existed one first
         c = self.col_active.find_one({"user_id": user_id, "release_ts": "",
-                                      "consensus_type": consensus_type,
-                                      "host_id": h.get("id")})
-        if not c:  # do not find assigned one, then apply new
-            c = self.col_active.find_one_and_update(
-                {"user_id": "", "consensus_type": consensus_type},
-                {"$set": {"user_id": user_id, "apply_ts": datetime.datetime.now()}},
-                return_document=ReturnDocument.AFTER)
-        else:
+                                      "consensus_type": consensus_type})
+        if c:
             logger.debug("Already assigned cluster for " + user_id)
-        if c and c.get("user_id") == user_id:
-            logger.info("Now have cluster {} for user {}".format(c.get("id"),
-                                                                 user_id))
-            result = self._serialize(c, keys=['id', 'name', 'user_id',
-                                              'daemon_url',
-                                              'api_url', 'consensus_type'])
-            #h = col_host.find_one({"id": c.get("host_id")})
-            return result
-        else:  # Failed to find available one
-            logger.warn("Not find available cluster for " + user_id)
-            return None
+            return self._serialize(c, keys=['id', 'name', 'user_id',
+                                            'daemon_url',
+                                            'api_url', 'consensus_type'])
+        logger.debug("Try find available cluster for " + user_id)
+        hosts = col_host.find({"status": "active"})
+        logger.debug("Find active hosts={}".format([h.get("name") for h in
+                                                   hosts]))
+        for h in hosts:
+            c = self.col_active.find_one_and_update(
+                {"user_id": "", "consensus_type": consensus_type,
+                 "host_id": h.get("id")},
+                {"$set": {"user_id": user_id,
+                          "apply_ts": datetime.datetime.now()}},
+                return_document=ReturnDocument.AFTER)
+            if c and c.get("user_id") == user_id:
+                logger.info("Now have cluster {} for user {}".format(
+                    c.get("id"), user_id))
+                result = self._serialize(c, keys=['id', 'name', 'user_id',
+                                                  'daemon_url',
+                                                  'api_url', 'consensus_type'])
+                #h = col_host.find_one({"id": c.get("host_id")})
+                return result
+        logger.warn("Not find available cluster for " + user_id)
+        return None
 
     def release_cluster(self, user_id):
         """ Release a cluster for a user_id and recreate it.
