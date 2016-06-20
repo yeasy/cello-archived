@@ -12,7 +12,7 @@ version: '2'
 
 services:
   vp:
-    image: yeasy/hyperledger-peer:pbft
+    image: yeasy/hyperledger-peer:latest
     restart: unless-stopped
     labels:
       - monitor=true

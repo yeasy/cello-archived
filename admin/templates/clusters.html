@@ -67,9 +67,9 @@
                     <tr>
                         <th>Name</th>
                         <th>User</th>
-                        <th>Apply Time</th>
                         <th>Type</th>
                         <th>Host</th>
+                        <th>Apply Time</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -77,10 +77,9 @@
                         <tr>
                             <td><a href="/cluster_info/{{item.id}}?released=0">{{item.name}}</a></td>
                             <td>{{item.user_id}}</td>
-                            <td>{{item.apply_ts}}</td>
                             <td>{{item.consensus_type}}</td>
-                            <td><a href="/host_info/{{item.host_id}}">{{item
-                            .host_id}}</a></td>
+                            <td><a href="/host_info/{{item.host_id}}">{{item .host_id}}</a></td>
+                            <td>{{item.apply_ts}}</td>
                             <td><input value="Delete" type="button"
                                        class="btn btn-xs btn-small btn-danger delete_cluster_button"
                                        id_data="{{item.id}}" col_name="{{col_name}}"/>
