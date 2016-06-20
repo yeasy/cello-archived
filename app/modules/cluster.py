@@ -256,12 +256,14 @@ class ClusterHandler(object):
         :param consensus_type: filter the cluster with consensus
         :return: serialized cluster or None
         """
-        if not col_host.find_one({"status": "active"}):
+        h = col_host.find_one({"status": "active"})
+        if not h:
             logger.warn("No active host exist for cluster applying")
             return None
         # TODO: should check already existed one first
         c = self.col_active.find_one({"user_id": user_id, "release_ts": "",
-                                      "consensus_type": consensus_type})
+                                      "consensus_type": consensus_type,
+                                      "host_id": h.get("id")})
         if not c:  # do not find assigned one, then apply new
             c = self.col_active.find_one_and_update(
                 {"user_id": "", "consensus_type": consensus_type},
@@ -275,7 +277,7 @@ class ClusterHandler(object):
             result = self._serialize(c, keys=['id', 'name', 'user_id',
                                               'daemon_url',
                                               'api_url', 'consensus_type'])
-            h = col_host.find_one({"id": c.get("host_id")})
+            #h = col_host.find_one({"id": c.get("host_id")})
             return result
         else:  # Failed to find available one
             logger.warn("Not find available cluster for " + user_id)

@@ -30,11 +30,11 @@
     <h3 class="page-header">System Status</h3>
     <div class="container-fluid">
         {% if available_hosts|length <= 0 %}
-            Host Status: <font color="#ff8c00"> None is available!
+            Host Status: <font color="#ff8c00"> All are full!
         </font>
         {% else %}
             Host Status: <font color="green"> {{ available_hosts|length }}/{{
-                hosts|length }} are available!</font>
+                hosts|length }} are not full!</font>
         {% endif %}
     <p></p>
         {% if clusters_free <= 0 %}

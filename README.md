@@ -100,6 +100,8 @@ Reference system configuration.
 
 ```sh
 fs.file-max = 2000000
+kernel.threads-max = 2091845
+kernel.pty.max = 210000
 net.ipv4.ip_local_port_range = 1025 65535
 net.ipv4.tcp_tw_reuse = 0
 net.ipv4.tcp_tw_recycle = 0
@@ -107,14 +109,18 @@ net.ipv4.tcp_max_tw_buckets = 5000
 net.ipv4.tcp_fin_timeout = 30
 net.ipv4.tcp_max_syn_backlog = 8192
 ```
+Need to run `sysctl -p` for usage.
 
 `/etc/security/limits.conf`
 
 ```sh
-* hard nofile 1000000
-* soft nofile 1000000
+* hard nofile 1048576
+* soft nofile 1048576
+* soft nproc 10485760
+* hard nproc 10485760
+* soft stack 32768
+* hard stack 32768
 ```
-
 check with `ulimit -n`.
 
 ### Start
@@ -148,7 +154,9 @@ $ bash ./scripts/restart.sh
 * ~~Support monitor.~~
 * ~~Support host fillup and clean buttons.~~
 * ~~Support host reset buttons.~~
-* Support only show occupied clusters, or sort.
+* ~~Support only show occupied clusters.~~
+* Support table sort.
+* Support local log version.
 * ~~Support detect host info when adding as swarm type.~~
 * ~~Add limitation on the running containers.~~
 * ~~Security option and log option (rotate)~~.
