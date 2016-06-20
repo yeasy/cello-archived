@@ -266,20 +266,20 @@ class ClusterHandler(object):
                                             'api_url', 'consensus_type'])
         logger.debug("Try find available cluster for " + user_id)
         hosts = col_host.find({"status": "active"})
-        logger.debug("Find active hosts={}".format([h.get("name") for h in
-                                                   hosts]))
-        for h in hosts:
+        host_ids = [h.get("id") for h in hosts]
+        logger.debug("Find active hosts={}".format(host_ids))
+        for h_id in host_ids:
             c = self.col_active.find_one_and_update(
                 {"user_id": "", "consensus_type": consensus_type,
-                 "host_id": h.get("id")},
+                 "host_id": h_id},
                 {"$set": {"user_id": user_id,
                           "apply_ts": datetime.datetime.now()}},
                 return_document=ReturnDocument.AFTER)
             if c and c.get("user_id") == user_id:
-                logger.info("Now have cluster {} for user {}".format(
-                    c.get("id"), user_id))
+                logger.info("Now have cluster {} at {} for user {}".format(
+                    c.get("id"), h_id, user_id))
                 result = self._serialize(c, keys=['id', 'name', 'user_id',
-                                                  'daemon_url',
+                                                  'daemon_url', 'host_id'
                                                   'api_url', 'consensus_type'])
                 #h = col_host.find_one({"id": c.get("host_id")})
                 return result
