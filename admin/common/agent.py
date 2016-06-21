@@ -14,7 +14,7 @@ from docker import Client
 
 from .log import log_handler, LOG_LEVEL
 from .utils import HOST_TYPES, CLUSTER_API_PORT_START, CLUSTER_NETWORK, \
-    COMPOSE_FILE_PATH, CONSENSUS_PLUGINS, CONSENSUS_MODES, LOG_TYPES
+    COMPOSE_FILE_PATH, CONSENSUS_PLUGINS, CONSENSUS_MODES, LOG_TYPES, CLUSTER_SIZES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -209,10 +209,10 @@ def setup_container_host(host_type, daemon_url, timeout=5):
         return False
     try:
         client = Client(base_url=daemon_url, timeout=timeout)
+        net_names = [x["Name"] for x in client.networks()]
         for cs_type in CONSENSUS_PLUGINS:
             net_name = CLUSTER_NETWORK+"_{}".format(cs_type)
-            net_names = client.networks(names=[net_name])
-            if net_names:
+            if net_name in net_names:
                 logger.warn("Network {} already exists, try using "
                             "it!".format(net_name))
             else:
@@ -246,10 +246,10 @@ def cleanup_container_host(daemon_url, timeout=5):
         return False
     try:
         client = Client(base_url=daemon_url, timeout=timeout)
+        net_names = [x["Name"] for x in client.networks()]
         for cs_type in CONSENSUS_PLUGINS:
             net_name = CLUSTER_NETWORK+"_{}".format(cs_type)
-            net_names = client.networks(names=[net_name])
-            if net_names:
+            if net_name in net_names:
                 logger.debug("Remove network {}".format(net_name))
                 client.remove_network(net_name)
             else:
@@ -301,13 +301,17 @@ def compose_ps(project):
 def compose_start(name, daemon_url, api_port,
                   consensus_plugin=CONSENSUS_PLUGINS[0],
                   consensus_mode=CONSENSUS_MODES[0],
-                  log_type=LOG_TYPES[0], cluster_size=4, timeout=5):
+                  log_type=LOG_TYPES[0], cluster_size=CLUSTER_SIZES[0],
+                  timeout=5):
     """ Start a cluster by compose
 
     :param name: The name of the cluster
     :param api_port: The port of the cluster API
     :param daemon_url: Docker host daemon
-    :param consensus_plugin: Cluster consensus type
+    :param consensus_plugin: Cluster consensus plugin
+    :param consensus_mode: Cluster consensus mode
+    :param log_type: which log plugin for host
+    :param cluster_size: the size of the cluster
     :param timeout: Docker client timeout value
     :return: The name list of the started peer containers
     """
@@ -340,14 +344,17 @@ def compose_start(name, daemon_url, api_port,
 def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
                  consensus_plugin=CONSENSUS_PLUGINS[0],
                  consensus_mode=CONSENSUS_MODES[0],
-                 log_type=LOG_TYPES[0], cluster_size=4, timeout=5):
+                 log_type=LOG_TYPES[0], cluster_size=CLUSTER_SIZES[0],
+                 timeout=5):
     """ Stop the cluster and remove the service containers
 
     :param name: The name of the cluster
     :param daemon_url: Docker host daemon
     :param api_port: The port of the cluster API
-    :param logging_level: logging level for the cluster output
     :param consensus_plugin: Cluster consensus type
+    :param consensus_mode: Cluster consensus mode
+    :param log_type: which log plugin for host
+    :param cluster_size: the size of the cluster
     :param timeout: Docker client timeout
     :return:
     """

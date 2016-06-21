@@ -20,7 +20,7 @@
         <dt>Apply Time<dt> <dd>{{item.apply_ts}}</dd>
         <dt>Release Time<dt> <dd>{{item.release_ts}}</dd>
         <dt>Duration<dt> <dd>{{item.duration}}</dd>
-        <dt>Size<dt> <dd>{{item.size}}</dd>
+        <dt>Size<dt> <dd>{{item.size|string}}</dd>
         {% if item.containers %}
             <dt>Containers<dt> <dd>
             {% if item.containers|length >0 %}

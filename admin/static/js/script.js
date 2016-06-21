@@ -49,11 +49,13 @@ $(document).ready(function() {
             data: form_data,
             success: function(response) {
                 console.log(response);
+                $('#newHostModal').hide();
                 alertMsg('Success!', 'New host is created.', 'success');
                 setTimeout("location.reload(true);",2000);
             },
             error: function(error) {
                 console.log(error);
+                $('#newHostModal').hide();
                 alertMsg('Failed!', error.responseJSON.error, 'danger');
                 setTimeout(location.reload, 2000);
             }
@@ -317,6 +319,7 @@ $(document).ready(function() {
             },
             error: function(error) {
                 console.log(error);
+                $('#newClusterModal').hide();
                 alertMsg('Failed!', error.responseJSON.error, 'danger');
                 setTimeout("location.reload(true);",2000);
                 //location.reload();
