@@ -209,8 +209,9 @@ class ClusterHandler(object):
             c.get("host_id"), c.get("daemon_url"), c.get("api_url", ""), \
             c.get("consensus_type", CONSENSUS_TYPES[0])
         port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
-        h = self._get_active_host(host_id)
-        if not h:  # clean up host collection
+        h = col_host.find_one({"id": host_id})
+        if not h:
+            logger.warn("No host found with id=" + host_id)
             return False
         has_exception = False
         try:
@@ -279,7 +280,7 @@ class ClusterHandler(object):
                 logger.info("Now have cluster {} at {} for user {}".format(
                     c.get("id"), h_id, user_id))
                 result = self._serialize(c, keys=['id', 'name', 'user_id',
-                                                  'daemon_url', 'host_id'
+                                                  'daemon_url', 'host_id',
                                                   'api_url', 'consensus_type'])
                 #h = col_host.find_one({"id": c.get("host_id")})
                 return result
@@ -305,12 +306,17 @@ class ClusterHandler(object):
             logger.debug("Run recreate_work in background thread")
             cluster_id, cluster_name = c.get("id"), c.get("name")
             host_id, api_url = c.get("host_id"), c.get("api_url")
+            # h = col_host.find_one({"id": host_id})
+            # if not h or h.get("status") != "active":
+            #     logger.warn("No host found with id=" + host_id)
+            #     return
             if not self.delete(cluster_id, record=True, forced=True):
-                logger.warn("Delete cluster error with id=" + cluster_id)
+                logger.warn("Delete cluster failed with id=" + cluster_id)
             else:
                 if not self.create(name=cluster_name, host_id=host_id,
                                    api_port=int(api_url.split(":")[-1])):
-                    logger.warn("ReCreate cluster error with name=" + cluster_name)
+                    logger.warn("ReCreate cluster failed with name=" +
+                                cluster_name)
 
         t = Thread(target=delete_recreate_work, args=())
         t.start()
@@ -328,6 +334,9 @@ class ClusterHandler(object):
         host = col_host.find_one({"id": id})
         if not host:
             logger.warn("No host found with id=" + id)
+            return None
+        if host.get("status") != "active":
+            logger.warn("Host's status is marked inactive with id=" + id)
             return None
         if not test_daemon(host.get("daemon_url")):
             logger.warn("Host {} is inactive".format(id))
