@@ -322,6 +322,7 @@ def compose_start(name, daemon_url, api_port,
     # hyperledger use this
     os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
     os.environ['PBFT_GENERAL_MODE'] = consensus_mode
+    os.environ['PBFT_GENERAL_N'] = cluster_size
     os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
@@ -361,6 +362,7 @@ def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
     # hyperledger use this
     os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
     os.environ['PBFT_GENERAL_MODE'] = consensus_mode
+    os.environ['PBFT_GENERAL_N'] = cluster_size
     os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
