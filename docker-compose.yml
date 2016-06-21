@@ -21,7 +21,7 @@ services:
       - MONGO_DB=dev
       - DEBUG=True    # in debug mode, service will auto-restart
       - LOG_LEVEL=DEBUG  # what level log will be output
-      - LOGGING_LEVEL_CLUSTER=DEBUG  # the level log for the cluster in pool
+      - LOGGING_LEVEL_CLUSTER=INFO  # the level log for the cluster in pool
       - SYSLOG_SERVER=tcp://192.168.7.60:5000   #container logs to send
     expose:
       - "8080"
