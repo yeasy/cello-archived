@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, render_template
 from flask import request as r
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import log_handler, LOG_LEVEL, CONSENSUS_TYPES, HOST_TYPES, \
+from common import log_handler, LOG_LEVEL, CONSENSUS_PLUGINS, HOST_TYPES, \
 CODE_OK, HOST_TYPES
 from version import version, version_info, author
 

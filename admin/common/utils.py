@@ -5,10 +5,14 @@ CLUSTER_API_PORT_START = 5000
 COMPOSE_FILE_PATH = "./_compose_files"
 
 CLUSTER_NETWORK = "hyperledger_cluster_net"
+CLUSTER_SIZES = ['4', '6']
 
 APP_API_VERSION = "v1"
 
-CONSENSUS_TYPES = ['pbft', 'sieve', 'noops']  # first one is the default one
+CONSENSUS_PLUGINS = ['noops', 'pbft']  # first one is the default one
+CONSENSUS_MODES = ['classic', 'batch', 'sieve']  # pbft has various modes
+
+LOG_TYPES = ['local', 'remote']
 
 HOST_TYPES = ['single', 'swarm']
 

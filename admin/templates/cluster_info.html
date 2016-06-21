@@ -8,7 +8,11 @@
         <dt>Id<dt> <dd>{{item.id}}</dd>
         <dt>Name<dt> <dd>{{item.name}}</dd>
         <dt>API URL<dt> <dd>{{item.api_url}}</dd>
-        <dt>Consensus Type<dt> <dd>{{item.consensus_type}}</dd>
+        {% if item.consensus_plugin== consensus_plugins[0] %}
+            <dt>Consensus<dt> <dd>{{item.consensus_plugin}}</dd>
+    {% else %}
+            <dt>Consensus<dt> <dd>{{item.consensus_plugin}}/{{ item.consensus_mode }}</dd>
+        {% endif %}
         <dt>Host<dt> <dd><a href="/host_info/{{item.host_id}}">{{item
         .host_id}}</a></dd>
         <dt>User Id<dt> <dd>{{item.user_id}}</dd>
@@ -16,6 +20,7 @@
         <dt>Apply Time<dt> <dd>{{item.apply_ts}}</dd>
         <dt>Release Time<dt> <dd>{{item.release_ts}}</dd>
         <dt>Duration<dt> <dd>{{item.duration}}</dd>
+        <dt>Size<dt> <dd>{{item.size}}</dd>
         {% if item.containers %}
             <dt>Containers<dt> <dd>
             {% if item.containers|length >0 %}

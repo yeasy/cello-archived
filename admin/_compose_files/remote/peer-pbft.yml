@@ -2,37 +2,38 @@
 # Notice that chaincode is executed inside docker in default net mode
 # https://github.com/yeasy/docker-compose-files
 
-# Depends on the yeasy/hyperledger-peer:noops image
+# Depends on the yeasy/hyperledger-peer:latest image
 
+# If you want enable consensus, just uncomment the
+# CORE_PEER_VALIDATOR_CONSENSUE=obcpbft line
 # See https://github.com/hyperledger/fabric/blob/master/docs/dev-setup/devnet-setup.md#using-consensus-plugin for more details.
 
 version: '2'
 
 services:
   vp:
-    image: yeasy/hyperledger-peer:noops
+    image: yeasy/hyperledger-peer:latest
     restart: unless-stopped
     labels:
       - monitor=true
       - hyperledger=true
       - com.docker.swarm.reschedule-policy=["on-node-failure"]
-    hostname: vp0
-    container_name: ${COMPOSE_PROJECT_NAME}_vp0
     environment:
       - CORE_PEER_ADDRESSAUTODETECT=true
       - CORE_PEER_NETWORKID=${PEER_NETWORKID}
       - CORE_LOGGING_LEVEL=${LOGGING_LEVEL_CLUSTER} #critical, error, warning, notice, info, debug
       # The following section enables bpft consensus
-      - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=noops  # noops, pbft, sieve
-      - CORE_PEER_ID=vp
-      - CORE_NOOPS_BLOCK_TIMEOUT=10
+      - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=${PEER_VALIDATOR_CONSENSUS_PLUGIN} # noops, pbft
+      - CORE_NOOPS_BLOCK_TIMEOUT=2 # only useful when in noops
+      - CORE_PBFT_GENERAL_MODE=${PBFT_GENERAL_MODE}  # batch, classic, sieve
+      - CORE_PBFT_GENERAL_N=4
+      - CORE_PBFT_GENERAL_BATCHSIZE=2  # only useful when in batch mode
+      - CORE_PBFT_GENERAL_TIMEOUT_REQUEST=5s
       - CORE_VM_ENDPOINT=${DAEMON_URL}
     expose:
       - "30303"
       - "30304"
       - "31315"
-    ports:
-      - "${API_PORT}:5000"
     #volumes: # docker.sock is mapped as the default CORE_VM_ENDPOINT
     #  - /var/run/docker.sock:/var/run/docker.sock
     mem_limit: 512000000
@@ -44,8 +45,3 @@ services:
       options:
         syslog-address: ${SYSLOG_SERVER}
         tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
-
-networks:
-  default:
-    external:
-      name: ${CLUSTER_NETWORK}

@@ -8,7 +8,7 @@ from flask import request as r
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, response_ok, \
     response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
-    CODE_NO_CONTENT, HOST_TYPES
+    HOST_TYPES, LOG_TYPES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -28,7 +28,8 @@ def hosts_show():
     items = list(host_handler.list(filter_data=col_filter))
 
     return render_template("hosts.html", items_count=len(items),
-                           items=items, host_types=HOST_TYPES)
+                           items=items, host_types=HOST_TYPES,
+                           log_types=LOG_TYPES)
 
 
 @host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
@@ -56,18 +57,24 @@ def host_api():
                 response_fail["data"] = r.form
                 return jsonify(response_fail), CODE_BAD_REQUEST
     elif r.method == 'POST':
-        name, daemon_url, capacity, status = r.form['name'], r.form[
-            'daemon_url'], r.form['capacity'], r.form['status']
-        logger.debug("name={}, daemon_url={}, capacity={}, status={}"
-                     .format( name, daemon_url, capacity, status))
-        if not name or not daemon_url or not capacity or not status:
+        name, daemon_url, capacity, status, log_type, log_server = \
+            r.form['name'], r.form['daemon_url'], r.form['capacity'],\
+            r.form['status'], r.form['log_type'], r.form['log_server']
+        logger.debug("name={}, daemon_url={}, capacity={}, status={}, "
+                     "log_type={}, log_server={}"
+                     .format(name, daemon_url, capacity, status, log_type,
+                             log_server))
+        if not name or not daemon_url or not capacity or not status or not \
+                log_type:
             logger.warn("host post without enough data")
             response_fail["error"] = "host POST without enough data"
             response_fail["data"] = r.form
             return jsonify(response_fail), CODE_BAD_REQUEST
         else:
-            result = host_handler.create(name, daemon_url, int(capacity),
-                                         status)
+            result = host_handler.create(name=name, daemon_url=daemon_url,
+                                         capacity=int(capacity),
+                                         status=status, log_type=log_type,
+                                         log_server=log_server)
             if result:
                 logger.debug("host creation successfully")
                 return jsonify(response_ok), CODE_CREATED

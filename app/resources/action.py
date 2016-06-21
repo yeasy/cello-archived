@@ -8,7 +8,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, APP_API_VERSION, \
     response_ok, response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
-    CODE_NO_CONTENT, CONSENSUS_TYPES
+    CODE_NO_CONTENT, CONSENSUS_PLUGINS
 
 from modules import cluster_handler
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ def cluster_apply():
     Return a Cluster json body.
     """
     user_id = request.args.get("user_id", "")
-    consensus_type = request.args.get("consensus_type", CONSENSUS_TYPES[0])
+    consensus_type = request.args.get("consensus_type", CONSENSUS_PLUGINS[0])
     logger.debug("userid="+user_id)
     for k in request.args:
         logger.debug("Arg: {0}:{1}".format(k, request.args[k]))

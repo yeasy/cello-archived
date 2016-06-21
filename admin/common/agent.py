@@ -13,7 +13,8 @@ from compose.project import OneOffFilter
 from docker import Client
 
 from .log import log_handler, LOG_LEVEL
-from .utils import HOST_TYPES, CLUSTER_API_PORT_START, CLUSTER_NETWORK, COMPOSE_FILE_PATH, CONSENSUS_TYPES
+from .utils import HOST_TYPES, CLUSTER_API_PORT_START, CLUSTER_NETWORK, \
+    COMPOSE_FILE_PATH, CONSENSUS_PLUGINS, CONSENSUS_MODES, LOG_TYPES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -190,6 +191,7 @@ def detect_container_host(swarm_url, container_name, timeout=5):
     except:
         return ''
 
+
 def setup_container_host(host_type, daemon_url, timeout=5):
     """
     Setup a container host for deploying cluster on it
@@ -207,7 +209,7 @@ def setup_container_host(host_type, daemon_url, timeout=5):
         return False
     try:
         client = Client(base_url=daemon_url, timeout=timeout)
-        for cs_type in CONSENSUS_TYPES:
+        for cs_type in CONSENSUS_PLUGINS:
             net_name = CLUSTER_NETWORK+"_{}".format(cs_type)
             net_names = client.networks(names=[net_name])
             if net_names:
@@ -244,7 +246,7 @@ def cleanup_container_host(daemon_url, timeout=5):
         return False
     try:
         client = Client(base_url=daemon_url, timeout=timeout)
-        for cs_type in CONSENSUS_TYPES:
+        for cs_type in CONSENSUS_PLUGINS:
             net_name = CLUSTER_NETWORK+"_{}".format(cs_type)
             net_names = client.networks(names=[net_name])
             if net_names:
@@ -296,27 +298,36 @@ def compose_ps(project):
     return items
 
 
-def compose_start(name, api_port, daemon_url,
-                  consensus_type=CONSENSUS_TYPES[0],timeout=5):
+def compose_start(name, daemon_url, api_port,
+                  consensus_plugin=CONSENSUS_PLUGINS[0],
+                  consensus_mode=CONSENSUS_MODES[0],
+                  log_type=LOG_TYPES[0], cluster_size=4, timeout=5):
     """ Start a cluster by compose
 
     :param name: The name of the cluster
     :param api_port: The port of the cluster API
     :param daemon_url: Docker host daemon
-    :param consensus_type: Cluster consensus type
+    :param consensus_plugin: Cluster consensus type
     :param timeout: Docker client timeout value
     :return: The name list of the started peer containers
     """
     logger.debug("Start compose project with logging_level={}, "
                  "consensus={}".format(os.environ['LOGGING_LEVEL_CLUSTER'],
-                                       consensus_type))
-    os.environ['DOCKER_HOST'] = daemon_url   # start compose at which host
-    os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
+                                       consensus_plugin))
+    # compose use this
+    os.environ['DOCKER_HOST'] = daemon_url  # start compose at which host
     os.environ['COMPOSE_PROJECT_NAME'] = name
+    os.environ['COMPOSE_FILE'] = "cluster-{}.yml".format(cluster_size)
+
+    # hyperledger use this
+    os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
+    os.environ['PBFT_GENERAL_MODE'] = consensus_mode
+    os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
-    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
-    project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
+    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_plugin)
+    # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
+    project = get_project(COMPOSE_FILE_PATH+"/"+log_type)
     containers = project.up(detached=True, timeout=timeout)
     result = {}
     for c in containers:
@@ -326,27 +337,36 @@ def compose_start(name, api_port, daemon_url,
 
 
 def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
-                 consensus_type=CONSENSUS_TYPES[0], timeout=5):
+                 consensus_plugin=CONSENSUS_PLUGINS[0],
+                 consensus_mode=CONSENSUS_MODES[0],
+                 log_type=LOG_TYPES[0], cluster_size=4, timeout=5):
     """ Stop the cluster and remove the service containers
 
     :param name: The name of the cluster
     :param daemon_url: Docker host daemon
     :param api_port: The port of the cluster API
     :param logging_level: logging level for the cluster output
-    :param consensus_type: Cluster consensus type
+    :param consensus_plugin: Cluster consensus type
     :param timeout: Docker client timeout
     :return:
     """
     logger.debug("Stop compose project {} with logging_level={}, "
                  "consensus={}".format(name, os.environ[
-        'LOGGING_LEVEL_CLUSTER'], consensus_type))
+        'LOGGING_LEVEL_CLUSTER'], consensus_plugin))
+    # compose use this
     os.environ['DOCKER_HOST'] = daemon_url
-    os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
     os.environ['COMPOSE_PROJECT_NAME'] = name
+    os.environ['COMPOSE_FILE'] = "cluster-{}.yml".format(cluster_size)
+
+    # hyperledger use this
+    os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
+    os.environ['PBFT_GENERAL_MODE'] = consensus_mode
+    os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
-    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
-    project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
+    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_plugin)
+    # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
+    project = get_project(COMPOSE_FILE_PATH+"/" + log_type)
     project.stop(timeout=timeout)
     project.remove_stopped(one_off=OneOffFilter.include, force=True)
 

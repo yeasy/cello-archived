@@ -10,7 +10,7 @@ from pymongo.collection import ReturnDocument
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, cleanup_container_host, LOG_LEVEL, setup_container_host, \
     test_daemon, detect_daemon_type, reset_container_host, \
-    CLUSTER_API_PORT_START
+    CLUSTER_API_PORT_START, LOG_TYPES
 
 from modules import cluster_handler
 
@@ -25,6 +25,7 @@ class HostHandler(object):
         self.col = db["host"]
 
     def create(self, name, daemon_url, capacity=1, status="active",
+               log_type=LOG_TYPES[0], log_server="",
                serialization=True):
         """ Create a new docker host node
 
@@ -35,6 +36,8 @@ class HostHandler(object):
         :param daemon_url: daemon_url of the host
         :param capacity: The number of clusters to hold
         :param status: active for using, inactive for not using
+        :param log_type: type of the log
+        :param log_server: server addr of the syslog
         :param serialization: whether to get serialized result or object
         :return: True or False
         """
@@ -63,7 +66,9 @@ class HostHandler(object):
             'capacity': capacity,
             'status': status,
             'clusters': [],
-            'type': detected_type
+            'type': detected_type,
+            'log_type': log_type,
+            'log_server': log_server
         }
         hid = self.col.insert_one(h).inserted_id  # object type
         host = self.col.find_one_and_update(
@@ -311,7 +316,8 @@ class HostHandler(object):
         return self._update_status(host)
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
-                                    'type','create_ts', 'status', 'clusters']):
+                                    'type','create_ts', 'status',
+                                    'clusters', 'log_type', 'log_server']):
         """ Serialize an obj
 
         :param doc: doc to serialize

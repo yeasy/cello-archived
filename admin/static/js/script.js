@@ -1,4 +1,30 @@
 $(document).ready(function() {
+    $('#newHostModal').on('shown.bs.modal', function (e) {
+        var selected=$("#log_type option:selected").text();
+        console.log("trigger hidden script"+selected);
+        $('#log_type').change(function () {
+            selected=$("#log_type option:selected").text().toUpperCase();
+            console.log(selected);
+            if (selected == 'LOCAL') {
+                $('#log_server').hide(200);
+            } else {
+                $('#log_server').show(200);
+            }
+        })
+    });
+    $('#newClusterModal').on('shown.bs.modal', function (e) {
+        var selected=$("#consensus_plugin option:selected").text();
+        $('#consensus_plugin').change(function () {
+            selected=$("#consensus_plugin option:selected").text().toUpperCase();
+            console.log(selected);
+            if (selected == 'NOOPS') {
+                $('#form_consensus_mode').hide(200);
+            } else {
+                $('#form_consensus_mode').show(200);
+            }
+        })
+    });
+    
     function alertMsg(title, message, type) {
         $.notify({
             title: '<strong>'+title+'</strong>',
@@ -147,6 +173,8 @@ $(document).ready(function() {
                 .find('[name="name"]').val(response.name).end()
                 .find('[name="daemon_url"]').val(response.daemon_url).end()
                 .find('[name="type"]').val(response.type).end()
+                .find('[name="log_type"]').val(response.log_type).end()
+                .find('[name="log_server"]').val(response.log_server).end()
                 .find('[name="capacity"]').val(response.capacity).end()
                 .find('[name="status"]').val(response.status).end()
                 .find('[name="create_ts"]').val(response.create_ts).end()
@@ -160,8 +188,23 @@ $(document).ready(function() {
                     show: false // We will show it manually later
                 })
                 .on('shown.bs.modal', function() {
-                    $('#config_host_form')
-                        .show();
+                    var selected=response.log_type.toUpperCase();
+                    console.log(selected);
+                    if (selected == 'LOCAL') {
+                        $('#log_server').hide(200);
+                    } else {
+                        $('#log_server').show(200);
+                    }
+                    $('#log_type').change(function () {
+                        selected=$("#log_type option:selected").text().toUpperCase();
+                        console.log(selected);
+                        if (selected == 'LOCAL') {
+                            $('#log_server').hide(200);
+                        } else {
+                            $('#log_server').show(200);
+                        }
+                    });
+                    $('#config_host_form').show();
                 })
                 .on('hide.bs.modal', function(e) {
                     // Bootbox will remove the modal (including the body which contains the login form)
@@ -255,6 +298,8 @@ $(document).ready(function() {
         $('#title', this).text(data.title);
         $('.btn-ok', this).data('hostId', data.id);
     });
+    
+    
     $('.create_cluster_button').click(function() {
         var form_data = $('#add_new_cluster_form').serialize();
         
@@ -265,6 +310,7 @@ $(document).ready(function() {
             data: form_data,
             success: function(response) {
                 console.log(response);
+                $('#newClusterModal').hide();
                 alertMsg('Success!', 'New cluster is created.', 'success');
                 setTimeout("location.reload(true);",2000);
                 //location.reload();

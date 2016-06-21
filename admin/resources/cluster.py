@@ -10,7 +10,7 @@ from flask.ext.paginate import Pagination
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, response_ok, \
     response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
-    CODE_NO_CONTENT, CONSENSUS_TYPES, json_decode
+    CONSENSUS_PLUGINS, CONSENSUS_MODES, CLUSTER_SIZES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -76,7 +76,10 @@ def clusters_show():
     return render_template("clusters.html", type=show_type, col_name=col_name,
                            items_count=total_items, items=show_clusters,
                            pagination=pagination,
-                           available_hosts=available_hosts, consensus_types=CONSENSUS_TYPES)
+                           available_hosts=available_hosts,
+                           consensus_plugins=CONSENSUS_PLUGINS,
+                           consensus_modes=CONSENSUS_MODES,
+                           cluster_sizes=CLUSTER_SIZES)
 
 
 @cluster.route('/cluster', methods=['GET', 'POST', 'DELETE'])
@@ -104,19 +107,32 @@ def cluster_api():
                 return jsonify(response_fail), CODE_BAD_REQUEST
     elif r.method == 'POST':
         if not r.form["name"] or not r.form["host_id"] or \
-                 not r.form["consensus_type"]:
+                 not r.form["consensus_plugin"] or not r.form["size"]:
             logger.warn("cluster post without enough data")
             response_fail["error"] = "cluster POST without enough data"
             response_fail["data"] = r.form
             return jsonify(response_fail), CODE_BAD_REQUEST
         else:
-            name, host_id, consensus_type = r.form['name'], r.form[
-                'host_id'], r.form['consensus_type']
-            if consensus_type not in CONSENSUS_TYPES:
-                logger.debug("Unknown consensus_type={}".format(consensus_type))
+            name, host_id, consensus_plugin, consensus_mode, size = \
+                r.form['name'], r.form['host_id'], r.form['consensus_plugin'],\
+                r.form['consensus_mode'] or CONSENSUS_MODES[0], r.form["size"]
+            if consensus_plugin not in CONSENSUS_PLUGINS:
+                logger.debug("Unknown consensus_plugin={}".format(
+                    consensus_plugin))
+                return jsonify(response_fail), CODE_BAD_REQUEST
+            if consensus_plugin != CONSENSUS_PLUGINS[0] and \
+                            consensus_mode not in CONSENSUS_MODES:
+                logger.debug("Invalid consensus, plugin={}, mode={}".format(
+                    consensus_plugin, consensus_mode))
+                return jsonify(response_fail), CODE_BAD_REQUEST
+
+            if size not in CLUSTER_SIZES:
+                logger.debug("Unknown cluster size={}".format(size))
                 return jsonify(response_fail), CODE_BAD_REQUEST
             if cluster_handler.create(name=name, host_id=host_id,
-                                      consensus_type=consensus_type):
+                                      consensus_plugin=consensus_plugin,
+                                      consensus_mode=consensus_mode,
+                                      size=size):
                 logger.debug("cluster POST successfully")
                 return jsonify(response_ok), CODE_CREATED
             else:
@@ -154,8 +170,12 @@ def cluster_info(cluster_id):
         cluster_id, r.args.get('released', '0'), r.method))
     released = (r.args.get('released', '0') != '0')
     if not released:
-        return render_template("cluster_info.html", item=cluster_handler.get(
-            cluster_id, serialization=True)), CODE_OK
+        return render_template("cluster_info.html",
+                               item=cluster_handler.get(
+                                   cluster_id, serialization=True),
+                               consensus_plugins=CONSENSUS_PLUGINS), CODE_OK
     else:
-        return render_template("cluster_info.html", item=cluster_handler.get(
-            cluster_id, serialization=True, col_name="released")), CODE_OK
+        return render_template("cluster_info.html",
+                               item=cluster_handler.get(
+            cluster_id, serialization=True, col_name="released"),
+                               consensus_plugins=CONSENSUS_PLUGINS), CODE_OK
