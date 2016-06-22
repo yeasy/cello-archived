@@ -80,7 +80,7 @@ class ClusterHandler(object):
         :param api_port: cluster api_port, will generate if not given
         :param user_id: user_id of the cluster if start to be applied
         :param consensus_plugin: type of the consensus type
-        :param size: size of the cluster, string type
+        :param size: size of the cluster, int type
         :return: Id of the created cluster or None
         """
         logger.info("Create cluster {}, host_id={}, consensus={}/{}, "
@@ -116,7 +116,7 @@ class ClusterHandler(object):
             'duration': "",
             'api_url': "",  # This will be generate later
             'daemon_url': daemon_url,
-            'size': int(size),
+            'size': size,
             'containers': [],
         }
         cid = self.col_active.insert_one(c).inserted_id  # object type
@@ -137,7 +137,7 @@ class ClusterHandler(object):
         try:
             logger.debug("Start compose project with name={}".format(str(cid)))
             containers = compose_start(name=str(cid), api_port=api_port,
-                                       daemon_url=daemon_url,
+                                       host=h,
                                        consensus_plugin=consensus_plugin,
                                        consensus_mode=consensus_mode,
                                        cluster_size=size)
@@ -258,21 +258,28 @@ class ClusterHandler(object):
             self.col_released.insert_one(c)
         return True
 
-    def apply_cluster(self, user_id, consensus_plugin=CONSENSUS_PLUGINS[0]):
+    def apply_cluster(self, user_id, consensus_plugin=CONSENSUS_PLUGINS[0],
+                      consensus_mode=CONSENSUS_MODES[0],
+                      size=CLUSTER_SIZES[0]):
         """ Apply a cluster for a user
 
         :param user_id: which user will apply the cluster
-        :param consensus_plugin: filter the cluster with consensus
+        :param consensus_plugin: filter the cluster with consensus plugin
+        :param consensus_mode: filter the cluster with consensus mode
+        :param size: cluster size
         :return: serialized cluster or None
         """
         # TODO: should check already existed one first
         c = self.col_active.find_one({"user_id": user_id, "release_ts": "",
-                                      "consensus_plugin": consensus_plugin})
+                                      "consensus_plugin": consensus_plugin,
+                                      "consensus_mode": consensus_mode,
+                                      "size": size})
         if c:
             logger.debug("Already assigned cluster for " + user_id)
             return self._serialize(c, keys=['id', 'name', 'user_id',
-                                            'daemon_url',
-                                            'api_url', 'consensus_plugin'])
+                                            'daemon_url', 'api_url',
+                                            'consensus_plugin',
+                                            'consensus_mode', 'size'])
         logger.debug("Try find available cluster for " + user_id)
         hosts = col_host.find({"status": "active"})
         host_ids = [h.get("id") for h in hosts]
@@ -280,7 +287,8 @@ class ClusterHandler(object):
         for h_id in host_ids:
             c = self.col_active.find_one_and_update(
                 {"user_id": "", "consensus_plugin": consensus_plugin,
-                 "host_id": h_id},
+                 "consensus_mode": consensus_mode,
+                 "size": size, "host_id": h_id},
                 {"$set": {"user_id": user_id,
                           "apply_ts": datetime.datetime.now()}},
                 return_document=ReturnDocument.AFTER)
@@ -288,8 +296,9 @@ class ClusterHandler(object):
                 logger.info("Now have cluster {} at {} for user {}".format(
                     c.get("id"), h_id, user_id))
                 result = self._serialize(c, keys=['id', 'name', 'user_id',
-                                                  'daemon_url', 'host_id',
-                                                  'api_url', 'consensus_plugin'])
+                                                  'daemon_url', 'api_url',
+                                                  'consensus_plugin'
+                                                  'consensus_mode', 'size'])
                 #h = col_host.find_one({"id": c.get("host_id")})
                 return result
         logger.warn("Not find available cluster for " + user_id)

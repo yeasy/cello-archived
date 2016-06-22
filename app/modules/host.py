@@ -45,6 +45,10 @@ class HostHandler(object):
                      .format(name, daemon_url, capacity))
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
+        if not log_server.startswith("tcp://"):
+            log_server = "tcp://" + log_server
+        if log_type == LOG_TYPES[0]:
+            log_server = ""
         if not test_daemon(daemon_url):
             logger.warn("The daemon_url is inactive:" + daemon_url)
             status = "inactive"
@@ -137,6 +141,8 @@ class HostHandler(object):
             return {}
 
         daemon_url = d.get('daemon_url', h_old.get("daemon_url"))
+        if "daemon_url" in d and not d["daemon_url"].startswith("tcp://"):
+            d["daemon_url"] = "tcp://" + d["daemon_url"]
 
         if "capacity" in d:
             d["capacity"] = int(d["capacity"])
@@ -146,6 +152,10 @@ class HostHandler(object):
         if "status" in d:
             if not test_daemon(daemon_url):
                 d["status"] = 'inactive'
+        if "log_server" in d and not d["log_server"].startswith("tcp://"):
+            d["log_server"] = "tcp://" + d["log_server"]
+        if "log_type" in d and d["log_type"] == LOG_TYPES[0]:
+            d["log_server"] = ""
         h_new = self.col.find_one_and_update(
             {"id": id},
             {"$set": d},

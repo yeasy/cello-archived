@@ -48,8 +48,7 @@ def show():
                            cluster_sizes=CLUSTER_SIZES,
                            consensus_plugins=CONSENSUS_PLUGINS,
                            consensus_modes=CONSENSUS_MODES,
-                           host_types=HOST_TYPES,
-                           log_types=LOG_TYPES)
+                           host_types=HOST_TYPES, log_types=LOG_TYPES)
 
 
 @index.route('/about', methods=['GET'])

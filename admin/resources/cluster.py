@@ -115,7 +115,8 @@ def cluster_api():
         else:
             name, host_id, consensus_plugin, consensus_mode, size = \
                 r.form['name'], r.form['host_id'], r.form['consensus_plugin'],\
-                r.form['consensus_mode'] or CONSENSUS_MODES[0], r.form["size"]
+                r.form['consensus_mode'] or CONSENSUS_MODES[0], int(r.form[
+                    "size"])
             if consensus_plugin not in CONSENSUS_PLUGINS:
                 logger.debug("Unknown consensus_plugin={}".format(
                     consensus_plugin))

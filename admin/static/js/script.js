@@ -1,26 +1,26 @@
 $(document).ready(function() {
     $('#newHostModal').on('shown.bs.modal', function (e) {
-        var selected=$("#log_type option:selected").text();
-        console.log("trigger hidden script"+selected);
-        $('#log_type').change(function () {
-            selected=$("#log_type option:selected").text().toUpperCase();
+        var selected=$("#newHostModal #log_type option:selected").text();
+        console.log("initial selection:"+selected);
+        $('#newHostModal #log_type').change(function () {
+            selected=$("#newHostModal #log_type option:selected").text().toUpperCase();
             console.log(selected);
             if (selected == 'LOCAL') {
-                $('#log_server').hide(200);
+                $('#newHostModal #log_server').hide(200);
             } else {
-                $('#log_server').show(200);
+                $('#newHostModal #log_server').show(200);
             }
         })
     });
     $('#newClusterModal').on('shown.bs.modal', function (e) {
-        var selected=$("#consensus_plugin option:selected").text();
-        $('#consensus_plugin').change(function () {
-            selected=$("#consensus_plugin option:selected").text().toUpperCase();
+        var selected=$("#newClusterModal #consensus_plugin option:selected").text();
+        $('#newClusterModal #consensus_plugin').change(function () {
+            selected=$("#newClusterModal #consensus_plugin option:selected").text().toUpperCase();
             console.log(selected);
             if (selected == 'NOOPS') {
-                $('#form_consensus_mode').hide(200);
+                $('#newClusterModal #form_consensus_mode').hide(200);
             } else {
-                $('#form_consensus_mode').show(200);
+                $('#newClusterModal #form_consensus_mode').show(200);
             }
         })
     });
@@ -122,6 +122,8 @@ $(document).ready(function() {
             var status    = $form.find('[name="status"]').val();
             var capacity    = $form.find('[name="capacity"]').val();
             var type    = $form.find('[name="type"]').val();
+            var log_type    = $form.find('[name="log_type"]').val();
+            var log_server    = $form.find('[name="log_server"]').val();
 
             // The url and method might be different in your application
             $.ajax({
@@ -132,6 +134,8 @@ $(document).ready(function() {
                     "name": name,
                     "status": status,
                     "capacity": capacity,
+                    "log_type": log_type,
+                    "log_server": log_server,
                     "type": type
                 }
             }).success(function(response) {
@@ -193,17 +197,17 @@ $(document).ready(function() {
                     var selected=response.log_type.toUpperCase();
                     console.log(selected);
                     if (selected == 'LOCAL') {
-                        $('#log_server').hide(200);
+                        $('#config_host_form #log_server').hide(200);
                     } else {
-                        $('#log_server').show(200);
+                        $('#config_host_form #log_server').show(200);
                     }
-                    $('#log_type').change(function () {
-                        selected=$("#log_type option:selected").text().toUpperCase();
+                    $('#config_host_form #log_type').change(function () {
+                        selected=$("#config_host_form #log_type option:selected").text().toUpperCase();
                         console.log(selected);
                         if (selected == 'LOCAL') {
-                            $('#log_server').hide(200);
+                            $('#config_host_form #log_server').hide(200);
                         } else {
-                            $('#log_server').show(200);
+                            $('#config_host_form #log_server').show(200);
                         }
                     });
                     $('#config_host_form').show();
