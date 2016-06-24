@@ -11,8 +11,8 @@ from common import db, log_handler, LOG_LEVEL, get_project, col_host, \
     clean_project_containers, clean_chaincode_images, test_daemon, \
     detect_container_host, compose_start, compose_stop
 
-from common import CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, CONSENSUS_TYPES,\
-    HOST_TYPES, CLUSTER_NETWORK, SYS_CREATOR, SYS_DELETER
+from common import CLUSTER_API_PORT_START, CONSENSUS_PLUGINS, \
+    CONSENSUS_MODES, HOST_TYPES, SYS_CREATOR, SYS_DELETER, CLUSTER_SIZES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -69,7 +69,8 @@ class ClusterHandler(object):
             return ins
 
     def create(self, name, host_id, api_port=0, user_id="",
-               consensus_type=CONSENSUS_TYPES[0]):
+               consensus_plugin=CONSENSUS_PLUGINS[0],
+               consensus_mode=CONSENSUS_MODES[0], size=CLUSTER_SIZES[0]):
         """ Create a cluster based on given data
 
         TODO: maybe need other id generation mechanism
@@ -78,11 +79,13 @@ class ClusterHandler(object):
         :param host_id: id of the host URL
         :param api_port: cluster api_port, will generate if not given
         :param user_id: user_id of the cluster if start to be applied
-        :param consensus_type: type of the consensus type
+        :param consensus_plugin: type of the consensus type
+        :param size: size of the cluster, int type
         :return: Id of the created cluster or None
         """
-        logger.info("Create cluster {0}, host_id={1}, consensus={2}".format(
-            name, host_id, consensus_type))
+        logger.info("Create cluster {}, host_id={}, consensus={}/{}, "
+                    "size={}".format(
+            name, host_id, consensus_plugin, consensus_mode, size))
 
         h = self._get_active_host(host_id)
         if not h:
@@ -106,12 +109,14 @@ class ClusterHandler(object):
             'name': name,
             'user_id': user_id or SYS_CREATOR,  # avoid applied
             'host_id': host_id,
-            'consensus_type': consensus_type,
+            'consensus_plugin': consensus_plugin,
+            'consensus_mode': consensus_mode,
             'create_ts': datetime.datetime.now(),
             'release_ts': "",
             'duration': "",
             'api_url': "",  # This will be generate later
             'daemon_url': daemon_url,
+            'size': size,
             'containers': [],
         }
         cid = self.col_active.insert_one(c).inserted_id  # object type
@@ -132,16 +137,19 @@ class ClusterHandler(object):
         try:
             logger.debug("Start compose project with name={}".format(str(cid)))
             containers = compose_start(name=str(cid), api_port=api_port,
-                                       daemon_url=daemon_url,
-                                       consensus_type=consensus_type)
+                                       host=h,
+                                       consensus_plugin=consensus_plugin,
+                                       consensus_mode=consensus_mode,
+                                       cluster_size=size)
         except Exception as e:
             logger.warn(e)
             logger.warn("Compose start error, then delete project and record")
             self.delete(id=str(cid), col_name="active", record=False,
                         forced=True)
             return None
-        if not containers:
-            logger.warn("containers empty, then cleanup project and record")
+        if not containers or int(size) != len(containers):
+            logger.warn("failed containers={}, then delete cluster".format(
+                len(containers)))
             self.delete(id=str(cid), col_name="active", record=False,
                         forced=True)
             return None
@@ -205,9 +213,9 @@ class ClusterHandler(object):
             self.col_active.update_one(
                 {"id": id},
                 {"$set": {"user_id": SYS_DELETER+user_id}})  # keep user info
-        host_id, daemon_url, api_url, consensus_type = \
+        host_id, daemon_url, api_url, consensus_plugin = \
             c.get("host_id"), c.get("daemon_url"), c.get("api_url", ""), \
-            c.get("consensus_type", CONSENSUS_TYPES[0])
+            c.get("consensus_plugin", CONSENSUS_PLUGINS[0])
         port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
         h = col_host.find_one({"id": host_id})
         if not h:
@@ -216,7 +224,7 @@ class ClusterHandler(object):
         has_exception = False
         try:
             compose_stop(name=id, daemon_url=daemon_url, api_port=port,
-                         consensus_type=consensus_type)
+                         consensus_plugin=consensus_plugin)
         except Exception as e:
             logger.error("Error in stop compose project, will clean")
             logger.debug(e)
@@ -250,29 +258,37 @@ class ClusterHandler(object):
             self.col_released.insert_one(c)
         return True
 
-    def apply_cluster(self, user_id, consensus_type=CONSENSUS_TYPES[0]):
+    def apply_cluster(self, user_id, consensus_plugin=CONSENSUS_PLUGINS[0],
+                      consensus_mode=CONSENSUS_MODES[0],
+                      size=CLUSTER_SIZES[0]):
         """ Apply a cluster for a user
 
         :param user_id: which user will apply the cluster
-        :param consensus_type: filter the cluster with consensus
+        :param consensus_plugin: filter the cluster with consensus plugin
+        :param consensus_mode: filter the cluster with consensus mode
+        :param size: cluster size
         :return: serialized cluster or None
         """
         # TODO: should check already existed one first
         c = self.col_active.find_one({"user_id": user_id, "release_ts": "",
-                                      "consensus_type": consensus_type})
+                                      "consensus_plugin": consensus_plugin,
+                                      "consensus_mode": consensus_mode,
+                                      "size": size})
         if c:
             logger.debug("Already assigned cluster for " + user_id)
             return self._serialize(c, keys=['id', 'name', 'user_id',
-                                            'daemon_url',
-                                            'api_url', 'consensus_type'])
+                                            'daemon_url', 'api_url',
+                                            'consensus_plugin',
+                                            'consensus_mode', 'size'])
         logger.debug("Try find available cluster for " + user_id)
         hosts = col_host.find({"status": "active"})
         host_ids = [h.get("id") for h in hosts]
         logger.debug("Find active hosts={}".format(host_ids))
         for h_id in host_ids:
             c = self.col_active.find_one_and_update(
-                {"user_id": "", "consensus_type": consensus_type,
-                 "host_id": h_id},
+                {"user_id": "", "consensus_plugin": consensus_plugin,
+                 "consensus_mode": consensus_mode,
+                 "size": size, "host_id": h_id},
                 {"$set": {"user_id": user_id,
                           "apply_ts": datetime.datetime.now()}},
                 return_document=ReturnDocument.AFTER)
@@ -280,26 +296,44 @@ class ClusterHandler(object):
                 logger.info("Now have cluster {} at {} for user {}".format(
                     c.get("id"), h_id, user_id))
                 result = self._serialize(c, keys=['id', 'name', 'user_id',
-                                                  'daemon_url', 'host_id',
-                                                  'api_url', 'consensus_type'])
+                                                  'daemon_url', 'api_url',
+                                                  'consensus_plugin'
+                                                  'consensus_mode', 'size'])
                 #h = col_host.find_one({"id": c.get("host_id")})
                 return result
         logger.warn("Not find available cluster for " + user_id)
         return None
 
-    def release_cluster(self, user_id):
-        """ Release a cluster for a user_id and recreate it.
+    def release_cluster_for_user(self, user_id):
+        """ Release all cluster for a user_id.
 
-        :param user_id: which user will apply the cluster
+        :param user_id: which user
+        :return: True or False
+        """
+        logger.debug("release clusters for user_id={}".format(user_id))
+        c = self.col_active.find({"user_id": user_id, "release_ts": ""})
+        cluster_ids = list(map(lambda x:x.get("id"), c))
+        logger.debug("clusters for user {}={}".format(user_id, cluster_ids))
+        result = True
+        for cid in cluster_ids:
+            result = result and self.release_cluster(cid)
+        return result
+
+    def release_cluster(self, cluster_id):
+        """ Release a specific cluster
+
+        Release means delete and try recreating it.
+
+        :param cluster_id: specific cluster to release
         :return: True or False
         """
         c = self.col_active.find_one_and_update(
-            {"user_id": user_id, "release_ts": ""},
+            {"id": cluster_id, "release_ts": ""},
             {"$set": {"release_ts": datetime.datetime.now()}},
             return_document=ReturnDocument.AFTER)
         if not c or not c.get("release_ts"):  # not have one
-            logger.warn("No cluster can be released for user {}".format(
-                user_id))
+            logger.warn("No cluster can be released for id {}".format(
+                cluster_id))
             return False
 
         def delete_recreate_work():
@@ -348,7 +382,8 @@ class ClusterHandler(object):
         return host
 
     def _serialize(self, doc, keys=['id', 'name', 'user_id', 'host_id',
-                                    'api_url', 'consensus_type', 'daemon_url',
+                                    'api_url', 'consensus_plugin',
+                                    'consensus_mode', 'daemon_url',
                                     'create_ts', 'apply_ts', 'release_ts',
                                     'duration', 'containers']):
         """ Serialize an obj

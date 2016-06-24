@@ -10,7 +10,7 @@ from pymongo.collection import ReturnDocument
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, cleanup_container_host, LOG_LEVEL, setup_container_host, \
     test_daemon, detect_daemon_type, reset_container_host, \
-    CLUSTER_API_PORT_START
+    CLUSTER_API_PORT_START, LOG_TYPES
 
 from modules import cluster_handler
 
@@ -25,6 +25,7 @@ class HostHandler(object):
         self.col = db["host"]
 
     def create(self, name, daemon_url, capacity=1, status="active",
+               log_type=LOG_TYPES[0], log_server="",
                serialization=True):
         """ Create a new docker host node
 
@@ -35,6 +36,8 @@ class HostHandler(object):
         :param daemon_url: daemon_url of the host
         :param capacity: The number of clusters to hold
         :param status: active for using, inactive for not using
+        :param log_type: type of the log
+        :param log_server: server addr of the syslog
         :param serialization: whether to get serialized result or object
         :return: True or False
         """
@@ -42,6 +45,10 @@ class HostHandler(object):
                      .format(name, daemon_url, capacity))
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
+        if not log_server.startswith("tcp://"):
+            log_server = "tcp://" + log_server
+        if log_type == LOG_TYPES[0]:
+            log_server = ""
         if not test_daemon(daemon_url):
             logger.warn("The daemon_url is inactive:" + daemon_url)
             status = "inactive"
@@ -63,7 +70,9 @@ class HostHandler(object):
             'capacity': capacity,
             'status': status,
             'clusters': [],
-            'type': detected_type
+            'type': detected_type,
+            'log_type': log_type,
+            'log_server': log_server
         }
         hid = self.col.insert_one(h).inserted_id  # object type
         host = self.col.find_one_and_update(
@@ -132,6 +141,8 @@ class HostHandler(object):
             return {}
 
         daemon_url = d.get('daemon_url', h_old.get("daemon_url"))
+        if "daemon_url" in d and not d["daemon_url"].startswith("tcp://"):
+            d["daemon_url"] = "tcp://" + d["daemon_url"]
 
         if "capacity" in d:
             d["capacity"] = int(d["capacity"])
@@ -141,6 +152,10 @@ class HostHandler(object):
         if "status" in d:
             if not test_daemon(daemon_url):
                 d["status"] = 'inactive'
+        if "log_server" in d and not d["log_server"].startswith("tcp://"):
+            d["log_server"] = "tcp://" + d["log_server"]
+        if "log_type" in d and d["log_type"] == LOG_TYPES[0]:
+            d["log_server"] = ""
         h_new = self.col.find_one_and_update(
             {"id": id},
             {"$set": d},
@@ -155,12 +170,19 @@ class HostHandler(object):
         """ List hosts with given criteria
 
         :param filter_data: Image with the filter properties
+        :param validate: validate the host status
         :return: iteration of serialized doc
         """
-        if not validate:
-            hosts = self.col.find(filter_data)
+        host_docs = self.col.find(filter_data)
+
+        def update_work(host):
+            self._update_status(host)
         if validate:
-            hosts = map(self._update_status, self.col.find(filter_data))
+            logger.debug("update host status")
+            for h in host_docs:
+                t = Thread(target=update_work, args=(h,))
+                t.start()
+        hosts = self.col.find(filter_data)
         result = map(self._serialize, hosts)
         return result
 
@@ -217,7 +239,7 @@ class HostHandler(object):
             t = Thread(target=create_cluster_work, args=(p,))
             t.start()
             i += 1
-            if i % 5 == 0:
+            if i % 2 == 0:
                 time.sleep(0.1)
 
         return True
@@ -249,7 +271,7 @@ class HostHandler(object):
             t = Thread(target=delete_cluster_work, args=(cid,))
             t.start()
             i += 1
-            if i % 5 == 0:
+            if i % 2 == 0:
                 time.sleep(0.1)
 
         self.col.find_one_and_update(
@@ -295,7 +317,6 @@ class HostHandler(object):
                 {"$set": {"status": "active"}},
                 return_document=ReturnDocument.AFTER)
 
-
     def _get_active_host(self, id):
         """
         Check if id exists, and status is active. Otherwise update to inactive.
@@ -311,7 +332,8 @@ class HostHandler(object):
         return self._update_status(host)
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
-                                    'type','create_ts', 'status', 'clusters']):
+                                    'type','create_ts', 'status',
+                                    'clusters', 'log_type', 'log_server']):
         """ Serialize an obj
 
         :param doc: doc to serialize

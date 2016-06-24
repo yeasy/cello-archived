@@ -6,7 +6,8 @@ from flask import Blueprint, render_template
 from flask import request as r
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import log_handler, LOG_LEVEL, CONSENSUS_TYPES, HOST_TYPES
+from common import log_handler, LOG_LEVEL, CONSENSUS_PLUGINS, \
+    CONSENSUS_MODES, HOST_TYPES, LOG_TYPES, CLUSTER_SIZES
 from version import version, homepage, author
 
 logger = logging.getLogger(__name__)
@@ -22,8 +23,8 @@ index = Blueprint('index', __name__)
 @index.route('/admin', methods=['GET'])
 @index.route('/index', methods=['GET'])
 def show():
-    logger.info("path={}, action={}".format(r.path, r.method))
-    hosts = list(host_handler.list(filter_data={}, validate=False))
+    logger.info("path={}, method={}".format(r.path, r.method))
+    hosts = list(host_handler.list(filter_data={}, validate=True))
     hosts.sort(key=lambda x: str(x["name"]), reverse=False)
     available_hosts = list(filter(
         lambda e: e["status"] == "active"
@@ -44,12 +45,14 @@ def show():
                            clusters_released=clusters_released,
                            clusters_free=clusters_free,
                            clusters_temp=clusters_temp,
-                           consensus_types=CONSENSUS_TYPES,
-                           host_types=HOST_TYPES)
+                           cluster_sizes=CLUSTER_SIZES,
+                           consensus_plugins=CONSENSUS_PLUGINS,
+                           consensus_modes=CONSENSUS_MODES,
+                           host_types=HOST_TYPES, log_types=LOG_TYPES)
 
 
 @index.route('/about', methods=['GET'])
 def about():
-    logger.info("path={}, action={}".format(r.path, r.method))
+    logger.info("path={}, method={}".format(r.path, r.method))
     return render_template("about.html", author=author, version=version,
                            homepage=homepage)

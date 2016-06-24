@@ -65,6 +65,7 @@ DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -
     - `yeasy/hyperledger-peer:pbft`
     - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the authentication service)
 * aufs-tools: required on ubuntu 14.04.
+* `sysctl net.ipv4.ip_forward=1`, and make sure peer can reach host server ports (e.g., 2375, 5000)
 * SSH (Optionally ): Open for Master to monitor.
 
 ### Configuration
@@ -156,7 +157,8 @@ $ bash ./scripts/restart.sh
 * ~~Support host reset buttons.~~
 * ~~Support only show occupied clusters.~~
 * Support table sort.
-* Support local log version.
+* ~~Support local log version.~~
+* ~~Support select cluster type and size version.~~
 * ~~Support detect host info when adding as swarm type.~~
 * ~~Add limitation on the running containers.~~
 * ~~Security option and log option (rotate)~~.

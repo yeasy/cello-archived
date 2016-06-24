@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-sudo docker run \
-  --volume=/:/rootfs:ro \
-  --volume=/var/run:/var/run:rw \
-  --volume=/sys:/sys:ro \
-  --volume=/var/lib/docker/:/var/lib/docker:ro \
-  --publish=8080:8080 \
-  --detach=true \
-  --name=cadvisor \
-  google/cadvisor:latest
+echo "Pull yeasy/hyperledger:latest and renaming"
+docker pull yeasy/hyperledger:latest && \
+docker rmi hyperledger/fabric-baseimage:latest && \
+docker tag yeasy/hyperledger:latest hyperledger/fabric-baseimage:latest
+
+echo "Pull yeasy/hyperledger-peer:latest"
+docker pull yeasy/hyperledger-peer:latest

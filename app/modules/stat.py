@@ -1,5 +1,5 @@
 import logging
-from common import LOG_LEVEL, HOST_TYPES, CONSENSUS_TYPES
+from common import LOG_LEVEL, HOST_TYPES, CONSENSUS_PLUGINS
 
 from modules import host_handler, cluster_handler
 
@@ -49,7 +49,7 @@ class StatHandler(object):
             {'name': 'free', 'y': free_clusters_number},
             {'name': 'used', 'y': total_number-free_clusters_number},
         ]
-        for consensus_type in CONSENSUS_TYPES:
+        for consensus_type in CONSENSUS_PLUGINS:
             clusters = list(cluster_handler.list(filter_data={'consensus_type':
                                                                   consensus_type}))
             result['type'].append({
