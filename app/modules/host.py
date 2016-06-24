@@ -170,12 +170,19 @@ class HostHandler(object):
         """ List hosts with given criteria
 
         :param filter_data: Image with the filter properties
+        :param validate: validate the host status
         :return: iteration of serialized doc
         """
-        if not validate:
-            hosts = self.col.find(filter_data)
+        host_docs = self.col.find(filter_data)
+
+        def update_work(host):
+            self._update_status(host)
         if validate:
-            hosts = map(self._update_status, self.col.find(filter_data))
+            logger.debug("update host status")
+            for h in host_docs:
+                t = Thread(target=update_work, args=(h,))
+                t.start()
+        hosts = self.col.find(filter_data)
         result = map(self._serialize, hosts)
         return result
 
@@ -232,7 +239,7 @@ class HostHandler(object):
             t = Thread(target=create_cluster_work, args=(p,))
             t.start()
             i += 1
-            if i % 5 == 0:
+            if i % 2 == 0:
                 time.sleep(0.1)
 
         return True
@@ -264,7 +271,7 @@ class HostHandler(object):
             t = Thread(target=delete_cluster_work, args=(cid,))
             t.start()
             i += 1
-            if i % 5 == 0:
+            if i % 2 == 0:
                 time.sleep(0.1)
 
         self.col.find_one_and_update(
@@ -309,7 +316,6 @@ class HostHandler(object):
                 {"id": host_id},
                 {"$set": {"status": "active"}},
                 return_document=ReturnDocument.AFTER)
-
 
     def _get_active_host(self, id):
         """

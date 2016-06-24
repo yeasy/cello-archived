@@ -23,7 +23,7 @@ cluster = Blueprint('cluster', __name__)
 
 @cluster.route('/clusters', methods=['GET'])
 def clusters_show():
-    logger.info("/clusters action=" + r.method)
+    logger.info("/clusters method=" + r.method)
     for k in r.args:
         logger.debug("{0}:{1}".format(k, r.args[k]))
     show_type=r.args.get("type", "active")

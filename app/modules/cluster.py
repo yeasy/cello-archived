@@ -304,19 +304,36 @@ class ClusterHandler(object):
         logger.warn("Not find available cluster for " + user_id)
         return None
 
-    def release_cluster(self, user_id):
-        """ Release a cluster for a user_id and recreate it.
+    def release_cluster_for_user(self, user_id):
+        """ Release all cluster for a user_id.
 
-        :param user_id: which user will apply the cluster
+        :param user_id: which user
+        :return: True or False
+        """
+        logger.debug("release clusters for user_id={}".format(user_id))
+        c = self.col_active.find({"user_id": user_id, "release_ts": ""})
+        cluster_ids = list(map(lambda x:x.get("id"), c))
+        logger.debug("clusters for user {}={}".format(user_id, cluster_ids))
+        result = True
+        for cid in cluster_ids:
+            result = result and self.release_cluster(cid)
+        return result
+
+    def release_cluster(self, cluster_id):
+        """ Release a specific cluster
+
+        Release means delete and try recreating it.
+
+        :param cluster_id: specific cluster to release
         :return: True or False
         """
         c = self.col_active.find_one_and_update(
-            {"user_id": user_id, "release_ts": ""},
+            {"id": cluster_id, "release_ts": ""},
             {"$set": {"release_ts": datetime.datetime.now()}},
             return_document=ReturnDocument.AFTER)
         if not c or not c.get("release_ts"):  # not have one
-            logger.warn("No cluster can be released for user {}".format(
-                user_id))
+            logger.warn("No cluster can be released for id {}".format(
+                cluster_id))
             return False
 
         def delete_recreate_work():

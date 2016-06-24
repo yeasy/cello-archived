@@ -23,8 +23,8 @@ index = Blueprint('index', __name__)
 @index.route('/admin', methods=['GET'])
 @index.route('/index', methods=['GET'])
 def show():
-    logger.info("path={}, action={}".format(r.path, r.method))
-    hosts = list(host_handler.list(filter_data={}, validate=False))
+    logger.info("path={}, method={}".format(r.path, r.method))
+    hosts = list(host_handler.list(filter_data={}, validate=True))
     hosts.sort(key=lambda x: str(x["name"]), reverse=False)
     available_hosts = list(filter(
         lambda e: e["status"] == "active"
@@ -53,6 +53,6 @@ def show():
 
 @index.route('/about', methods=['GET'])
 def about():
-    logger.info("path={}, action={}".format(r.path, r.method))
+    logger.info("path={}, method={}".format(r.path, r.method))
     return render_template("about.html", author=author, version=version,
                            homepage=homepage)

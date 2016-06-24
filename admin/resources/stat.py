@@ -21,7 +21,7 @@ stat = Blueprint('stat', __name__)
 
 @stat.route('/stat', methods=['GET'])
 def show():
-    logger.info("path={}, action={}".format(r.path, r.method))
+    logger.info("path={}, method={}".format(r.path, r.method))
     hosts = list(host_handler.list())
 
     return render_template("stat.html",hosts=hosts)
@@ -29,7 +29,7 @@ def show():
 
 @stat.route('/_health', methods=['GET'])
 def health():
-    logger.info("path={}, action={}".format(r.path, r.method))
+    logger.info("path={}, method={}".format(r.path, r.method))
     result = {
         'health': 'OK',
         'version': version
@@ -40,7 +40,7 @@ def health():
 
 @stat.route('/_stat', methods=['GET'])
 def get():
-    logger.info("path={}, action={}".format(r.path, r.method))
+    logger.info("path={}, method={}".format(r.path, r.method))
     for k in r.args:
         logger.debug("Arg: {0}:{1}".format(k, r.args[k]))
     for k in r.form:

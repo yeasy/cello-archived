@@ -27,3 +27,12 @@ def json_decode(jsonstr):
         print(e)
         return jsonstr
     return json_object
+
+
+def debug_request(logger, request):
+    for k in request.args:
+        logger.debug("Arg: {0}:{1}".format(k, request.args[k]))
+    for k in request.form:
+        logger.debug("Form: {0}:{1}".format(k, request.form[k]))
+
+

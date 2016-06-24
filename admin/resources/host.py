@@ -8,7 +8,7 @@ from flask import request as r
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, response_ok, \
     response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
-    HOST_TYPES, LOG_TYPES
+    HOST_TYPES, LOG_TYPES, debug_request
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -21,11 +21,10 @@ host = Blueprint('host', __name__)
 
 @host.route('/hosts', methods=['GET'])
 def hosts_show():
-    logger.info("/hosts action=" + r.method)
-    for k in r.args:
-        logger.debug("{0}:{1}".format(k, r.args[k]))
+    logger.info("/hosts method=" + r.method)
+    debug_request(logger, r)
     col_filter = dict((key, r.args.get(key)) for key in r.args)
-    items = list(host_handler.list(filter_data=col_filter))
+    items = list(host_handler.list(filter_data=col_filter, validate=True))
 
     return render_template("hosts.html", items_count=len(items),
                            items=items, host_types=HOST_TYPES, log_types=LOG_TYPES)
@@ -34,10 +33,7 @@ def hosts_show():
 @host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def host_api():
     logger.info("/host method=" + r.method)
-    for k in r.args:
-        logger.debug("Arg: {0}:{1}".format(k, r.args[k]))
-    for k in r.form:
-        logger.debug("Form: {0}:{1}".format(k, r.form[k]))
+    debug_request(logger, r)
     if r.method == 'GET':
         if "id" not in r.args and "id" not in r.form:
             logger.warn("host get without enough data")
@@ -121,7 +117,7 @@ def host_api():
 
 @host.route('/host_info/<host_id>', methods=['GET'])
 def host_info(host_id):
-    logger.debug("/ host_info/{0} action={1}".format(host_id, r.method))
+    logger.debug("/ host_info/{0} method={1}".format(host_id, r.method))
     return render_template("host_info.html", item=host_handler.get(
         host_id, serialization=True)), CODE_OK
 
@@ -129,10 +125,7 @@ def host_info(host_id):
 @host.route('/host_action', methods=['POST'])
 def host_action():
     logger.info("/host_action, method=" + r.method)
-    for k in r.args:
-        logger.debug("Arg: {0}:{1}".format(k, r.args[k]))
-    for k in r.form:
-        logger.debug("Form: {0}:{1}".format(k, r.form[k]))
+    debug_request(logger, r)
 
     host_id, action = r.form['id'], r.form['action']
     logger.debug("host id={}, action={}".format(host_id, action))

@@ -325,10 +325,13 @@ def compose_start(name, host, api_port,
     os.environ['COMPOSE_FILE'] = "cluster-{}.yml".format(cluster_size)
 
     # hyperledger use this
+    os.environ['VM_ENDPOINT'] = daemon_url  # vp use this for chaincode
+    #os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = CLUSTER_NETWORK+"_{
+    # }".format(consensus_plugin)  # "host"
+    os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = "bridge"
     os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
     os.environ['PBFT_GENERAL_MODE'] = consensus_mode
     os.environ['PBFT_GENERAL_N'] = str(cluster_size)
-    os.environ['VM_ENDPOINT'] = daemon_url  # vp use this for chaincode
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_plugin)
@@ -373,13 +376,15 @@ def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
     os.environ['COMPOSE_FILE'] = "cluster-{}.yml".format(cluster_size)
 
     # hyperledger use this
+    os.environ['VM_ENDPOINT'] = daemon_url  # vp use this for chaincode
+    os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = CLUSTER_NETWORK+"_{}".format(
+        consensus_plugin)  # "host"
     os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
     os.environ['PBFT_GENERAL_MODE'] = consensus_mode
     os.environ['PBFT_GENERAL_N'] = str(cluster_size)
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_plugin)
-    os.environ['VM_ENDPOINT'] = daemon_url  # vp use this for chaincode
     if log_type != LOG_TYPES[0]:  # not local
         os.environ['SYSLOG_SERVER'] = log_server
 

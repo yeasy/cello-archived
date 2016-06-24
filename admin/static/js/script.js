@@ -57,7 +57,7 @@ $(document).ready(function() {
                 console.log(error);
                 $('#newHostModal').hide();
                 alertMsg('Failed!', error.responseJSON.error, 'danger');
-                setTimeout(location.reload, 2000);
+                setTimeout(location.reload(true), 2000);
             }
         });
     });
