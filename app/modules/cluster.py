@@ -297,9 +297,8 @@ class ClusterHandler(object):
                     c.get("id"), h_id, user_id))
                 result = self._serialize(c, keys=['id', 'name', 'user_id',
                                                   'daemon_url', 'api_url',
-                                                  'consensus_plugin'
+                                                  'consensus_plugin',
                                                   'consensus_mode', 'size'])
-                #h = col_host.find_one({"id": c.get("host_id")})
                 return result
         logger.warn("Not find available cluster for " + user_id)
         return None
