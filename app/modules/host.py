@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import random
 import sys
 import time
 
@@ -10,7 +11,7 @@ from pymongo.collection import ReturnDocument
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, cleanup_container_host, LOG_LEVEL, setup_container_host, \
     test_daemon, detect_daemon_type, reset_container_host, \
-    CLUSTER_API_PORT_START, LOG_TYPES
+    CLUSTER_API_PORT_START, LOG_TYPES, CONSENSUS_PLUGINS, CONSENSUS_MODES, CLUSTER_SIZES
 
 from modules import cluster_handler
 
@@ -227,8 +228,16 @@ class HostHandler(object):
         def create_cluster_work(port):
             cluster_name = "{}_{}".format(host.get("name"),
                                           (port-CLUSTER_API_PORT_START))
+            consensus_plugin = random.choice(CONSENSUS_PLUGINS)
+            if consensus_plugin != CONSENSUS_PLUGINS[0]:
+                consensus_mode = random.choice(CONSENSUS_MODES)
+            else:
+                consensus_mode = ""
+            cluster_size = random.choice(CLUSTER_SIZES)
             cid = cluster_handler.create(name=cluster_name, host_id=str(id),
-                                         api_port=port)
+                                         api_port=port, consensus_plugin=consensus_plugin,
+                                         consensus_mode=consensus_mode,
+                                         size=cluster_size)
             if cid:
                 logger.debug("Create cluster %s with id={}".format(
                     cluster_name, cid))

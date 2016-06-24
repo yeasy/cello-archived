@@ -1,1 +1,1 @@
-from .action import action_v1
+from .action import action_v1, action_v2

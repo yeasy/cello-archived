@@ -107,7 +107,7 @@
               <div class="form-group form-inline has-feedback">
                   <label for="host_capacity" style="width: 20%">Capacity</label>
                   <input id="host_capacity" type="number" name="capacity"
-                         class="form-control" min="1" max="1000" value=2 required>
+                         class="form-control" min="0" max="1000" value=1 required>
               </div>
               {% if log_types|length > 0 %}
                     <div class="form-group form-inline">
@@ -128,6 +128,7 @@
                         >
                     </div>
               {% endif %}
+              <!--
               {% if host_types|length > 0 %}
                     <div class="form-group form-inline">
                         <label for="host_type" style="width: 20%">Daemon Type</label>
@@ -149,6 +150,15 @@
                       <option value="inactive">Inactive</option>
                   </select>
               </div>
+              -->
+              <div class="form-group checkbox">
+                  <label>
+                      <input type="checkbox" name="fillup"> Fillup with cluster
+                  </label>
+                  <label>
+                      <input type="checkbox" name="schedulable"> Schedulable
+                  </label>
+              </div>
           </form>
       </div>
         <div class="modal-footer">
@@ -158,6 +168,7 @@
     </div>
   </div>
 </div>
+
 <div id="newClusterModal" class="modal fade" role="dialog">
     <div class="modal-dialog">
         <!-- Modal content-->

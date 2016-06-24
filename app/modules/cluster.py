@@ -384,7 +384,7 @@ class ClusterHandler(object):
                                     'api_url', 'consensus_plugin',
                                     'consensus_mode', 'daemon_url',
                                     'create_ts', 'apply_ts', 'release_ts',
-                                    'duration', 'containers']):
+                                    'duration', 'containers', 'size']):
         """ Serialize an obj
 
         :param doc: doc to serialize
