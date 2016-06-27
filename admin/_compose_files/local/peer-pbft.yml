@@ -27,6 +27,7 @@ services:
       - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=${PEER_VALIDATOR_CONSENSUS_PLUGIN} # noops, pbft
       # The following section enables noops consensus
       - CORE_NOOPS_BLOCK_TIMEOUT=2 # only useful when in noops
+      - CORE_NOOPS_BLOCK_WAIT=2 # only useful when in noops
       # The following section enables pbft consensus
       - CORE_PBFT_GENERAL_MODE=${PBFT_GENERAL_MODE}  # batch, classic, sieve
       - CORE_PBFT_GENERAL_N=${PBFT_GENERAL_N}

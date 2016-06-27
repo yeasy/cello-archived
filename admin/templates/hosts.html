@@ -14,6 +14,7 @@
                 <tr>
                     <th>Name</th>
                     <th>Type</th>
+                    <th>Schedulable</th>
                     <th>Status</th>
                     <th>Capacity</th>
                     <th>Clusters</th>
@@ -31,6 +32,7 @@
                     {% endif %}
                 <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
                 <td>{{item.type|upper}}</td>
+                <td>{{item.schedulable}}</td>
                 <td>{{item.status}}</td>
                 <td>{{item.capacity|string}}</td>
                 <td>{{item.clusters|length}}</td>
@@ -67,14 +69,14 @@
     <form id="config_host_form" class="form-horizontal" data-toggle="validator" style="display: none;">
         <div class="form-group">
             <label class="col-sm-3 form-control-label">ID</label>
-            <div class="col-sm-8">
+            <div class="col-sm-6">
             <input type="text" class="form-control" name="id" disabled="disabled" />
             </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-3 form-control-label">Name</label>
-            <div class="col-sm-8">
+            <div class="col-sm-4">
             <input type="text" class="form-control" name="name"  pattern="^[-_A-z0-9]{1,}$"
                          maxlength="16" data-error="A name is required"/>
             </div>
@@ -82,7 +84,7 @@
 
         <div class="form-group">
             <label class="col-sm-3 form-control-label">Daemon URL</label>
-            <div class="col-sm-8">
+            <div class="col-sm-6">
             <input type="text" class="form-control" name="daemon_url"
                    disabled="disabled" />
             </div>
@@ -90,7 +92,7 @@
 
         <div class="form-group">
             <label class="col-sm-3 form-control-label">Capacity</label>
-            <div class="col-sm-8">
+            <div class="col-sm-3">
             <input type="number" class="form-control" name="capacity"
                    min="0" max="1000" data-error="0~1000"/>
             </div>
@@ -98,12 +100,11 @@
 
         <div class="form-group">
             <label  class="col-sm-3 form-control-label">Status</label>
-            <div class="col-sm-8">
-                  <select class="c-select" name="status" required>
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                  </select>
+            <div class="col-sm-3">
+                <input type="text" class="form-control" name="status"
+                       disabled="disabled" />
             </div>
+            <input type="checkbox" name="schedulable"> Schedulable
         </div>
 
         {% if host_types|length > 0 %}
@@ -135,12 +136,12 @@
         <div class="form-group" id="log_server" style="display: ;">
             <label class="col-sm-3 form-control-label">Log Server</label>
             <div class="col-sm-8">
-                <input type="text" class="form-control" name="log_server"/>
+                <input type="text" class="form-control" name="log_server" placeholder="192.168.0.1:5000"/>
             </div>
         </div>
         <div class="form-group">
             <label class="col-sm-3 form-control-label">Created</label>
-            <div class="col-sm-8">
+            <div class="col-sm-6">
             <input type="text" class="form-control" name="create_ts"
                    disabled="disabled" />
             </div>
@@ -148,14 +149,14 @@
 
         <div class="form-group">
             <label class="col-sm-3 form-control-label">Running Cluster</label>
-            <div class="col-sm-8">
+            <div class="col-sm-4">
             <input type="number" class="form-control" name="clusters"
                    disabled="disabled" />
             </div>
         </div>
 
         <div class="form-group">
-            <div class="col-sm-offset-2 pull-xs-right">
+            <div class="col-sm-offset-8">
                 <button type="button" id="save_host_button" class="btn btn-primary btn-default">Save</button>
                 <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
             </div>

@@ -57,7 +57,7 @@ $(document).ready(function() {
                 console.log(error);
                 $('#newHostModal').hide();
                 alertMsg('Failed!', error.responseJSON.error, 'danger');
-                setTimeout(location.reload(true), 2000);
+                setTimeout("location.reload(true);",2000);
             }
         });
     });
@@ -122,6 +122,11 @@ $(document).ready(function() {
             var status    = $form.find('[name="status"]').val();
             var capacity    = $form.find('[name="capacity"]').val();
             var type    = $form.find('[name="type"]').val();
+        if($form.find('[name="schedulable"]').is(':checked')) {
+            var schedulable    = true
+        } else {
+            var schedulable    = false
+        }
             var log_type    = $form.find('[name="log_type"]').val();
             var log_server    = $form.find('[name="log_server"]').val();
 
@@ -136,7 +141,8 @@ $(document).ready(function() {
                     "capacity": capacity,
                     "log_type": log_type,
                     "log_server": log_server,
-                    "type": type
+                    "type": type,
+                    "schedulable": schedulable
                 }
             }).success(function(response) {
                 // Get the cells
@@ -159,7 +165,7 @@ $(document).ready(function() {
                 // Hide the dialog
                 $form.parents('.bootbox').modal('hide');
                 alertMsg('Failed!', error.responseJSON.error, 'danger');
-                setTimeout(location.reload, 2000);
+                setTimeout("location.reload(true);",2000);
             });
         });
     $('.edit_host_button').on('click', function() {
@@ -186,6 +192,11 @@ $(document).ready(function() {
                 .find('[name="create_ts"]').val(response.create_ts).end()
                 .find('[name="clusters"]').val(response.clusters.length).end();
 
+            console.log(response.schedulable);
+            if (response.schedulable == "true")
+                $('#config_host_form').find('[name="schedulable"]').prop('checked', true);
+            else
+                $('#config_host_form').find('[name="schedulable"]').prop('checked', false);
             // Show the dialog
             bootbox
                 .dialog({
@@ -195,7 +206,7 @@ $(document).ready(function() {
                 })
                 .on('shown.bs.modal', function() {
                     var selected=response.log_type.toUpperCase();
-                    console.log(selected);
+                    //console.log(selected);
                     if (selected == 'LOCAL') {
                         $('#config_host_form #log_server').hide(200);
                     } else {

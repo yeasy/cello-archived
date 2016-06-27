@@ -29,10 +29,36 @@ def json_decode(jsonstr):
     return json_object
 
 
-def debug_request(logger, request):
+def request_debug(request, logger):
+    logger.debug("path={}, method={}".format(request.path, request.method))
+    logger.debug("request args:")
     for k in request.args:
         logger.debug("Arg: {0}:{1}".format(k, request.args[k]))
+    logger.debug("request form:")
     for k in request.form:
         logger.debug("Form: {0}:{1}".format(k, request.form[k]))
+    logger.debug("request raw body data:")
+    logger.debug(request.data)
 
 
+def request_get(request, key, default_value=None):
+    if key in request.args:
+        return request.args.get(key)
+    elif key in request.form:
+        return request.form.get(key)
+    try:
+        json_body = request.get_json(force=True, silent=True)
+        if key in json_body:
+            return json_body[key]
+        else:
+            return default_value
+    except Exception as e:
+        return default_value
+
+
+def request_json_body(request, default_value={}):
+    try:
+        json_body = request.get_json(force=True, silent=True)
+        return json_body
+    except Exception as e:
+        return default_value

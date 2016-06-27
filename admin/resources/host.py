@@ -8,7 +8,7 @@ from flask import request as r
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, response_ok, \
     response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
-    HOST_TYPES, LOG_TYPES, debug_request
+    HOST_TYPES, LOG_TYPES, request_debug, request_get
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -22,7 +22,7 @@ host = Blueprint('host', __name__)
 @host.route('/hosts', methods=['GET'])
 def hosts_show():
     logger.info("/hosts method=" + r.method)
-    debug_request(logger, r)
+    request_debug(r, logger)
     col_filter = dict((key, r.args.get(key)) for key in r.args)
     items = list(host_handler.list(filter_data=col_filter, validate=True))
 
@@ -32,8 +32,7 @@ def hosts_show():
 
 @host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def host_api():
-    logger.info("/host method=" + r.method)
-    debug_request(logger, r)
+    request_debug(r, logger)
     if r.method == 'GET':
         if "id" not in r.args and "id" not in r.form:
             logger.warn("host get without enough data")
@@ -42,8 +41,7 @@ def host_api():
             response_fail["data"] = r.form
             return jsonify(response_fail), CODE_BAD_REQUEST
         else:
-            host_id = r.args.get("id") or r.form.get("id")
-            logger.debug("id=" + host_id)
+            host_id = request_get(r, "id")
             result = host_handler.get(host_id, serialization=True)
             if result:
                 return jsonify(result), CODE_OK
@@ -52,12 +50,25 @@ def host_api():
                 response_fail["data"] = r.form
                 return jsonify(response_fail), CODE_BAD_REQUEST
     elif r.method == 'POST':
-        name, daemon_url, capacity, status = \
-            r.form['name'], r.form['daemon_url'], r.form['capacity'],\
-            r.form['status']
-        logger.debug("name={}, daemon_url={}, capacity={}, status={} ".
-                     format(name, daemon_url, capacity, status))
-        if not name or not daemon_url or not capacity or not status:
+        name, daemon_url, capacity, log_type, log_server = \
+            r.form['name'], r.form['daemon_url'], r.form['capacity'], \
+            r.form['log_type'], r.form['log_server']
+
+        if "fillup" in r.form and r.form["fillup"] == "on":
+            fillup = True
+        else:
+            fillup = False
+
+        if "schedulable" in r.form and r.form["schedulable"]=="on":
+            schedulable = "true"
+        else:
+            schedulable = "false"
+
+        logger.debug("name={}, daemon_url={}, capacity={}"
+                     "fillup={}, schedulable={}, log={}/{}".
+                     format(name, daemon_url, capacity, fillup, schedulable,
+                            log_type, log_server))
+        if not name or not daemon_url or not capacity or not log_type:
             logger.warn("host post without enough data")
             response_fail["error"] = "host POST without enough data"
             response_fail["data"] = r.form
@@ -65,7 +76,10 @@ def host_api():
         else:
             result = host_handler.create(name=name, daemon_url=daemon_url,
                                          capacity=int(capacity),
-                                         status=status)
+                                         fillup=fillup,
+                                         schedulable=schedulable,
+                                         log_type=log_type,
+                                         log_server=log_server)
             if result:
                 logger.debug("host creation successfully")
                 return jsonify(response_ok), CODE_CREATED
@@ -125,10 +139,9 @@ def host_info(host_id):
 @host.route('/host_action', methods=['POST'])
 def host_action():
     logger.info("/host_action, method=" + r.method)
-    debug_request(logger, r)
+    request_debug(r, logger)
 
     host_id, action = r.form['id'], r.form['action']
-    logger.debug("host id={}, action={}".format(host_id, action))
     if not host_id or not action:
         logger.warn("host post without enough data")
         response_fail["error"] = "host POST without enough data"

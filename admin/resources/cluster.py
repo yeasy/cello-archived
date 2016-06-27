@@ -10,7 +10,7 @@ from flask.ext.paginate import Pagination
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, response_ok, \
     response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
-    CONSENSUS_PLUGINS, CONSENSUS_MODES, CLUSTER_SIZES
+    CONSENSUS_PLUGINS, CONSENSUS_MODES, CLUSTER_SIZES, request_debug
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -23,10 +23,8 @@ cluster = Blueprint('cluster', __name__)
 
 @cluster.route('/clusters', methods=['GET'])
 def clusters_show():
-    logger.info("/clusters method=" + r.method)
-    for k in r.args:
-        logger.debug("{0}:{1}".format(k, r.args[k]))
-    show_type=r.args.get("type", "active")
+    request_debug(r, logger)
+    show_type = r.args.get("type", "active")
     col_filter = dict((key, r.args.get(key)) for key in r.args if
                       key != "col_name" and key != "page" and key !="type")
     if show_type != "released":
@@ -85,10 +83,7 @@ def clusters_show():
 @cluster.route('/cluster', methods=['GET', 'POST', 'DELETE'])
 def cluster_api():
     logger.info("/cluster action=" + r.method)
-    for k in r.args:
-        logger.debug("Arg: {0}:{1}".format(k, r.args[k]))
-    for k in r.form:
-        logger.debug("Form: {0}:{1}".format(k, r.form[k]))
+    request_debug(r, logger)
     if r.method == 'GET':
         if not r.form["id"]:
             logger.warn("cluster get without enough data")
@@ -97,8 +92,7 @@ def cluster_api():
             return jsonify(response_fail), CODE_BAD_REQUEST
         else:
             logger.debug("id=" + r.form['id'])
-            result = cluster_handler.get(r.form['id'],
-                                         serialization=True)
+            result = cluster_handler.get(r.form['id'], serialization=True)
             if result:
                 return jsonify(result), CODE_OK
             else:

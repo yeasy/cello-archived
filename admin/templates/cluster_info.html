@@ -10,7 +10,7 @@
         <dt>API URL<dt> <dd>{{item.api_url}}</dd>
         {% if item.consensus_plugin== consensus_plugins[0] %}
             <dt>Consensus<dt> <dd>{{item.consensus_plugin}}</dd>
-    {% else %}
+        {% else %}
             <dt>Consensus<dt> <dd>{{item.consensus_plugin}}/{{ item.consensus_mode }}</dd>
         {% endif %}
         <dt>Host<dt> <dd><a href="/host_info/{{item.host_id}}">{{item

@@ -28,8 +28,8 @@
                         <th>Name</th>
                         <th>API</th>
                         <th>Type</th>
+                        <th>Size</th>
                         <th>Host</th>
-                        <th>Created</th>
                         <th></th>
                     </tr>
                     </thead>
@@ -42,10 +42,14 @@
                         {% endif %}
                     <td><a href="/cluster_info/{{item.id}}?released=0">{{item.name}}</a></td>
                     <td>{{item.api_url}}</td>
-                    <td>{{item.consensus_plugin}}</td>
+                    {% if item.consensus_plugin== consensus_plugins[0] %}
+                        <td>{{item.consensus_plugin}}</td>
+                    {% else %}
+                        <td>{{item.consensus_plugin}}/{{ item.consensus_mode }}</td>
+                    {% endif %}
+                    <td>{{item.size|string}}</td>
                     <td><a href="/host_info/{{item.host_id}}">{{item
                     .host_id}}</a></td>
-                    <td>{{item.create_ts}}</td>
 
                     <td><input value="Delete" type="button"
                                class="btn btn-xs btn-small btn-danger delete_cluster_button"
@@ -68,6 +72,7 @@
                         <th>Name</th>
                         <th>User</th>
                         <th>Type</th>
+                        <th>Size</th>
                         <th>Host</th>
                         <th>Apply Time</th>
                     </tr>
@@ -77,7 +82,12 @@
                         <tr>
                             <td><a href="/cluster_info/{{item.id}}?released=0">{{item.name}}</a></td>
                             <td>{{item.user_id}}</td>
+                            {% if item.consensus_plugin== consensus_plugins[0] %}
                             <td>{{item.consensus_plugin}}</td>
+                            {% else %}
+                            <td>{{item.consensus_plugin}}/{{ item.consensus_mode }}</td>
+                            {% endif %}
+                            <td>{{item.size|string}}</td>
                             <td><a href="/host_info/{{item.host_id}}">{{item .host_id}}</a></td>
                             <td>{{item.apply_ts}}</td>
                             <td><input value="Delete" type="button"
@@ -100,6 +110,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Type</th>
+                        <th>Size</th>
                         <th>Host</th>
                         {% if col_name != "active" %}
                             <th>User</th>
@@ -113,7 +124,12 @@
                     {% for item in items %}
                         <tr>
                             <td><a href="/cluster_info/{{item.id}}?released=1">{{item.name}}</a></td>
+                            {% if item.consensus_plugin== consensus_plugins[0] %}
                             <td>{{item.consensus_plugin}}</td>
+                            {% else %}
+                            <td>{{item.consensus_plugin}}/{{ item.consensus_mode }}</td>
+                            {% endif %}
+                            <td>{{item.size|string}}</td>
                             <td><a href="/host_info/{{item.host_id}}">{{item .host_id}}</a></td>
                             <td>{{item.user_id}}</td>
                             <td>{{item.release_ts}}</td>
