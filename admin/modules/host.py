@@ -25,9 +25,9 @@ class HostHandler(object):
     def __init__(self):
         self.col = db["host"]
 
-    def create(self, name, daemon_url, capacity=1, status="active",
-               log_type=LOG_TYPES[0], log_server="",
-               serialization=True):
+    def create(self, name, daemon_url, capacity=1,
+               log_type=LOG_TYPES[0], log_server="", fillup=False,
+               schedulable=False, serialization=True):
         """ Create a new docker host node
 
         A docker host is potentially a single node or a swarm.
@@ -36,21 +36,27 @@ class HostHandler(object):
         :param name: name of the node
         :param daemon_url: daemon_url of the host
         :param capacity: The number of clusters to hold
-        :param status: active for using, inactive for not using
         :param log_type: type of the log
         :param log_server: server addr of the syslog
+        :param fillup: Whether fillup after creation
+        :param schedulable: Whether can schedule cluster request to it
         :param serialization: whether to get serialized result or object
         :return: True or False
         """
-        logger.debug("Create host: name={}, daemon_url={}, capacity={}"
-                     .format(name, daemon_url, capacity))
+        logger.debug("Create host: name={}, daemon_url={}, capacity={}, "
+                     "log={}/{}, fillup={}, schedulable={}"
+                     .format(name, daemon_url, capacity, log_type,
+                             log_server, fillup, schedulable))
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
         if not log_server.startswith("tcp://"):
             log_server = "tcp://" + log_server
         if log_type == LOG_TYPES[0]:
             log_server = ""
-        if not test_daemon(daemon_url):
+        if test_daemon(daemon_url):
+            logger.warn("The daemon_url is active:" + daemon_url)
+            status = "active"
+        else:
             logger.warn("The daemon_url is inactive:" + daemon_url)
             status = "inactive"
 
@@ -73,7 +79,8 @@ class HostHandler(object):
             'clusters': [],
             'type': detected_type,
             'log_type': log_type,
-            'log_server': log_server
+            'log_server': log_server,
+            'schedulable': schedulable
         }
         hid = self.col.insert_one(h).inserted_id  # object type
         host = self.col.find_one_and_update(
@@ -91,7 +98,7 @@ class HostHandler(object):
             else:
                 logger.warn("Create cluster failed")
 
-        if status == "active" and capacity > 0:  # should fillup it
+        if status == "active" and capacity > 0 and fillup:  # should fillup it
             logger.debug("Init with {} clusters in host".format(capacity))
             free_ports = cluster_handler.find_free_api_ports(str(
                 hid), capacity)
@@ -137,11 +144,11 @@ class HostHandler(object):
         :return: serialized result or obj
         """
         logger.debug("Get a host with id=" + id)
-        h_old = self._get_active_host(id)
+        h_old = self.col.find_one({"id": id})
         if not h_old:
+            logger.warn("No host found with id=" + id)
             return {}
 
-        daemon_url = d.get('daemon_url', h_old.get("daemon_url"))
         if "daemon_url" in d and not d["daemon_url"].startswith("tcp://"):
             d["daemon_url"] = "tcp://" + d["daemon_url"]
 
@@ -150,9 +157,6 @@ class HostHandler(object):
         if d["capacity"] < len(h_old.get("clusters")):
             logger.warn("Cannot set cap smaller than running clusters")
             return {}
-        if "status" in d:
-            if not test_daemon(daemon_url):
-                d["status"] = 'inactive'
         if "log_server" in d and not d["log_server"].startswith("tcp://"):
             d["log_server"] = "tcp://" + d["log_server"]
         if "log_type" in d and d["log_type"] == LOG_TYPES[0]:
@@ -342,6 +346,7 @@ class HostHandler(object):
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
                                     'type','create_ts', 'status',
+                                    'schedulable',
                                     'clusters', 'log_type', 'log_server']):
         """ Serialize an obj
 

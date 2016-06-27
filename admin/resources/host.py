@@ -50,12 +50,25 @@ def host_api():
                 response_fail["data"] = r.form
                 return jsonify(response_fail), CODE_BAD_REQUEST
     elif r.method == 'POST':
-        name, daemon_url, capacity, status = \
-            r.form['name'], r.form['daemon_url'], r.form['capacity'],\
-            r.form['status']
-        logger.debug("name={}, daemon_url={}, capacity={}, status={} ".
-                     format(name, daemon_url, capacity, status))
-        if not name or not daemon_url or not capacity or not status:
+        name, daemon_url, capacity, log_type, log_server = \
+            r.form['name'], r.form['daemon_url'], r.form['capacity'], \
+            r.form['log_type'], r.form['log_server']
+
+        if "fillup" in r.form and r.form["fillup"] == "on":
+            fillup = True
+        else:
+            fillup = False
+
+        if "schedulable" in r.form and r.form["schedulable"]=="on":
+            schedulable = "true"
+        else:
+            schedulable = "false"
+
+        logger.debug("name={}, daemon_url={}, capacity={}"
+                     "fillup={}, schedulable={}, log={}/{}".
+                     format(name, daemon_url, capacity, fillup, schedulable,
+                            log_type, log_server))
+        if not name or not daemon_url or not capacity or not log_type:
             logger.warn("host post without enough data")
             response_fail["error"] = "host POST without enough data"
             response_fail["data"] = r.form
@@ -63,7 +76,10 @@ def host_api():
         else:
             result = host_handler.create(name=name, daemon_url=daemon_url,
                                          capacity=int(capacity),
-                                         status=status)
+                                         fillup=fillup,
+                                         schedulable=schedulable,
+                                         log_type=log_type,
+                                         log_server=log_server)
             if result:
                 logger.debug("host creation successfully")
                 return jsonify(response_ok), CODE_CREATED

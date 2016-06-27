@@ -28,6 +28,17 @@ def cluster_apply():
     Return a Cluster json body.
     """
     request_debug(r, logger)
+
+    def make_response_invalid(msg=""):
+        response_fail["error"] = msg or "Invalid request data"
+        response_fail["data"] = {
+            "user_id": user_id,
+            "consensus_plugin": consensus_plugin,
+            "consensus_mode": consensus_mode,
+            "size": cluster_size
+        }
+        return jsonify(response_fail), CODE_BAD_REQUEST
+
     user_id = request_get(r, "user_id")
     if not user_id:
         logger.warn("cluster_apply without user_id")
@@ -35,13 +46,37 @@ def cluster_apply():
         response_fail["data"] = r.args
         return jsonify(response_fail), CODE_BAD_REQUEST
 
-    consensus_plugin = request_get(r, "consensus_plugin") or CONSENSUS_PLUGINS[0]
-    consensus_mode = request_get(r, "consensus_mode") or CONSENSUS_MODES[0]
-    cluster_size = int(request_get(r, "size") or CLUSTER_SIZES[0])
-    c = cluster_handler.apply_cluster(user_id=user_id,
-                                      consensus_plugin=consensus_plugin,
-                                      consensus_mode=consensus_mode,
-                                      size=cluster_size)
+    condition = {}
+
+    consensus_plugin = request_get(r, "consensus_plugin")
+    consensus_mode = request_get(r, "consensus_mode")
+    cluster_size = int(request_get(r, "size") or -1)
+    if consensus_plugin:
+        if consensus_plugin not in CONSENSUS_PLUGINS:
+            logger.warn("Invalid consensus_plugin")
+            make_response_invalid("Invalid consensus_plugin")
+        else:
+            condition["consensus_plugin"] = consensus_plugin
+
+    if consensus_mode:
+        if consensus_mode not in CONSENSUS_MODES:
+            logger.warn("Invalid consensus_mode")
+            make_response_invalid("Invalid consensus_mode")
+        else:
+            condition["consensus_mode"] = consensus_mode
+
+    if cluster_size >=0:
+        if cluster_size not in CLUSTER_SIZES:
+            logger.warn("Invalid cluster_size")
+            make_response_invalid("Invalid cluster_size")
+        else:
+            condition["size"] = cluster_size
+
+    if len(condition) <=0:
+        make_response_invalid("Not enough param in request")
+
+    logger.debug("condition={}".format(condition))
+    c = cluster_handler.apply_cluster(user_id=user_id, condition=condition)
     if not c:
         logger.warn("cluster_apply failed")
         response_fail["error"] = "No available res for " + user_id

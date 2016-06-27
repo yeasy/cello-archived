@@ -258,37 +258,32 @@ class ClusterHandler(object):
             self.col_released.insert_one(c)
         return True
 
-    def apply_cluster(self, user_id, consensus_plugin=CONSENSUS_PLUGINS[0],
-                      consensus_mode=CONSENSUS_MODES[0],
-                      size=CLUSTER_SIZES[0]):
+    def apply_cluster(self, user_id, condition={}, multi_chain=False):
         """ Apply a cluster for a user
 
         :param user_id: which user will apply the cluster
-        :param consensus_plugin: filter the cluster with consensus plugin
-        :param consensus_mode: filter the cluster with consensus mode
-        :param size: cluster size
+        :param condition: the filter to select
+        :param multi_chain: Allow multiple chain for each tenant
         :return: serialized cluster or None
         """
-        # TODO: should check already existed one first
-        c = self.col_active.find_one({"user_id": user_id, "release_ts": "",
-                                      "consensus_plugin": consensus_plugin,
-                                      "consensus_mode": consensus_mode,
-                                      "size": size})
-        if c:
-            logger.debug("Already assigned cluster for " + user_id)
-            return self._serialize(c, keys=['id', 'name', 'user_id',
+        if not multi_chain:
+            filt = {"user_id": user_id, "release_ts": ""}
+            filt.update(condition)
+            c = self.col_active.find_one(filt)
+            if c:
+                logger.debug("Already assigned cluster for " + user_id)
+                return self._serialize(c, keys=['id', 'name', 'user_id',
                                             'daemon_url', 'api_url',
                                             'consensus_plugin',
                                             'consensus_mode', 'size'])
         logger.debug("Try find available cluster for " + user_id)
-        hosts = col_host.find({"status": "active"})
+        hosts = col_host.find({"status": "active", "schedulable": "true"})
         host_ids = [h.get("id") for h in hosts]
-        logger.debug("Find active hosts={}".format(host_ids))
-        for h_id in host_ids:
-            c = self.col_active.find_one_and_update(
-                {"user_id": "", "consensus_plugin": consensus_plugin,
-                 "consensus_mode": consensus_mode,
-                 "size": size, "host_id": h_id},
+        logger.debug("Find active and schedulable hosts={}".format(host_ids))
+        for h_id in host_ids:  # check each active and schedulable host
+            filt = {"user_id": "", "host_id": h_id}
+            filt.update(condition)
+            c = self.col_active.find_one_and_update(filt,
                 {"$set": {"user_id": user_id,
                           "apply_ts": datetime.datetime.now()}},
                 return_document=ReturnDocument.AFTER)
@@ -311,7 +306,7 @@ class ClusterHandler(object):
         """
         logger.debug("release clusters for user_id={}".format(user_id))
         c = self.col_active.find({"user_id": user_id, "release_ts": ""})
-        cluster_ids = list(map(lambda x:x.get("id"), c))
+        cluster_ids = list(map(lambda x: x.get("id"), c))
         logger.debug("clusters for user {}={}".format(user_id, cluster_ids))
         result = True
         for cid in cluster_ids:
@@ -337,7 +332,10 @@ class ClusterHandler(object):
 
         def delete_recreate_work():
             logger.debug("Run recreate_work in background thread")
-            cluster_id, cluster_name = c.get("id"), c.get("name")
+            cluster_id, cluster_name, consensus_plugin, consensus_mode, \
+            size = \
+                c.get("id"), c.get("name"), c.get("consensus_plugin"), \
+                c.get("consensus_mode"), c.get("size")
             host_id, api_url = c.get("host_id"), c.get("api_url")
             # h = col_host.find_one({"id": host_id})
             # if not h or h.get("status") != "active":
@@ -347,7 +345,9 @@ class ClusterHandler(object):
                 logger.warn("Delete cluster failed with id=" + cluster_id)
             else:
                 if not self.create(name=cluster_name, host_id=host_id,
-                                   api_port=int(api_url.split(":")[-1])):
+                                   api_port=int(api_url.split(":")[-1]),
+                                   consensus_plugin=consensus_plugin,
+                                   consensus_mode=consensus_mode, size=size):
                     logger.warn("ReCreate cluster failed with name=" +
                                 cluster_name)
 
