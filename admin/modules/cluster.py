@@ -273,9 +273,9 @@ class ClusterHandler(object):
             if c:
                 logger.debug("Already assigned cluster for " + user_id)
                 return self._serialize(c, keys=['id', 'name', 'user_id',
-                                            'daemon_url', 'api_url',
-                                            'consensus_plugin',
-                                            'consensus_mode', 'size'])
+                                                'daemon_url', 'api_url',
+                                                'consensus_plugin',
+                                                'consensus_mode', 'size'])
         logger.debug("Try find available cluster for " + user_id)
         hosts = col_host.find({"status": "active", "schedulable": "true"})
         host_ids = [h.get("id") for h in hosts]
@@ -290,13 +290,12 @@ class ClusterHandler(object):
             if c and c.get("user_id") == user_id:
                 logger.info("Now have cluster {} at {} for user {}".format(
                     c.get("id"), h_id, user_id))
-                result = self._serialize(c, keys=['id', 'name', 'user_id',
-                                                  'daemon_url', 'api_url',
-                                                  'consensus_plugin',
-                                                  'consensus_mode', 'size'])
-                return result
-        logger.warn("Not find available cluster for " + user_id)
-        return None
+                return self._serialize(c, keys=['id', 'name', 'user_id',
+                                                'daemon_url', 'api_url',
+                                                'consensus_plugin',
+                                                'consensus_mode', 'size'])
+        logger.warn("Not find matched available cluster for " + user_id)
+        return {}
 
     def release_cluster_for_user(self, user_id):
         """ Release all cluster for a user_id.

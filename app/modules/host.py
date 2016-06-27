@@ -88,28 +88,8 @@ class HostHandler(object):
             {"$set": {"id": str(hid)}},
             return_document=ReturnDocument.AFTER)
 
-        def create_cluster_work(port):
-            cluster_name = "{}_{}".format(name, (port-CLUSTER_API_PORT_START))
-            cid = cluster_handler.create(name=cluster_name, host_id=str(hid),
-                                         api_port=port)
-            if cid:
-                logger.debug("Create cluster %s with id={}".format(
-                    cluster_name, cid))
-            else:
-                logger.warn("Create cluster failed")
-
-        if status == "active" and capacity > 0 and fillup:  # should fillup it
-            logger.debug("Init with {} clusters in host".format(capacity))
-            free_ports = cluster_handler.find_free_api_ports(str(
-                hid), capacity)
-            logger.debug("Free_ports = {}".format(free_ports))
-            i = 0
-            for p in free_ports:
-                t = Thread(target=create_cluster_work, args=(p,))
-                t.start()
-                i += 1
-                if i % 5 == 0:
-                    time.sleep(0.1)
+        if capacity > 0 and fillup:  # should fillup it
+            self.fillup(hid)
 
         if serialization:
             return self._serialize(host)
@@ -220,6 +200,7 @@ class HostHandler(object):
         logger.debug("fillup host with id = {}".format(id))
         host = self._get_active_host(id)
         if not host:
+            logger.warn("host fillup failed as inactive status")
             return False
         num_new = host.get("capacity") - len(host.get("clusters"))
         if num_new <= 0:
@@ -239,7 +220,8 @@ class HostHandler(object):
                 consensus_mode = ""
             cluster_size = random.choice(CLUSTER_SIZES)
             cid = cluster_handler.create(name=cluster_name, host_id=str(id),
-                                         api_port=port, consensus_plugin=consensus_plugin,
+                                         api_port=port,
+                                         consensus_plugin=consensus_plugin,
                                          consensus_mode=consensus_mode,
                                          size=cluster_size)
             if cid:
