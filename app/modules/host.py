@@ -230,8 +230,7 @@ class HostHandler(object):
             t = Thread(target=create_cluster_work, args=(p,))
             t.start()
             i += 1
-            if i % 2 == 0:
-                time.sleep(0.1)
+            time.sleep(0.1)
 
         return True
 
