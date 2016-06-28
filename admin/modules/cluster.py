@@ -197,7 +197,8 @@ class ClusterHandler(object):
         user_id = c.get("user_id")  # original user_id
         logger.debug("user_id={}".format(user_id))
         if not forced and user_id != "" and \
-                not user_id.startswith(SYS_DELETER):
+                not user_id.startswith(SYS_DELETER) and \
+                not user_id.startswith(SYS_CREATOR):
             # not forced, then only process unused or in-deleting
             logger.warn("Cannot find deletable cluster {} in {} by "
                         "user {}".format(id, col_name, user_id))

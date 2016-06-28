@@ -315,8 +315,10 @@ def compose_start(name, host, api_port,
     :return: The name list of the started peer containers
     """
     logger.debug("Compose start: host={}, logging_level={}, "
-                 "consensus={}, size={}".format(host.get("name"),
-        os.environ['LOGGING_LEVEL_CLUSTER'], consensus_plugin, cluster_size))
+                 "consensus={}/{}, size={}".format(host.get("name"),
+        os.environ['LOGGING_LEVEL_CLUSTER'], consensus_plugin,
+                                                   consensus_mode,
+                                                   cluster_size))
     daemon_url, log_type, log_server = \
         host.get("daemon_url"), host.get("log_type"), host.get("log_server")
     # compose use this

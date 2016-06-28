@@ -11,7 +11,7 @@ from pymongo.collection import ReturnDocument
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, cleanup_container_host, LOG_LEVEL, setup_container_host, \
     test_daemon, detect_daemon_type, reset_container_host, \
-    CLUSTER_API_PORT_START, LOG_TYPES, CONSENSUS_PLUGINS, CONSENSUS_MODES, CLUSTER_SIZES
+    CLUSTER_API_PORT_START, LOG_TYPES, CLUSTER_SIZES, CONSENSUS_TYPES
 
 from modules import cluster_handler
 
@@ -213,11 +213,7 @@ class HostHandler(object):
         def create_cluster_work(port):
             cluster_name = "{}_{}".format(host.get("name"),
                                           (port-CLUSTER_API_PORT_START))
-            consensus_plugin = random.choice(CONSENSUS_PLUGINS)
-            if consensus_plugin != CONSENSUS_PLUGINS[0]:
-                consensus_mode = random.choice(CONSENSUS_MODES)
-            else:
-                consensus_mode = ""
+            consensus_plugin, consensus_mode = random.choice(CONSENSUS_TYPES)
             cluster_size = random.choice(CLUSTER_SIZES)
             cid = cluster_handler.create(name=cluster_name, host_id=str(id),
                                          api_port=port,
@@ -234,8 +230,7 @@ class HostHandler(object):
             t = Thread(target=create_cluster_work, args=(p,))
             t.start()
             i += 1
-            if i % 2 == 0:
-                time.sleep(0.1)
+            time.sleep(0.1)
 
         return True
 

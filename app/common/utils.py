@@ -12,6 +12,13 @@ APP_API_VERSION = "v1"
 CONSENSUS_PLUGINS = ['noops', 'pbft']  # first one is the default one
 CONSENSUS_MODES = ['classic', 'batch', 'sieve']  # pbft has various modes
 
+CONSENSUS_TYPES = [
+    ('noops', ''),
+    ('pbft', 'classic'),
+    ('pbft', 'batch'),
+    ('pbft', 'sieve'),
+]
+
 LOG_TYPES = ['local', 'syslog']
 
 HOST_TYPES = ['single', 'swarm']
