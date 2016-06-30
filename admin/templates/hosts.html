@@ -11,9 +11,9 @@
 
     {% if items_count > 0 %}
         <div class="row">
-            <table id="table_hosts" class="table table-striped
-                table-bordered table_sorted">
-                <thead>
+            <table id="table_hosts" class="hover table table-striped
+            table-bordered table_sorted">
+                <thead align="center">
                 <tr>
                     <th>Name</th>
                     <th>Type</th>
@@ -22,52 +22,49 @@
                     <th>Capacity</th>
                     <th>Clusters</th>
                     <th>Log Type</th>
-                    <th>Daemon URL</th>
                     <th></th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for item in items %}
-                    {% if item.schedulable != "true" %}
-                        <tr bgcolor="#add8e6">
+                    {% if item.schedulable == "false" %}
+                        <tr style="background-color:lightgray">
                     {% else %}
                         <tr>
                     {% endif %}
-                <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
-                <td>{{item.type|upper}}</td>
-                <td>{{item.schedulable}}</td>
-                <td>
-                    {% if item.status == "active" %}
-                        <font color="green">{{item.status}}</font>
-                    {% else %}
-                    <font color="red">{{item.status}}</font>
-                    {% endif %}
-                </td>
-                <td>{{item.capacity|string}}</td>
-                <td>{{item.clusters|length}}</td>
-                <td>{{item.log_type|upper}}</td>
-                <td>{{item.daemon_url}}</td>
-                <td>
-                    <button type="button" data-id="{{item.id}}"
-                            class="btn btn-xs btn-sm
-                    btn-primary btn-info btn-default edit_host_button">
-                        <span class="glyphicon glyphicon-cog"
-                              aria-hidden="true"></span>
-                    </button>
-                    <button type="button" class="btn btn-xs btn-sm btn-danger"
-                            aria-label="Left Align"
-                            data-id="{{item.id}}"
-                            data-title="{{ item.name }}"
-                            data-toggle="modal"
-                            data-target="#delete_host_confirm"
-                            {% if item.clusters|length > 0 %}
-                            disabled
+                        <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
+                        <td>{{item.type|upper}}</td>
+                        <td>{{item.schedulable}}</td>
+                        <td>
+                            {% if item.status == "active" %}
+                                <font color="green">{{item.status}}</font>
+                            {% else %}
+                                <font color="red">{{item.status}}</font>
                             {% endif %}
-                    >
-                    <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
-                    </button>
-                </td>
-                </tr>
+                        </td>
+                        <td>{{item.capacity|string}}</td>
+                        <td>{{item.clusters|length}}</td>
+                        <td>{{item.log_type|upper}}</td>
+                        <td>
+                            <button type="button" data-id="{{item.id}}"
+                                    class="btn btn-xs btn-sm btn-primary btn-info btn-default edit_host_button">
+                                <span class="glyphicon glyphicon-cog"
+                                      aria-hidden="true"></span>
+                            </button>
+                            <button type="button" class="btn btn-xs btn-sm btn-danger"
+                                    aria-label="Left Align"
+                                    data-id="{{item.id}}"
+                                    data-title="{{ item.name }}"
+                                    data-toggle="modal"
+                                    data-target="#delete_host_confirm"
+                                    {% if item.clusters|length > 0 %}
+                                        disabled
+                                    {% endif %}
+                            >
+                                <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+                            </button>
+                        </td>
+                    </tr>
                 {% endfor %}
                 </tbody>
             </table>

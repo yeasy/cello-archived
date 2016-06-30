@@ -1,5 +1,9 @@
 $(document).ready(function() {
-    $('.table_sorted').DataTable();
+    $('.table_sorted').DataTable(
+        {
+            
+        }
+    );
     $('#newHostModal').on('shown.bs.modal', function (e) {
         var selected=$("#newHostModal #log_type option:selected").text();
         console.log("initial selection:"+selected);
