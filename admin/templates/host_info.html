@@ -3,62 +3,54 @@
 {% block body %}
 {{ super() }}
 <h2 class="page-header">Host Information
-    {% if item.clusters|length <= 0 %}
-        <input value="Reset" type="button" title="Removing all clusters at
-        the host, only when no cluster at it."
-               class="btn btn-danger btn-default btn-primary pull-sm-right"
-               data-id="{{item.id}}"
-               data-title="{{ item.name }}"
-               data-toggle="modal" data-target="#reset_host_confirm"
-        />
-    {% else %}
-        <input value="Reset" type="button" title="Removing all clusters at the host, only when no cluster at it."
-               class="btn btn-danger btn-default btn-primary pull-sm-right"
-               data-id="{{item.id}}"
-               data-title="{{ item.name }}"
-               data-toggle="modal" data-target="#reset_host_confirm"
-               disabled
-        />
-    {% endif %}
+    <button title="Resetting the host when no cluster at it."
+           class="btn btn-danger btn-default btn-primary pull-sm-right"
+           data-id="{{item.id}}"
+           data-title="{{ item.name }}"
+           data-toggle="modal" data-target="#reset_host_confirm"
+           style="float: right;"
+            {% if item.clusters|length > 0 %}
+           disabled
+            {% endif %} >
+        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+    </button>
 
-    {% if item.clusters|length > 0 %}
-        <input value="Clean" type="button" title="Try best to clean unused clusters at this host"
-               class="btn btn-info btn-default btn-primary pull-sm-right"
-               id="clean_host_button" data-id="{{item.id}}"
-        />
-    {% else %}
-        <input value="Clean" type="button" title="Try best to clean unused clusters at this host"
-               class="btn btn-info btn-default btn-primary pull-sm-right"
-               id="clean_host_button" data-id="{{item.id}}" disabled
-        />
-    {% endif %}
+&nbsp; &nbsp;
 
-    {% if item.clusters|length >= item.capacity %}
-        <input value="Fillup" type="button"
-               class="btn btn-default btn-primary pull-sm-right"
-               id="fillup_host_button" data-id="{{item.id}}"
-               title="Fill up this host to its capacity = {{ item.capacity|string }}"
-               disabled
-        />
-    {% else %}
-        <input type="button" value="Fillup"
-               class="btn btn-default btn-primary pull-sm-right"
-               id="fillup_host_button" data-id="{{item.id}}"
-               title="Fill up this host to its capacity = {{ item.capacity|string }}"
-        />
-    {% endif %}
+    <button title="Try best to clean unused clusters at this host"
+           class="btn btn-info btn-default btn-primary pull-sm-right"
+           id="clean_host_button" data-id="{{item.id}}"
+           style="float: right;"
+            {% if item.clusters|length <= 0 %}
+           disabled
+            {% endif %} >
+        <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+    </button>
 
-    <input type="button" value="Config"
+    <button
+           class="btn btn-default btn-primary pull-sm-right"
+           id="fillup_host_button" data-id="{{item.id}}"
+           title="Fill up this host to its capacity = {{ item.capacity|string }}"
+           style="float: right;"
+            {% if item.clusters|length >= item.capacity %}
+           disabled
+            {% endif %}>
+        <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span>
+    </button>
+
+    <button title="Config the host"
            class="btn btn-default btn-info btn-primary edit_host_button
            pull-sm-right"
-           id="config_host_button"  data-id="{{item.id}}">
-    </input>
+           id="config_host_button"  data-id="{{item.id}}"
+           style="float: right;" >
+        <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+        </button>
 </h2>
 
     <div class="container-fluid">
         <dl class="dl-horizontal">
-        <dt>Name<dt> <dd>{{item.name}}</dd>
-        <dt>Id<dt> <dd>{{item.id}}</dd>
+            <dt>Name<dt> <dd>{{item.name}}</dd>
+            <dt>Id<dt> <dd>{{item.id}}</dd>
         <dt>Status<dt> <dd>{{item.status}}</dd>
         <dt>Schedulable<dt> <dd>{{item.schedulable}}</dd>
         <dt>Type<dt> <dd>{{item.type}}</dd>

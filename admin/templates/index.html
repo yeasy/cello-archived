@@ -9,18 +9,25 @@
                 <a href="/hosts"><span class="label label-pill label-default
                 label-pill
                  ">{{hosts|length}}</span> Deployed Hosts</a>
-                <button type="button" class="btn btn-sm btn-success btn-default pull-sm-right" style="float: right;" data-toggle="modal"
-                        data-target="#newHostModal">+</button>
+                <button class="btn btn-sm btn-success btn-default pull-sm-right"
+                        style="float: right;" data-toggle="modal"
+                        data-target="#newHostModal">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                </button>
 
             </li>
             <li class="list-group-item  list-group-item-success">
                 <a href="/clusters?col_name=active"><span class="label label-default label-pill ">{{clusters_active}}</span> Active Clusters</a>
                 {% if hosts_free|length > 0 %}
                     <button type="button" class="btn btn-sm btn-success
-                    btn-default pull-xs-right" style="float: right;" data-toggle="modal" data-target="#newClusterModal">+</button>
+                    btn-default pull-xs-right" style="float: right;" data-toggle="modal" data-target="#newClusterModal">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    </button>
                 {% else %}
                     <button type="button" class="btn btn-sm btn-success
-                    btn-default pull-xs-right" style="float: right;" data-toggle="modal" data-target="#newClusterModal" disabled>+</button>
+                    btn-default pull-xs-right" style="float: right;" data-toggle="modal" data-target="#newClusterModal" disabled>
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    </button>
                 {% endif %}
             </li>
             <li class="list-group-item list-group-item-info">
