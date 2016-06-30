@@ -25,15 +25,21 @@
                 </thead>
                 <tbody>
                 {% for item in items %}
-                    {% if item.status != "active" %}
+                    {% if item.schedulable != "true" %}
                         <tr bgcolor="#add8e6">
-                    {% else %}
+                            {% else %}
                         <tr>
                     {% endif %}
                 <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
                 <td>{{item.type|upper}}</td>
                 <td>{{item.schedulable}}</td>
-                <td>{{item.status}}</td>
+                    <td>
+                {% if item.status == "active" %}
+                   <font color="green">{{item.status}}</font>
+                {% else %}
+                    <font color="red">{{item.status}}</font>
+                {% endif %}
+                    </td>
                 <td>{{item.capacity|string}}</td>
                 <td>{{item.clusters|length}}</td>
                 <td>{{item.log_type|upper}}</td>
@@ -65,103 +71,6 @@
         </div>
     {% endif %}
 
-   <!-- The form which is used to populate the item data -->
-    <form id="config_host_form" class="form-horizontal" data-toggle="validator" style="display: none;">
-        <div class="form-group">
-            <label class="col-sm-3 form-control-label">ID</label>
-            <div class="col-sm-6">
-            <input type="text" class="form-control" name="id" disabled="disabled" />
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-3 form-control-label">Name</label>
-            <div class="col-sm-4">
-            <input type="text" class="form-control" name="name"  pattern="^[-_A-z0-9]{1,}$"
-                         maxlength="16" data-error="A name is required"/>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-3 form-control-label">Daemon URL</label>
-            <div class="col-sm-6">
-            <input type="text" class="form-control" name="daemon_url"
-                   disabled="disabled" />
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-3 form-control-label">Capacity</label>
-            <div class="col-sm-3">
-            <input type="number" class="form-control" name="capacity"
-                   min="0" max="1000" data-error="0~1000"/>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label  class="col-sm-3 form-control-label">Status</label>
-            <div class="col-sm-3">
-                <input type="text" class="form-control" name="status"
-                       disabled="disabled" />
-            </div>
-            <input type="checkbox" name="schedulable"> Schedulable
-        </div>
-
-        {% if host_types|length > 0 %}
-            <div class="form-group">
-                <label  class="col-sm-3 form-control-label" for="host_type">Type</label>
-                <div class="col-sm-8">
-                    <select class="c-select" name="type" required>
-                        {% for t in host_types %}
-                            <option value="{{t}}">{{t|upper}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-        {% endif %}
-        {% if log_types|length > 0 %}
-            <div class="form-group">
-                <label  class="col-sm-3 form-control-label"
-                        for="log_type">Log Type</label>
-                <div class="col-sm-8">
-                    <select class="c-select" name="log_type" id="log_type"
-                            required>
-                        {% for t in log_types %}
-                            <option value="{{t}}">{{t|upper}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-        {% endif %}
-        <div class="form-group" id="log_server" style="display: ;">
-            <label class="col-sm-3 form-control-label">Log Server</label>
-            <div class="col-sm-8">
-                <input type="text" class="form-control" name="log_server" placeholder="192.168.0.1:5000"/>
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-3 form-control-label">Created</label>
-            <div class="col-sm-6">
-            <input type="text" class="form-control" name="create_ts"
-                   disabled="disabled" />
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-3 form-control-label">Running Cluster</label>
-            <div class="col-sm-4">
-            <input type="number" class="form-control" name="clusters"
-                   disabled="disabled" />
-            </div>
-        </div>
-
-        <div class="form-group">
-            <div class="col-sm-offset-8">
-                <button type="button" id="save_host_button" class="btn btn-primary btn-default">Save</button>
-                <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
-            </div>
-        </div>
-    </form>
 
 <div class="modal fade" id="delete_host_confirm" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">

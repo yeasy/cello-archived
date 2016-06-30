@@ -7,7 +7,7 @@ from threading import Thread
 from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import db, log_handler, LOG_LEVEL, get_project, col_host, \
+from common import db, log_handler, LOG_LEVEL, col_host, \
     clean_project_containers, clean_chaincode_images, test_daemon, \
     detect_container_host, compose_start, compose_stop
 

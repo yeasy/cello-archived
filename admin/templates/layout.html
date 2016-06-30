@@ -17,12 +17,15 @@
 
     <!-- Bootstrap core CSS -->
     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../static/css/bootstrap.css" rel="stylesheet">
-    <link href="../static/css/dashboard.css" rel="stylesheet">
-    <link href="../static/css/paginate.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/dashboard.css">
+    <link rel="stylesheet" href="../static/css/paginate.css">
 
 <!--
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="../static/css/bootstrap-theme.css">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link href="../static/css/fix_glyphicons.css" rel="stylesheet">
 -->
 
 
@@ -31,26 +34,50 @@
 </head>
 
 <body>
-<nav class="navbar navbar-dark navbar-fixed-top bg-inverse">
-      <button type="button" class="navbar-toggler hidden-sm-up" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a class="navbar-brand" href="#">Pool Manager</a>
-      <div id="navbar">
-        <nav class="nav navbar-nav pull-xs-left">
-          <a class="nav-item nav-link" href="/index">Dashboard</a>
-          <a class="nav-item nav-link" href="#">Settings</a>
-          <a class="nav-item nav-link" href="#">Profile</a>
-          <a class="nav-item nav-link" href="#">Help</a>
-        </nav>
-          <!--
-        <form class="pull-xs-right">
-          <input type="text" class="form-control" placeholder="Search...">
-        </form>
-        -->
+
+<!--
+<nav class="navbar navbar-inverse navbar-fixed-top bg-inverse">
+<button type="button" class="navbar-toggler hidden-sm-up" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+<span class="sr-only">Toggle navigation</span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+</button>
+
+<a class="navbar-brand" href="#">Pool Manager</a>
+<div id="navbar">
+<nav class="nav navbar-nav pull-xs-left">
+    <a class="nav-item nav-link" href="/index">Dashboard</a>
+    <a class="nav-item nav-link" href="#">Settings</a>
+    <a class="nav-item nav-link" href="#">Profile</a>
+    <a class="nav-item nav-link" href="#">Help</a>
+</nav>
+    </div>
+</nav>
+-->
+
+<nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Blockchain Pool Manager</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">Settings</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="#">Help</a></li>
+          </ul>
+          <form class="navbar-form navbar-right">
+            <input type="text" class="form-control" placeholder="Search...">
+          </form>
+        </div>
       </div>
     </nav>
 
@@ -186,12 +213,12 @@
                                class="form-control" pattern="^[-_A-z0-9]{1,}$"
                                placeholder="Cluster Name" data-error="A name is required" max-length="16" required >
                     </div>
-                {% if available_hosts|length > 0 %}
+                {% if hosts_available|length > 0 %}
                     <div class="form-group">
                         <label for="host">Select a Host</label>
                         <select id="host" class="c-select" name="host_id" required>
-                            <option selected value="{{ available_hosts[0].id}}">{{ available_hosts[0].name }}</option>
-                            {% for h in available_hosts[1:] %}
+                            <option selected value="{{ hosts_available[0].id}}">{{ hosts_available[0].name }}</option>
+                            {% for h in hosts_available[1:] %}
                                 <option value="{{h.id}}">{{h.name}}</option>
                             {% endfor %}
                         </select>
@@ -249,6 +276,99 @@
         </div>
     </div>
 </div>
+
+<!-- The form which is used to populate the item data -->
+<form id="config_host_form" class="form-horizontal" data-toggle="validator" style="display: none;">
+    <div class="form-group">
+        <label class="col-sm-3 form-control-label">ID</label>
+        <div class="col-sm-6">
+            <input type="text" class="form-control" name="id" disabled="disabled" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 form-control-label">Name</label>
+        <div class="col-sm-4">
+            <input type="text" class="form-control" name="name"  pattern="^[-_A-z0-9]{1,}$"
+                   maxlength="16" data-error="A name is required"/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 form-control-label">Daemon URL</label>
+        <div class="col-sm-6">
+            <input type="text" class="form-control" name="daemon_url"
+                   disabled="disabled" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 form-control-label">Capacity</label>
+        <div class="col-sm-3">
+            <input type="number" class="form-control" name="capacity"
+                   min="0" max="1000" data-error="0~1000"/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label  class="col-sm-3 form-control-label">Status</label>
+        <div class="col-sm-3">
+            <input type="text" class="form-control" name="status"
+                   disabled="disabled" />
+        </div>
+        <input type="checkbox" name="schedulable"> Schedulable
+    </div>
+
+    <div class="form-group">
+        <label  class="col-sm-3 form-control-label" for="host_type">Type</label>
+        <div class="col-sm-3">
+            <input type="text" class="form-control" name="type"
+                   disabled="disabled" />
+        </div>
+    </div>
+    {% if log_types|length > 0 %}
+        <div class="form-group">
+            <label  class="col-sm-3 form-control-label"
+                    for="log_type">Log Type</label>
+            <div class="col-sm-8">
+                <select class="c-select" name="log_type" id="log_type"
+                        required>
+                    {% for t in log_types %}
+                        <option value="{{t}}">{{t|upper}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    {% endif %}
+    <div class="form-group" id="log_server" style="display:none;">
+        <label class="col-sm-3 form-control-label">Log Server</label>
+        <div class="col-sm-6">
+            <input type="text" class="form-control" name="log_server" placeholder="192.168.0.1:5000"/>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-3 form-control-label">Created</label>
+        <div class="col-sm-6">
+            <input type="text" class="form-control" name="create_ts"
+                   disabled="disabled" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-sm-3 form-control-label">Running Cluster</label>
+        <div class="col-sm-4">
+            <input type="number" class="form-control" name="clusters"
+                   disabled="disabled" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-8">
+            <button type="button" id="save_host_button" class="btn btn-primary btn-default">Save</button>
+            <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+        </div>
+    </div>
+</form>
 
 <!--
 <div class="footer container-fluid">

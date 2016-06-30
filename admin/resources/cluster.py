@@ -4,7 +4,7 @@ import sys
 
 from flask import jsonify, Blueprint, render_template
 from flask import request as r
-from flask.ext.paginate import Pagination
+from flask_paginate import Pagination
 
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -68,13 +68,13 @@ def clusters_show():
                             search=search, record_name='clusters')
 
     hosts = list(host_handler.list())
-    available_hosts = list(filter(
-        lambda e: e["status"] == "active"
+    hosts_available = list(filter(
+        lambda e: e["status"] == "active"  # and e["schedulable"] == "true"
                   and len(e["clusters"]) < e["capacity"], hosts))
     return render_template("clusters.html", type=show_type, col_name=col_name,
                            items_count=total_items, items=show_clusters,
                            pagination=pagination,
-                           available_hosts=available_hosts,
+                           hosts_available=hosts_available,
                            consensus_plugins=CONSENSUS_PLUGINS,
                            consensus_modes=CONSENSUS_MODES,
                            cluster_sizes=CLUSTER_SIZES)

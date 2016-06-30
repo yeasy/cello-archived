@@ -2,9 +2,61 @@
 {% block title %}Host Info{% endblock %}
 {% block body %}
 {{ super() }}
-<h2>Host Information</h2>
-<div class="container-fluid">
-    <dl class="dl-horizontal">
+<h2 class="page-header">Host Information
+    {% if item.clusters|length <= 0 %}
+        <input value="Reset" type="button" title="Removing all clusters at
+        the host, only when no cluster at it."
+               class="btn btn-danger btn-default btn-primary pull-sm-right"
+               data-id="{{item.id}}"
+               data-title="{{ item.name }}"
+               data-toggle="modal" data-target="#reset_host_confirm"
+        />
+    {% else %}
+        <input value="Reset" type="button" title="Removing all clusters at the host, only when no cluster at it."
+               class="btn btn-danger btn-default btn-primary pull-sm-right"
+               data-id="{{item.id}}"
+               data-title="{{ item.name }}"
+               data-toggle="modal" data-target="#reset_host_confirm"
+               disabled
+        />
+    {% endif %}
+
+    {% if item.clusters|length > 0 %}
+        <input value="Clean" type="button" title="Try best to clean unused clusters at this host"
+               class="btn btn-info btn-default btn-primary pull-sm-right"
+               id="clean_host_button" data-id="{{item.id}}"
+        />
+    {% else %}
+        <input value="Clean" type="button" title="Try best to clean unused clusters at this host"
+               class="btn btn-info btn-default btn-primary pull-sm-right"
+               id="clean_host_button" data-id="{{item.id}}" disabled
+        />
+    {% endif %}
+
+    {% if item.clusters|length >= item.capacity %}
+        <input value="Fillup" type="button"
+               class="btn btn-default btn-primary pull-sm-right"
+               id="fillup_host_button" data-id="{{item.id}}"
+               title="Fill up this host to its capacity = {{ item.capacity|string }}"
+               disabled
+        />
+    {% else %}
+        <input type="button" value="Fillup"
+               class="btn btn-default btn-primary pull-sm-right"
+               id="fillup_host_button" data-id="{{item.id}}"
+               title="Fill up this host to its capacity = {{ item.capacity|string }}"
+        />
+    {% endif %}
+
+    <input type="button" value="Config"
+           class="btn btn-default btn-info btn-primary edit_host_button
+           pull-sm-right"
+           id="config_host_button"  data-id="{{item.id}}">
+    </input>
+</h2>
+
+    <div class="container-fluid">
+        <dl class="dl-horizontal">
         <dt>Name<dt> <dd>{{item.name}}</dd>
         <dt>Id<dt> <dd>{{item.id}}</dd>
         <dt>Status<dt> <dd>{{item.status}}</dd>
@@ -21,54 +73,8 @@
         {% endfor %}
     </dd>
     </dl>
-    <div class="container-fluid">
-        {% if item.clusters|length >= item.capacity %}
-        <input value="Fillup" type="button"
-               class="btn btn-default btn-primary"
-               id="fillup_host_button" data-id="{{item.id}}"
-               title="Fill up this host to its capacity = {{ item.capacity|string }}"
-                disabled
-        />
-        {% else %}
-            <input value="Fillup" type="button"
-                   class="btn btn-default btn-primary"
-                   id="fillup_host_button" data-id="{{item.id}}"
-                   title="Fill up this host to its capacity = {{ item.capacity|string }}"
-            />
-        {% endif %}
 
-        {% if item.clusters|length > 0 %}
-        <input value="Clean" type="button" title="Try best to clean unused clusters at this host"
-               class="btn btn-info btn-default btn-primary"
-               id="clean_host_button" data-id="{{item.id}}"
-        />
-        {% else %}
-            <input value="Clean" type="button" title="Try best to clean unused clusters at this host"
-               class="btn btn-info btn-default btn-primary"
-               id="clean_host_button" data-id="{{item.id}}" disabled
-        />
-        {% endif %}
-
-        {% if item.clusters|length <= 0 %}
-        <input value="Reset" type="button" title="Removing all clusters at
-        the host, only when no cluster at it."
-               class="btn btn-danger btn-default btn-primary"
-               data-id="{{item.id}}"
-               data-title="{{ item.name }}"
-               data-toggle="modal" data-target="#reset_host_confirm"
-        />
-       {% else %}
-            <input value="Reset" type="button" title="Removing all clusters at the host, only when no cluster at it."
-                   class="btn btn-danger btn-default btn-primary"
-                   data-id="{{item.id}}"
-                   data-title="{{ item.name }}"
-                   data-toggle="modal" data-target="#reset_host_confirm"
-                   disabled
-            />
-        {% endif %}
-    </div>
-
-<div class="modal fade" id="reset_host_confirm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal fade" id="reset_host_confirm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">

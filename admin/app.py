@@ -1,10 +1,8 @@
-import logging
 import os
 
 from common import log_handler, LOG_LEVEL
 from flask import Flask, render_template
 from resources import index, cluster, host, stat
-from resources.stat import stat
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
