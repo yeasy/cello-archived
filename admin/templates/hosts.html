@@ -5,11 +5,14 @@
      <!-- Glyphicon in a H1 tag -->
     <h2 class="page-header">Hosts: {{items_count}}
         <button
-            type="button" class="btn btn-primary btn-success btn-default pull-sm-right" data-toggle="modal" data-target="#newHostModal">Add Host</button></h2>
+            type="button" class="btn btn-primary btn-success btn-default
+            pull-sm-right" style="float:right" data-toggle="modal"
+            data-target="#newHostModal">Add Host</button></h2>
 
     {% if items_count > 0 %}
         <div class="row">
-            <table class="table">
+            <table id="table_hosts" class="table table-striped
+                table-bordered table_sorted">
                 <thead>
                 <tr>
                     <th>Name</th>
@@ -27,19 +30,19 @@
                 {% for item in items %}
                     {% if item.schedulable != "true" %}
                         <tr bgcolor="#add8e6">
-                            {% else %}
+                    {% else %}
                         <tr>
                     {% endif %}
                 <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
                 <td>{{item.type|upper}}</td>
                 <td>{{item.schedulable}}</td>
-                    <td>
-                {% if item.status == "active" %}
-                   <font color="green">{{item.status}}</font>
-                {% else %}
+                <td>
+                    {% if item.status == "active" %}
+                        <font color="green">{{item.status}}</font>
+                    {% else %}
                     <font color="red">{{item.status}}</font>
-                {% endif %}
-                    </td>
+                    {% endif %}
+                </td>
                 <td>{{item.capacity|string}}</td>
                 <td>{{item.clusters|length}}</td>
                 <td>{{item.log_type|upper}}</td>

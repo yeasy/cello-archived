@@ -1,4 +1,5 @@
 $(document).ready(function() {
+    $('.table_sorted').DataTable();
     $('#newHostModal').on('shown.bs.modal', function (e) {
         var selected=$("#newHostModal #log_type option:selected").text();
         console.log("initial selection:"+selected);
@@ -343,15 +344,15 @@ $(document).ready(function() {
     });
     $('.delete_cluster_button').click(function() {
         // Confirm
-        var id_data = $(this).attr('id_data');
-        var col_name = $(this).attr('col_name');
+        var data_id = $(this).attr('data-id');
+        var col_name = $(this).attr('data-col_name');
 
         $.ajax({
             url: "/cluster",
             type: 'DELETE',
             dataType: 'json',
             data:{
-                "id": id_data,
+                "id": data_id,
                 "col_name": col_name
             },
             success: function(response) {

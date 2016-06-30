@@ -4,7 +4,6 @@ import sys
 
 from flask import jsonify, Blueprint, render_template
 from flask import request as r
-from flask_paginate import Pagination
 
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -45,35 +44,12 @@ def clusters_show():
         clusters.sort(key=lambda x: str(x["release_ts"]), reverse=True)
     total_items = len(clusters)
 
-    search = False
-    q = r.args.get('q')
-    if q:
-        search = True
-    try:
-        page = int(r.args.get('page', 1))
-    except ValueError:
-        page = 1
-
-    per_page = 10
-    if page*per_page >= total_items:  # show ends at this page
-        show_clusters = clusters[(page-1)*per_page:]
-        logger.debug("last page, total={} page={},per_page={},show_items={"
-                     "}".format(total_items, page, per_page, show_clusters))
-    else:
-        show_clusters = clusters[(page-1)*per_page:page*per_page]
-        logger.debug("middle page, total={}, page={},per_page={},show_items={"
-                     "}".format(total_items, page, per_page, show_clusters))
-
-    pagination = Pagination(page=page, per_page=per_page, total=total_items,
-                            search=search, record_name='clusters')
-
     hosts = list(host_handler.list())
     hosts_available = list(filter(
         lambda e: e["status"] == "active"  # and e["schedulable"] == "true"
                   and len(e["clusters"]) < e["capacity"], hosts))
     return render_template("clusters.html", type=show_type, col_name=col_name,
-                           items_count=total_items, items=show_clusters,
-                           pagination=pagination,
+                           items_count=total_items, items=clusters,
                            hosts_available=hosts_available,
                            consensus_plugins=CONSENSUS_PLUGINS,
                            consensus_modes=CONSENSUS_MODES,
