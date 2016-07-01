@@ -237,7 +237,7 @@ $(document).ready(function() {
                 .modal('show');
         });
     });
-    $('#fillup_host_button').click(function() {
+    $('.fillup_host_button').click(function() {
         // Confirm
         var id = $(this).attr('data-id');
 
@@ -264,7 +264,7 @@ $(document).ready(function() {
             }
         });
     });
-    $('#clean_host_button').click(function() {
+    $('.clean_host_button').click(function() {
         // Confirm
         var id = $(this).attr('data-id');
 

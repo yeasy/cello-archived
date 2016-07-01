@@ -228,7 +228,7 @@ class HostHandler(object):
         for p in free_ports:
             t = Thread(target=create_cluster_work, args=(p,))
             t.start()
-            time.sleep(0.2)
+            time.sleep(1.0)
 
         return True
 
@@ -280,7 +280,8 @@ class HostHandler(object):
         if not host or len(host.get("clusters")) > 0:
             logger.warn("no resettable host is found with id ={}".format(id))
             return False
-        return reset_container_host(daemon_url=host.get("daemon_url"))
+        return reset_container_host(host_type=host.get("type"),
+                                    daemon_url=host.get("daemon_url"))
 
     def _update_status(self, host):
         """

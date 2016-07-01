@@ -1,13 +1,15 @@
 {% extends "layout.html" %}
 {% block title %}Clusters{% endblock %}
 {% block body %}
-{{ super() }}
-     <!-- Glyphicon in a H1 tag -->
+    {{ super() }}
+    <!-- Glyphicon in a H1 tag -->
     <h2 class="page-header">Hosts: {{items_count}}
         <button
-            type="button" class="btn btn-primary btn-success btn-default
+                type="button" class="btn btn-primary btn-success btn-default
             pull-sm-right" style="float:right" data-toggle="modal"
-            data-target="#newHostModal">Add Host</button></h2>
+                data-target="#newHostModal">Add Host
+        </button>
+    </h2>
 
     {% if items_count > 0 %}
         <div class="row">
@@ -17,11 +19,11 @@
                 <tr>
                     <th>Name</th>
                     <th>Type</th>
-                    <th>Schedulable</th>
                     <th>Status</th>
-                    <th>Capacity</th>
                     <th>Clusters</th>
+                    <th>Capacity</th>
                     <th>Log Type</th>
+                    <th>Schedulable</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -29,42 +31,55 @@
                 {% for item in items %}
                     {% if item.schedulable == "false" %}
                         <tr style="background-color:lightgray">
-                    {% else %}
+                            {% else %}
                         <tr>
                     {% endif %}
-                        <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
-                        <td>{{item.type|upper}}</td>
-                        <td>{{item.schedulable}}</td>
-                        <td>
-                            {% if item.status == "active" %}
-                                <font color="green">{{item.status}}</font>
-                            {% else %}
-                                <font color="red">{{item.status}}</font>
-                            {% endif %}
-                        </td>
-                        <td>{{item.capacity|string}}</td>
-                        <td>{{item.clusters|length}}</td>
-                        <td>{{item.log_type|upper}}</td>
-                        <td>
-                            <button type="button" data-id="{{item.id}}"
-                                    class="btn btn-xs btn-sm btn-primary btn-info btn-default edit_host_button">
-                                <span class="glyphicon glyphicon-cog"
-                                      aria-hidden="true"></span>
-                            </button>
-                            <button type="button" class="btn btn-xs btn-sm btn-danger"
-                                    aria-label="Left Align"
-                                    data-id="{{item.id}}"
-                                    data-title="{{ item.name }}"
-                                    data-toggle="modal"
-                                    data-target="#delete_host_confirm"
-                                    {% if item.clusters|length > 0 %}
-                                        disabled
-                                    {% endif %}
-                            >
-                                <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
-                            </button>
-                        </td>
-                    </tr>
+                <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
+                <td>{{item.type|upper}}</td>
+                <td>
+                    {% if item.status == "active" %}
+                        <font color="green">{{item.status}}</font>
+                    {% else %}
+                        <font color="red">{{item.status}}</font>
+                    {% endif %}
+                </td>
+                <td>{{item.clusters|length}}</td>
+                <td>{{item.capacity|string}}</td>
+                <td>{{item.log_type|upper}}</td>
+                <td>{{item.schedulable}}</td>
+                <td>
+                    <button type="button" data-id="{{item.id}}"
+                            class="btn btn-xs btn-sm btn-primary btn-info btn-default edit_host_button"
+                            style="float: right;"
+                    >
+                        <span class="glyphicon glyphicon-cog"
+                              aria-hidden="true"></span>
+                    </button>
+
+                    <button title="Try best to clean unused clusters at this host"
+                            class="btn btn-xs btn-sm btn-warning btn-default
+                             btn-primary clean_host_button"
+                            data-id="{{item.id}}"
+                            style="float: right;"
+                            {% if item.clusters|length <= 0 %}
+                            disabled
+                            {% endif %} >
+                        <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                    </button>
+
+                    <button
+                            class="btn btn-xs btn-sm btn-default btn-primary fillup_host_button"
+                            data-id="{{item.id}}"
+                            title="Fill up this host to its capacity = {{ item.capacity|string }}"
+                            style="float: right;"
+                            {% if item.clusters|length >= item.capacity %}
+                            disabled
+                            {% endif %}>
+                        <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span>
+                    </button>
+
+                </td>
+                </tr>
                 {% endfor %}
                 </tbody>
             </table>
@@ -72,24 +87,5 @@
     {% endif %}
 
 
-<div class="modal fade" id="delete_host_confirm" tabindex="-1" role="dialog"
-     aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
-                </div>
-                <div class="modal-body">
-                    <p>You are about to <font color="red">remove</font> the host <font color="red"><i id="title"></i></font>, this procedure is irreversible.</p>
-                    <p>Do you want to proceed?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger btn-ok">Delete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 {% endblock %}

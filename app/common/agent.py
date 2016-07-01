@@ -134,7 +134,7 @@ def detect_daemon_type(daemon_url, timeout=5):
         return None
 
 
-def reset_container_host(daemon_url, timeout=15):
+def reset_container_host(host_type, daemon_url, timeout=15):
     """ Try to detect the daemon type
 
     Only wait for timeout seconds.
@@ -166,11 +166,12 @@ def reset_container_host(daemon_url, timeout=15):
                     logger.error(e)
                     continue
         logger.debug("cleaning <none> images")
-        return True
     except Exception as e:
         logger.error("Exception happens when reset host!")
         logger.error(e)
         return False
+
+    return setup_container_host(host_type=host_type, daemon_url=daemon_url)
 
 
 def detect_container_host(swarm_url, container_name, timeout=5):
