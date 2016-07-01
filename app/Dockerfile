@@ -12,4 +12,4 @@ COPY . /app
 #CMD ["python", "app.py"]
 
 # use this in product
-CMD ["gunicorn", "-w", "64", "-b", "0.0.0.0:80", "app:app"]
+CMD ["gunicorn", "-w", "128", "-b", "0.0.0.0:80", "app:app"]
