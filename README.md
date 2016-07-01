@@ -156,7 +156,7 @@ $ bash ./scripts/restart.sh
 * ~~Support host fillup and clean buttons.~~
 * ~~Support host reset buttons.~~
 * ~~Support only show occupied clusters.~~
-* Support table sort.
+* ~~Support table sort.~~
 * ~~Support local log version.~~
 * ~~Support select cluster type and size version.~~
 * ~~Support detect host info when adding as swarm type.~~

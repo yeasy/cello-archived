@@ -5,24 +5,32 @@
     <h3 class="page-header">System Overview</h3>
     <div class="container-fluid">
         <ul class="list-group col-sm-6 col-md-4">
-            <li class="list-group-item  list-group-item-info">
-                <button type="button" class="btn btn-sm btn-success
-            btn-default pull-xs-right" data-toggle="modal"
-                        data-target="#newHostModal">+</button>
-                <a href="/hosts"><span class="label label-default label-pill
+            <li class="list-group-item  list-group-item-danger">
+                <a href="/hosts"><span class="label label-pill label-default
+                label-pill
                  ">{{hosts|length}}</span> Deployed Hosts</a>
+                <button class="btn btn-sm btn-success btn-default pull-sm-right"
+                        style="float: right;" data-toggle="modal"
+                        data-target="#newHostModal">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                </button>
 
             </li>
             <li class="list-group-item  list-group-item-success">
+                <a href="/clusters?col_name=active"><span class="label label-default label-pill ">{{clusters_active}}</span> Active Clusters</a>
                 {% if hosts_free|length > 0 %}
                     <button type="button" class="btn btn-sm btn-success
-                    btn-default pull-xs-right" data-toggle="modal" data-target="#newClusterModal">+</button>
+                    btn-default pull-xs-right" style="float: right;" data-toggle="modal" data-target="#newClusterModal">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    </button>
                 {% else %}
-                    <button type="button" class="btn btn-sm btn-success btn-default pull-xs-right" data-toggle="modal" data-target="#newClusterModal" disabled>+</button>
+                    <button type="button" class="btn btn-sm btn-success
+                    btn-default pull-xs-right" style="float: right;" data-toggle="modal" data-target="#newClusterModal" disabled>
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    </button>
                 {% endif %}
-                <a href="/clusters?col_name=active"><span class="label label-default label-pill ">{{clusters_active}}</span> Active Clusters</a>
             </li>
-            <li class="list-group-item list-group-item-warning">
+            <li class="list-group-item list-group-item-info">
                 <a href="/clusters?col_name=released"><span class="label label-default label-pill">{{clusters_released}}</span> Released Clusters</a>
             </li>
         </ul>

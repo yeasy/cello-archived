@@ -89,7 +89,7 @@ class HostHandler(object):
             return_document=ReturnDocument.AFTER)
 
         if capacity > 0 and fillup:  # should fillup it
-            self.fillup(hid)
+            self.fillup(str(hid))
 
         if serialization:
             return self._serialize(host)
@@ -207,7 +207,7 @@ class HostHandler(object):
             logger.warn("host already full")
             return True
 
-        free_ports = cluster_handler.find_free_api_ports(str(id), num_new)
+        free_ports = cluster_handler.find_free_api_ports(id, num_new)
         logger.debug("Free_ports = {}".format(free_ports))
 
         def create_cluster_work(port):
@@ -215,7 +215,7 @@ class HostHandler(object):
                                           (port-CLUSTER_API_PORT_START))
             consensus_plugin, consensus_mode = random.choice(CONSENSUS_TYPES)
             cluster_size = random.choice(CLUSTER_SIZES)
-            cid = cluster_handler.create(name=cluster_name, host_id=str(id),
+            cid = cluster_handler.create(name=cluster_name, host_id=id,
                                          api_port=port,
                                          consensus_plugin=consensus_plugin,
                                          consensus_mode=consensus_mode,
@@ -225,12 +225,10 @@ class HostHandler(object):
                     cluster_name, cid))
             else:
                 logger.warn("Create cluster failed")
-        i = 0
         for p in free_ports:
             t = Thread(target=create_cluster_work, args=(p,))
             t.start()
-            i += 1
-            time.sleep(0.1)
+            time.sleep(1.0)
 
         return True
 
@@ -282,7 +280,8 @@ class HostHandler(object):
         if not host or len(host.get("clusters")) > 0:
             logger.warn("no resettable host is found with id ={}".format(id))
             return False
-        return reset_container_host(daemon_url=host.get("daemon_url"))
+        return reset_container_host(host_type=host.get("type"),
+                                    daemon_url=host.get("daemon_url"))
 
     def _update_status(self, host):
         """

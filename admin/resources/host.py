@@ -9,12 +9,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, response_ok, \
     response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
     HOST_TYPES, LOG_TYPES, request_debug, request_get
+from modules import host_handler
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
-from modules import host_handler
 
 host = Blueprint('host', __name__)
 
@@ -25,6 +25,7 @@ def hosts_show():
     request_debug(r, logger)
     col_filter = dict((key, r.args.get(key)) for key in r.args)
     items = list(host_handler.list(filter_data=col_filter, validate=True))
+    items.sort(key=lambda x: str(x["name"]), reverse=True)
 
     return render_template("hosts.html", items_count=len(items),
                            items=items, host_types=HOST_TYPES, log_types=LOG_TYPES)
@@ -36,8 +37,7 @@ def host_api():
     if r.method == 'GET':
         if "id" not in r.args and "id" not in r.form:
             logger.warn("host get without enough data")
-            response_fail["error"] = "host GET without " \
-                                            "enough data"
+            response_fail["error"] = "host GET without enough data"
             response_fail["data"] = r.form
             return jsonify(response_fail), CODE_BAD_REQUEST
         else:
@@ -59,7 +59,7 @@ def host_api():
         else:
             fillup = False
 
-        if "schedulable" in r.form and r.form["schedulable"]=="on":
+        if "schedulable" in r.form and r.form["schedulable"] == "on":
             schedulable = "true"
         else:
             schedulable = "false"
@@ -111,8 +111,7 @@ def host_api():
     elif r.method == 'DELETE':
         if "id" not in r.form or not r.form["id"]:
             logger.warn("host operation post without enough data")
-            response_fail["error"] = "host delete without " \
-                                            "enough data"
+            response_fail["error"] = "host delete without enough data"
             response_fail["data"] = r.form
             return jsonify(response_fail), CODE_BAD_REQUEST
         else:
