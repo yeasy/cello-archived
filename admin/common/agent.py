@@ -275,30 +275,6 @@ def get_project(template_path):
     return project
 
 
-# no used
-def compose_ps(project):
-    """ Get containers status of given compose project
-
-    :param project: Project to operate
-    :return: Those container information in dict
-    """
-    containers = project.containers(stopped=True)
-
-    items = [{
-                 'name': container.name,
-                 'name_without_project': container.name_without_project,
-                 'command': container.human_readable_command,
-                 'state': container.human_readable_state,
-                 'labels': container.labels,
-                 'ports': container.ports,
-                 'volumes': get_volumes(
-                     get_container_from_id(project.client, container.id)),
-                 'is_running': container.is_running} for container in
-             containers]
-
-    return items
-
-
 def compose_start(name, host, api_port,
                   consensus_plugin=CONSENSUS_PLUGINS[0],
                   consensus_mode=CONSENSUS_MODES[0],
@@ -396,26 +372,3 @@ def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
     project.stop(timeout=timeout)
     project.remove_stopped(one_off=OneOffFilter.include, force=True)
 
-
-# no used
-def get_container_from_id(client, container_id):
-    """
-    return the docker container from a given id
-    """
-    return Container.from_id(client, container_id)
-
-
-# no used
-def get_volumes(container):
-    """
-    retrieve container volumes details
-    """
-    return container.get('Config.Volumes')
-
-
-# no used
-def get_yml_path(path):
-    """
-    get path of docker-compose.yml file
-    """
-    return get_default_config_files(path)[0]

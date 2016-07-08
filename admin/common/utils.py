@@ -1,8 +1,10 @@
 import json
-# first port that can be assigned as cluster API
-CLUSTER_API_PORT_START = 5000
+import os
 
-COMPOSE_FILE_PATH = "./_compose_files"
+# first port that can be assigned as cluster API
+CLUSTER_API_PORT_START = int(os.getenv("CLUSTER_API_PORT_START", 5000))
+
+COMPOSE_FILE_PATH = os.getenv("COMPOSE_FILE_PATH", "./_compose_files")
 
 CLUSTER_NETWORK = "bpm_net"
 CLUSTER_SIZES = [4, 6]
@@ -13,8 +15,8 @@ CONSENSUS_MODES = ['batch']  # pbft has various modes
 
 CONSENSUS_TYPES = [
     ('noops', ''),
-    #('pbft', 'classic'),
     ('pbft', 'batch'),
+    #('pbft', 'classic'),
     #('pbft', 'sieve'),
 ]
 

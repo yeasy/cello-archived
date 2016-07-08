@@ -36,7 +36,7 @@ All services are recommended to setup through Docker containers by default.
 
 ### Master Requirement
 * system: 8c16g100g
-* docker engine: 1.11.1+
+* docker engine: 1.11.2
 * docker-compose: 1.7.0+
 * docker images:
     - python:3.5
@@ -47,12 +47,13 @@ All services are recommended to setup through Docker containers by default.
 ### Node Requirement
 * system: 8c16g100g
 * docker engine:
-    - 1.11.1+,
+    - 1.11.2,
     - Let daemon listen on port 2375, and make sure Master can reach Node from port 2375.
 
 ```sh
 # Add this into /etc/default/docker
-DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*'"
+DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker
+.sock --api-cors-header='*' --default-ulimit=nofile=1024:2048 --default-ulimit=nproc=4096:8192"
 ```
 * docker images:
     - `yeasy/hyperledger:latest`
@@ -103,7 +104,7 @@ Reference system configuration.
 fs.file-max = 2000000
 kernel.threads-max = 2091845
 kernel.pty.max = 210000
-net.ipv4.ip_local_port_range = 1025 65535
+net.ipv4.ip_local_port_range = 10000 65535
 net.ipv4.tcp_tw_reuse = 0
 net.ipv4.tcp_tw_recycle = 0
 net.ipv4.tcp_max_tw_buckets = 5000

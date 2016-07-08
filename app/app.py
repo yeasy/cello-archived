@@ -2,7 +2,6 @@ import os
 from flask import Flask
 
 from common import log_handler, LOG_LEVEL
-#from resources import action_v1
 from resources import action_v1, action_v2
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
