@@ -50,11 +50,11 @@ def clean_project_containers(daemon_url, name_prefix, timeout=5):
     :param timeout: Time to wait for the response
     :return: None
     """
-    logger.debug("Clean project related containers")
+    logger.debug("Clean project related containers, daemon_url={}, prefix={"
+                 "}".format(daemon_url, name_prefix))
     client = Client(base_url=daemon_url, timeout=timeout)
     containers = client.containers(all=True)
-    id_removes = [e['Id'] for e in containers if e['Names'][0][
-                                                 1:].startswith(name_prefix)]
+    id_removes = [e['Id'] for e in containers if e['Names'][0].split("/")[-1].startswith(name_prefix)]
     for _ in id_removes:
         logger.debug("Remove container "+_)
         client.remove_container(_, force=True)
@@ -292,10 +292,12 @@ def compose_start(name, host, api_port,
     :return: The name list of the started peer containers
     """
     logger.debug("Compose start: host={}, logging_level={}, "
-                 "consensus={}/{}, size={}".format(host.get("name"),
-        os.environ['LOGGING_LEVEL_CLUSTER'], consensus_plugin,
-                                                   consensus_mode,
-                                                   cluster_size))
+                 "consensus={}/{}, size={}".format(
+        host.get("name"),
+        host.get('log_level'),
+        consensus_plugin,
+        consensus_mode,
+        cluster_size))
     daemon_url, log_type, log_server = \
         host.get("daemon_url"), host.get("log_type"), host.get("log_server")
     # compose use this
@@ -305,15 +307,16 @@ def compose_start(name, host, api_port,
 
     # hyperledger use this
     os.environ['VM_ENDPOINT'] = daemon_url  # vp use this for chaincode
-    #os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = CLUSTER_NETWORK+"_{
-    # }".format(consensus_plugin)  # "host"
-    os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = "bridge"
+    os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = \
+        CLUSTER_NETWORK+"_{}".format(consensus_plugin)  # "host"
+    #os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = "bridge"
     os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
     os.environ['PBFT_GENERAL_MODE'] = consensus_mode
     os.environ['PBFT_GENERAL_N'] = str(cluster_size)
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_plugin)
+    os.environ['LOGGING_LEVEL_CLUSTER'] = host.get("log_level")
     # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
     if log_type != LOG_TYPES[0]:  # not local
         os.environ['SYSLOG_SERVER'] = log_server

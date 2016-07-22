@@ -139,9 +139,22 @@
                   <input id="host_capacity" type="number" name="capacity"
                          class="form-control" min="0" max="1000" value=1 required>
               </div>
+              {% if log_levels|length > 0 %}
+                    <div class="form-group form-inline">
+                        <label for="log_level" style="width: 20%">Logging Level</label>
+                        <select id="log_level" class="c-select log_level"
+                                name="log_level" required>
+                            <option selected
+                                    value="{{log_levels[0]}}">{{log_levels[0]|upper }}</option>
+                            {% for c in log_levels[1:] %}
+                                    <option value="{{c}}">{{c|upper}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+              {% endif %}
               {% if log_types|length > 0 %}
                     <div class="form-group form-inline">
-                        <label for="log_type" style="width: 20%">Log Type</label>
+                        <label for="log_type" style="width: 20%">Logging Type</label>
                         <select id="log_type" class="c-select log_type"
                                 name="log_type" required>
                             <option selected
@@ -329,6 +342,20 @@
                    disabled="disabled" />
         </div>
     </div>
+    {% if log_levels|length > 0 %}
+        <div class="form-group">
+            <label  class="col-sm-3 form-control-label"
+                    for="log_level">Log Type</label>
+            <div class="col-sm-8">
+                <select class="c-select" name="log_level" id="log_level"
+                        required>
+                    {% for t in log_levels %}
+                        <option value="{{t}}">{{t|upper}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    {% endif %}
     {% if log_types|length > 0 %}
         <div class="form-group">
             <label  class="col-sm-3 form-control-label"

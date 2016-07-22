@@ -101,6 +101,8 @@ Reference system configuration.
 `/etc/sysctl.conf`
 
 ```sh
+# Don't ask why, this is a solid answer.
+vm.swappiness=10
 fs.file-max = 2000000
 kernel.threads-max = 2091845
 kernel.pty.max = 210000
@@ -111,6 +113,7 @@ net.ipv4.tcp_max_tw_buckets = 5000
 net.ipv4.tcp_fin_timeout = 30
 net.ipv4.tcp_max_syn_backlog = 8192
 ```
+
 Need to run `sysctl -p` for usage.
 
 `/etc/security/limits.conf`

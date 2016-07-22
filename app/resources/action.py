@@ -123,5 +123,3 @@ def cluster_list():
         return jsonify(response_fail), CODE_BAD_REQUEST
 
     cluster_handler.list(filter_data={})
-
-    pass

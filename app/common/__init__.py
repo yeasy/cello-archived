@@ -12,4 +12,5 @@ from .log import log_handler, LOG_LEVEL
 from .utils import CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, \
     CONSENSUS_PLUGINS, CONSENSUS_MODES, HOST_TYPES, \
     CLUSTER_NETWORK, LOG_TYPES, SYS_CREATOR, SYS_DELETER, CLUSTER_SIZES, \
-    request_debug, request_get, request_json_body, CONSENSUS_TYPES
+    request_debug, request_get, request_json_body, CONSENSUS_TYPES, \
+    LOGGING_LEVEL_CLUSTER

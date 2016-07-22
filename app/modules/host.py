@@ -11,7 +11,8 @@ from pymongo.collection import ReturnDocument
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, cleanup_container_host, LOG_LEVEL, setup_container_host, \
     test_daemon, detect_daemon_type, reset_container_host, \
-    CLUSTER_API_PORT_START, LOG_TYPES, CLUSTER_SIZES, CONSENSUS_TYPES
+    CLUSTER_API_PORT_START, LOG_TYPES, CLUSTER_SIZES, CONSENSUS_TYPES, \
+LOGGING_LEVEL_CLUSTER
 
 from modules import cluster_handler
 
@@ -26,6 +27,7 @@ class HostHandler(object):
         self.col = db["host"]
 
     def create(self, name, daemon_url, capacity=1,
+               log_level=LOGGING_LEVEL_CLUSTER[0],
                log_type=LOG_TYPES[0], log_server="", fillup=False,
                schedulable=False, serialization=True):
         """ Create a new docker host node
@@ -78,6 +80,7 @@ class HostHandler(object):
             'status': status,
             'clusters': [],
             'type': detected_type,
+            'log_level': log_level,
             'log_type': log_type,
             'log_server': log_server,
             'schedulable': schedulable
@@ -322,8 +325,8 @@ class HostHandler(object):
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
                                     'type','create_ts', 'status',
-                                    'schedulable',
-                                    'clusters', 'log_type', 'log_server']):
+                                    'schedulable','clusters',
+                                    'log_level', 'log_type', 'log_server']):
         """ Serialize an obj
 
         :param doc: doc to serialize

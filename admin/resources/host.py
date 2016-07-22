@@ -8,7 +8,7 @@ from flask import request as r
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, response_ok, \
     response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
-    HOST_TYPES, LOG_TYPES, request_debug, request_get
+    HOST_TYPES, LOG_TYPES, request_debug, request_get, LOGGING_LEVEL_CLUSTER
 from modules import host_handler
 
 logger = logging.getLogger(__name__)
@@ -27,8 +27,13 @@ def hosts_show():
     items = list(host_handler.list(filter_data=col_filter, validate=True))
     items.sort(key=lambda x: str(x["name"]), reverse=True)
 
-    return render_template("hosts.html", items_count=len(items),
-                           items=items, host_types=HOST_TYPES, log_types=LOG_TYPES)
+    return render_template("hosts.html",
+                           items_count=len(items),
+                           items=items,
+                           host_types=HOST_TYPES,
+                           log_types=LOG_TYPES,
+                           log_levels=LOGGING_LEVEL_CLUSTER,
+                           )
 
 
 @host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
@@ -50,9 +55,9 @@ def host_api():
                 response_fail["data"] = r.form
                 return jsonify(response_fail), CODE_BAD_REQUEST
     elif r.method == 'POST':
-        name, daemon_url, capacity, log_type, log_server = \
+        name, daemon_url, capacity, log_type, log_server, log_level = \
             r.form['name'], r.form['daemon_url'], r.form['capacity'], \
-            r.form['log_type'], r.form['log_server']
+            r.form['log_type'], r.form['log_server'], r.form['log_level']
 
         if "fillup" in r.form and r.form["fillup"] == "on":
             fillup = True
@@ -78,6 +83,7 @@ def host_api():
                                          capacity=int(capacity),
                                          fillup=fillup,
                                          schedulable=schedulable,
+                                         log_level=log_level,
                                          log_type=log_type,
                                          log_server=log_server)
             if result:

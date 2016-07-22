@@ -132,6 +132,7 @@ $(document).ready(function() {
         } else {
             var schedulable    = false
         }
+            var log_level    = $form.find('[name="log_level"]').val();
             var log_type    = $form.find('[name="log_type"]').val();
             var log_server    = $form.find('[name="log_server"]').val();
 
@@ -144,6 +145,7 @@ $(document).ready(function() {
                     "name": name,
                     "status": status,
                     "capacity": capacity,
+                    "log_level": log_level,
                     "log_type": log_type,
                     "log_server": log_server,
                     "type": type,
@@ -190,6 +192,7 @@ $(document).ready(function() {
                 .find('[name="name"]').val(response.name).end()
                 .find('[name="daemon_url"]').val(response.daemon_url).end()
                 .find('[name="type"]').val(response.type).end()
+                .find('[name="log_level"]').val(response.log_level).end()
                 .find('[name="log_type"]').val(response.log_type).end()
                 .find('[name="log_server"]').val(response.log_server).end()
                 .find('[name="capacity"]').val(response.capacity).end()
