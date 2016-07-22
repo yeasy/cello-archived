@@ -20,7 +20,7 @@ CONSENSUS_TYPES = [
 
 LOG_TYPES = ['local', 'syslog']
 
-HOST_TYPES = ['single', 'swarm']
+HOST_TYPES = ['single']
 
 SYS_CREATOR = "__SYSTEM__CREATING__"
 SYS_DELETER = "__SYSTEM__DELETING__"

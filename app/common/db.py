@@ -2,7 +2,7 @@ import os
 
 from pymongo import MongoClient
 
-MONGO_URL = os.environ.get('MONGO_URL', None) or 'mongodb://mongo:27017'
+MONGO_URL = os.environ.get('MONGO_URL', None) or 'mongodb://127.0.0.1:27017'
 MONGO_DB = os.environ.get('MONGO_DB', None) or 'dev'
 
 mongo_client = MongoClient(MONGO_URL)

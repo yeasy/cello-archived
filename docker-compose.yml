@@ -15,8 +15,6 @@ services:
     hostname: poolmanager-admin
     restart: unless-stopped
     environment:
-      - USER=admin
-      - PASS=pass
       - MONGO_URL=mongodb://mongo:27017
       - MONGO_DB=dev
       - DEBUG=False    # in debug mode, service will auto-restart

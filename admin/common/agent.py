@@ -122,6 +122,7 @@ def detect_daemon_type(daemon_url, timeout=5):
     if len(segs) != 3:
         logger.error("Invalid daemon url = ", daemon_url)
         return None
+    return 'single'
     try:
         client = Client(base_url=daemon_url, timeout=timeout)
         server_version = client.info()['ServerVersion']
