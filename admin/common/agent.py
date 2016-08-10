@@ -316,7 +316,7 @@ def compose_start(name, host, api_port,
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_plugin)
-    os.environ['LOGGING_LEVEL_CLUSTER'] = host.get("log_level")
+    os.environ['LOGGING_LEVEL_CLUSTERS'] = host.get("log_level")
     # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
     if log_type != LOG_TYPES[0]:  # not local
         os.environ['SYSLOG_SERVER'] = log_server
@@ -350,8 +350,7 @@ def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
     :return:
     """
     logger.debug("Stop compose project {} with logging_level={}, "
-                 "consensus={}".format(name, os.environ[
-        'LOGGING_LEVEL_CLUSTER'], consensus_plugin))
+                 "consensus={}".format(name, 'INFO', consensus_plugin))
     # compose use this
     os.environ['DOCKER_HOST'] = daemon_url
     os.environ['COMPOSE_PROJECT_NAME'] = name
@@ -367,6 +366,7 @@ def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_plugin)
+    os.environ['LOGGING_LEVEL_CLUSTERS'] = "INFO"
     if log_type != LOG_TYPES[0]:  # not local
         os.environ['SYSLOG_SERVER'] = log_server
 

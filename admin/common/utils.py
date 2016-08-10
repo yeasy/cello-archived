@@ -24,7 +24,7 @@ LOG_TYPES = ['local', 'syslog']
 
 HOST_TYPES = ['single', 'swarm']
 
-LOGGING_LEVEL_CLUSTER = ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR',
+LOGGING_LEVEL_CLUSTERS = ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR',
                          'CRITICAL']
 
 SYS_CREATOR = "__SYSTEM__CREATING__"

@@ -15,19 +15,14 @@ services:
     hostname: poolmanager-admin
     restart: unless-stopped
     environment:
-      - USER=admin
-      - PASS=pass
       - MONGO_URL=mongodb://mongo:27017
       - MONGO_DB=dev
       - DEBUG=True    # in debug mode, service will auto-restart
       - LOG_LEVEL=DEBUG  # what level log will be output
-      #- SYSLOG_SERVER=tcp://192.168.7.60:5000   #container logs to send
     expose:
       - "8080"
     volumes:  # This should be removed in product env
       - ./admin:/app
-    #links:
-    #  - mongo
 
   # poolmanager app service
   app:
@@ -41,13 +36,10 @@ services:
       - MONGO_DB=dev
       - DEBUG=True    # in debug mode, service will auto-restart
       - LOG_LEVEL=DEBUG  # what level log will be output
-      #- SYSLOG_SERVER=tcp://192.168.7.60:5000   #container logs to send
     expose:
       - "80"
     volumes:  # This should be removed in product env
       - ./app:/app
-    #links:
-    #  - mongo
 
   # mongo database, may use cluster in future
   mongo:

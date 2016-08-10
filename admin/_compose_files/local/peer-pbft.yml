@@ -4,7 +4,7 @@
 
 # Depends on the yeasy/hyperledger-peer:latest image
 
-# If you want enable consensus, just uncomment the
+# If you want to enable consensus, just uncomment the
 # CORE_PEER_VALIDATOR_CONSENSUE=obcpbft line
 # See https://github.com/hyperledger/fabric/blob/master/docs/dev-setup/devnet-setup.md#using-consensus-plugin for more details.
 
@@ -21,7 +21,7 @@ services:
     environment:
       - CORE_PEER_ADDRESSAUTODETECT=true
       - CORE_PEER_NETWORKID=${PEER_NETWORKID}
-      - CORE_LOGGING_LEVEL=${LOGGING_LEVEL_CLUSTER} #critical, error, warning, notice, info, debug
+      - CORE_LOGGING_LEVEL=${LOGGING_LEVEL_CLUSTERS} #critical, error, warning, notice, info, debug
       - CORE_VM_ENDPOINT=${VM_ENDPOINT}
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${VM_DOCKER_HOSTCONFIG_NETWORKMODE} # host, bridge, ipvlan, none
       - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=${PEER_VALIDATOR_CONSENSUS_PLUGIN} # noops, pbft

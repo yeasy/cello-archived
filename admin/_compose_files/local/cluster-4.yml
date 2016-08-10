@@ -1,9 +1,7 @@
 # This compose file will start 4 hyperledger peer nodes, and make a cluster
 #  vp0: validating node as root
-#  vp1: validating node as peer
-#  vp2: validating node as peer
-#  vp3: validating node as peer
-# https://github.com/yeasy/docker-compose-files
+#  vp1 - vp3: validating node as peer
+# https://github.com/yeasy/docker-compose-files#hyperledger
 
 version: '2'
 

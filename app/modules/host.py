@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, cleanup_container_host, LOG_LEVEL, setup_container_host, \
     test_daemon, detect_daemon_type, reset_container_host, \
     CLUSTER_API_PORT_START, LOG_TYPES, CLUSTER_SIZES, CONSENSUS_TYPES, \
-LOGGING_LEVEL_CLUSTER
+LOGGING_LEVEL_CLUSTERS
 
 from modules import cluster_handler
 
@@ -27,7 +27,7 @@ class HostHandler(object):
         self.col = db["host"]
 
     def create(self, name, daemon_url, capacity=1,
-               log_level=LOGGING_LEVEL_CLUSTER[0],
+               log_level=LOGGING_LEVEL_CLUSTERS[0],
                log_type=LOG_TYPES[0], log_server="", fillup=False,
                schedulable=False, serialization=True):
         """ Create a new docker host node
@@ -51,8 +51,8 @@ class HostHandler(object):
                              log_server, fillup, schedulable))
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
-        if not log_server.startswith("tcp://"):
-            log_server = "tcp://" + log_server
+        if "://" not in log_server:
+            log_server = "udp://" + log_server
         if log_type == LOG_TYPES[0]:
             log_server = ""
         if test_daemon(daemon_url):
@@ -140,8 +140,8 @@ class HostHandler(object):
         if d["capacity"] < len(h_old.get("clusters")):
             logger.warn("Cannot set cap smaller than running clusters")
             return {}
-        if "log_server" in d and not d["log_server"].startswith("tcp://"):
-            d["log_server"] = "tcp://" + d["log_server"]
+        if "log_server" in d and "://" not in d["log_server"]:
+            d["log_server"] = "udp://" + d["log_server"]
         if "log_type" in d and d["log_type"] == LOG_TYPES[0]:
             d["log_server"] = ""
         h_new = self.col.find_one_and_update(
@@ -257,13 +257,10 @@ class HostHandler(object):
         def delete_cluster_work(cid):
             cluster_handler.delete(cid)  # can delete unused or in-deleting
 
-        i = 0
         for cid in host.get("clusters"):
             t = Thread(target=delete_cluster_work, args=(cid,))
             t.start()
-            i += 1
-            if i % 2 == 0:
-                time.sleep(0.1)
+            time.sleep(0.2)
 
         self.col.find_one_and_update(
             {"id": id},

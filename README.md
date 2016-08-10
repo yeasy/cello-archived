@@ -52,8 +52,7 @@ All services are recommended to setup through Docker containers by default.
 
 ```sh
 # Add this into /etc/default/docker
-DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker
-.sock --api-cors-header='*' --default-ulimit=nofile=1024:2048 --default-ulimit=nproc=4096:8192"
+DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*' --default-ulimit=nofile=1024:2048 --default-ulimit=nproc=4096:8192"
 ```
 * docker images:
     - `yeasy/hyperledger:latest`
@@ -62,8 +61,7 @@ DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker
         $ docker pull yeasy/hyperledger:latest
         $ docker tag yeasy/hyperledger:latest hyperledger/fabric-baseimage:latest
         ```
-    - `yeasy/hyperledger-peer:noops`
-    - `yeasy/hyperledger-peer:pbft`
+    - `yeasy/hyperledger-peer:latest`
     - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the authentication service)
 * aufs-tools: required on ubuntu 14.04.
 * `sysctl net.ipv4.ip_forward=1`, and make sure peer can reach host server ports (e.g., 2375, 5000)
@@ -106,6 +104,8 @@ vm.swappiness=10
 fs.file-max = 2000000
 kernel.threads-max = 2091845
 kernel.pty.max = 210000
+kernel.keys.root_maxkeys = 20000
+kernel.keys.maxkeys = 20000
 net.ipv4.ip_local_port_range = 10000 65535
 net.ipv4.tcp_tw_reuse = 0
 net.ipv4.tcp_tw_recycle = 0

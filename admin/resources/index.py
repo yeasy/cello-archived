@@ -8,7 +8,7 @@ from flask import request as r
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, CONSENSUS_PLUGINS, \
     CONSENSUS_MODES, HOST_TYPES, LOG_TYPES, CLUSTER_SIZES, request_debug, \
-    LOGGING_LEVEL_CLUSTER
+    LOGGING_LEVEL_CLUSTERS
 from version import version, homepage, author
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ def show():
                            consensus_modes=CONSENSUS_MODES,
                            host_types=HOST_TYPES,
                            log_types=LOG_TYPES,
-                           log_levels=LOGGING_LEVEL_CLUSTER
+                           log_levels=LOGGING_LEVEL_CLUSTERS
                            )
 
 

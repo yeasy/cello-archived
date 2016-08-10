@@ -1,5 +1,5 @@
 FROM python:3.5
-MAINTAINER Baohua Yang "baohyang@cn.ibm.com"
+MAINTAINER Baohua Yang <"baohyang@cn.ibm.com">
 ENV TZ Asia/Shanghai
 
 WORKDIR /app
@@ -12,4 +12,4 @@ COPY . /app
 CMD ["python", "app.py"]
 
 # use this in product
-#CMD ["gunicorn", "-w", "8", "-b", "0.0.0.0:8080", "app:app"]
+#CMD ["gunicorn", "-w", "128", "-b", "0.0.0.0:8080", "app:app"]

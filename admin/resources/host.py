@@ -8,7 +8,7 @@ from flask import request as r
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, response_ok, \
     response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
-    HOST_TYPES, LOG_TYPES, request_debug, request_get, LOGGING_LEVEL_CLUSTER
+    HOST_TYPES, LOG_TYPES, request_debug, request_get, LOGGING_LEVEL_CLUSTERS
 from modules import host_handler
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ def hosts_show():
                            items=items,
                            host_types=HOST_TYPES,
                            log_types=LOG_TYPES,
-                           log_levels=LOGGING_LEVEL_CLUSTER,
+                           log_levels=LOGGING_LEVEL_CLUSTERS,
                            )
 
 
