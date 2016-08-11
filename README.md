@@ -30,18 +30,35 @@ other action.*
 
 ## Deployment
 
-*TODO: We may need a setup script.*
+For the first time running, please setup the master node with
+```sh
+$ bash scripts/setup.sh
+```
+
+To (Re)start the whole service, please run
+
+```sh
+$ bash scripts/restart.sh
+```
+
+To redeploy one sub service, e.g., admin, please run
+
+```sh
+$ bash scripts/redeploy.sh admin
+```
 
 All services are recommended to setup through Docker containers by default.
 
+The work node is recommended to config manually.
+
 ### Master Requirement
 * system: 8c16g100g
-* docker engine: 1.11.2
+* docker engine: 1.11.2+
 * docker-compose: 1.7.0+
 * docker images:
     - python:3.5
     - mongo:3.2
-    - yeasy/nginx
+    - yeasy/nginx:latest
     - mongo-express:0.30 (optional)
 
 ### Node Requirement

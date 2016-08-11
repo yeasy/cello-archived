@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# This script will (re)start all services using docker-compose.
-# It should be triggered at the upper directory
+# This script will check the env and (re)start all services.
+# It should be triggered at the upper directory, and safe to repeat.
 
 DB_DIR=/opt/poolmanager/mongo
 
