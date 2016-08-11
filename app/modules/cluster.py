@@ -241,7 +241,7 @@ class ClusterHandler(object):
         except Exception as e:
             logger.error("Error clean chaincode images")
             logger.error(e)
-            has_exception = True
+            # has_exception = True  # may ignore this case
         if has_exception:
             logger.warn("Cluster {} delete: stop with exceptions".format(id))
             return False
