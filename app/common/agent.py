@@ -13,7 +13,8 @@ from compose.project import OneOffFilter
 from docker import Client
 
 from .log import log_handler, LOG_LEVEL
-from .utils import HOST_TYPES, CLUSTER_API_PORT_START, CLUSTER_NETWORK, COMPOSE_FILE_PATH, CONSENSUS_TYPES
+from .utils import HOST_TYPES, CLUSTER_API_PORT_START, CLUSTER_NETWORK, \
+    COMPOSE_FILE_PATH, CONSENSUS_PLUGINS, CONSENSUS_MODES, LOG_TYPES, CLUSTER_SIZES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -35,11 +36,7 @@ def clean_chaincode_images(daemon_url, name_prefix, timeout=5):
         name_prefix)]
     logger.debug("chaincode image id to removes=" + ", ".join(id_removes))
     for _ in id_removes:
-        try:
-            client.remove_image(_, force=True)
-        except Exception as e:
-            logger.error("Exception in clean_chaincode_images")
-            logger.error(e)
+        client.remove_image(_, force=True)
 
 
 def clean_project_containers(daemon_url, name_prefix, timeout=5):
@@ -53,18 +50,14 @@ def clean_project_containers(daemon_url, name_prefix, timeout=5):
     :param timeout: Time to wait for the response
     :return: None
     """
-    logger.debug("Clean project related containers")
+    logger.debug("Clean project related containers, daemon_url={}, prefix={"
+                 "}".format(daemon_url, name_prefix))
     client = Client(base_url=daemon_url, timeout=timeout)
     containers = client.containers(all=True)
-    id_removes = [e['Id'] for e in containers if e['Names'][0][
-                                                 1:].startswith(name_prefix)]
+    id_removes = [e['Id'] for e in containers if e['Names'][0].split("/")[-1].startswith(name_prefix)]
     for _ in id_removes:
         logger.debug("Remove container "+_)
-        try:
-            client.remove_container(_, force=True)
-        except Exception as e:
-            logger.error("Exception in clean_project_containers")
-            logger.error(e)
+        client.remove_container(_, force=True)
 
 
 #  Deprecated
@@ -95,7 +88,7 @@ def clean_exited_containers(daemon_url):
 def test_daemon(daemon_url, timeout=5):
     """ Check if the daemon is active
 
-    Only wait for 2 seconds.
+    Only wait for timeout seconds.
 
     :param daemon_url: Docker daemon url
     :param timeout: Time to wait for the response
@@ -117,7 +110,7 @@ def test_daemon(daemon_url, timeout=5):
 def detect_daemon_type(daemon_url, timeout=5):
     """ Try to detect the daemon type
 
-    Only wait for 2 seconds.
+    Only wait for timeout seconds.
 
     :param daemon_url: Docker daemon url
     :param timeout: Time to wait for the response
@@ -136,8 +129,49 @@ def detect_daemon_type(daemon_url, timeout=5):
             return 'swarm'
         else:
             return 'single'
-    except:
+    except Exception as e:
+        logger.error(e)
         return None
+
+
+def reset_container_host(host_type, daemon_url, timeout=15):
+    """ Try to detect the daemon type
+
+    Only wait for timeout seconds.
+
+    :param daemon_url: Docker daemon url
+    :param timeout: Time to wait for the response
+    :return: host type info
+    """
+    try:
+        client = Client(base_url=daemon_url, timeout=timeout)
+        containers = client.containers(quiet=True, all=True)
+        logger.debug(containers)
+        for c in containers:
+            client.remove_container(c['Id'], force=True)
+        logger.debug("cleaning all containers")
+    except Exception as e:
+        logger.error("Exception happens when reset host!")
+        logger.error(e)
+        return False
+    try:
+        images = client.images(all=True)
+        logger.debug(images)
+        for i in images:
+            if i["RepoTags"][0] == "<none>:<none>":
+                logger.debug(i)
+                try:
+                    client.remove_image(i['Id'])
+                except Exception as e:
+                    logger.error(e)
+                    continue
+        logger.debug("cleaning <none> images")
+    except Exception as e:
+        logger.error("Exception happens when reset host!")
+        logger.error(e)
+        return False
+
+    return setup_container_host(host_type=host_type, daemon_url=daemon_url)
 
 
 def detect_container_host(swarm_url, container_name, timeout=5):
@@ -176,10 +210,10 @@ def setup_container_host(host_type, daemon_url, timeout=5):
         return False
     try:
         client = Client(base_url=daemon_url, timeout=timeout)
-        for cs_type in CONSENSUS_TYPES:
+        net_names = [x["Name"] for x in client.networks()]
+        for cs_type in CONSENSUS_PLUGINS:
             net_name = CLUSTER_NETWORK+"_{}".format(cs_type)
-            net_names = client.networks(names=[net_name])
-            if net_names:
+            if net_name in net_names:
                 logger.warn("Network {} already exists, try using "
                             "it!".format(net_name))
             else:
@@ -213,10 +247,10 @@ def cleanup_container_host(daemon_url, timeout=5):
         return False
     try:
         client = Client(base_url=daemon_url, timeout=timeout)
-        for cs_type in CONSENSUS_TYPES:
+        net_names = [x["Name"] for x in client.networks()]
+        for cs_type in CONSENSUS_PLUGINS:
             net_name = CLUSTER_NETWORK+"_{}".format(cs_type)
-            net_names = client.networks(names=[net_name])
-            if net_names:
+            if net_name in net_names:
                 logger.debug("Remove network {}".format(net_name))
                 client.remove_network(net_name)
             else:
@@ -241,51 +275,54 @@ def get_project(template_path):
     return project
 
 
-# no used
-def compose_ps(project):
-    """ Get containers status of given compose project
-
-    :param project: Project to operate
-    :return: Those container information in dict
-    """
-    containers = project.containers(stopped=True)
-
-    items = [{
-                 'name': container.name,
-                 'name_without_project': container.name_without_project,
-                 'command': container.human_readable_command,
-                 'state': container.human_readable_state,
-                 'labels': container.labels,
-                 'ports': container.ports,
-                 'volumes': get_volumes(
-                     get_container_from_id(project.client, container.id)),
-                 'is_running': container.is_running} for container in
-             containers]
-
-    return items
-
-
-def compose_start(name, api_port, daemon_url,
-                  consensus_type=CONSENSUS_TYPES[0]):
+def compose_start(name, host, api_port,
+                  consensus_plugin=CONSENSUS_PLUGINS[0],
+                  consensus_mode=CONSENSUS_MODES[0],
+                  cluster_size=CLUSTER_SIZES[0],
+                  timeout=5):
     """ Start a cluster by compose
 
     :param name: The name of the cluster
     :param api_port: The port of the cluster API
-    :param daemon_url: Docker host daemon
-    :param consensus_type: Cluster consensus type
+    :param host: Docker host obj
+    :param consensus_plugin: Cluster consensus plugin
+    :param consensus_mode: Cluster consensus mode
+    :param cluster_size: the size of the cluster
+    :param timeout: Docker client timeout value
     :return: The name list of the started peer containers
     """
-    logger.debug("Start compose project with logging_level={}, "
-                 "consensus={}".format(os.environ['LOGGING_LEVEL_CLUSTER'],
-                                       consensus_type))
-    os.environ['DOCKER_HOST'] = daemon_url   # start compose at which host
-    os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
+    logger.debug("Compose start: host={}, logging_level={}, "
+                 "consensus={}/{}, size={}".format(
+        host.get("name"),
+        host.get('log_level'),
+        consensus_plugin,
+        consensus_mode,
+        cluster_size))
+    daemon_url, log_type, log_server = \
+        host.get("daemon_url"), host.get("log_type"), host.get("log_server")
+    # compose use this
+    os.environ['DOCKER_HOST'] = daemon_url  # start compose at which host
     os.environ['COMPOSE_PROJECT_NAME'] = name
+    os.environ['COMPOSE_FILE'] = "cluster-{}.yml".format(cluster_size)
+
+    # hyperledger use this
+    os.environ['VM_ENDPOINT'] = daemon_url  # vp use this for chaincode
+    os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = \
+        CLUSTER_NETWORK+"_{}".format(consensus_plugin)  # "host"
+    #os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = "bridge"
+    os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
+    os.environ['PBFT_GENERAL_MODE'] = consensus_mode
+    os.environ['PBFT_GENERAL_N'] = str(cluster_size)
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
-    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
-    project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
-    containers = project.up(detached=True)
+    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_plugin)
+    os.environ['LOGGING_LEVEL_CLUSTERS'] = host.get("log_level")
+    # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
+    if log_type != LOG_TYPES[0]:  # not local
+        os.environ['SYSLOG_SERVER'] = log_server
+
+    project = get_project(COMPOSE_FILE_PATH+"/"+log_type)
+    containers = project.up(detached=True, timeout=timeout)
     result = {}
     for c in containers:
         result[c.name] = c.id
@@ -294,53 +331,47 @@ def compose_start(name, api_port, daemon_url,
 
 
 def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
-                 consensus_type=CONSENSUS_TYPES[0]):
+                 consensus_plugin=CONSENSUS_PLUGINS[0],
+                 consensus_mode=CONSENSUS_MODES[0],
+                 log_type=LOG_TYPES[0], log_server="",
+                 cluster_size=CLUSTER_SIZES[0],
+                 timeout=5):
     """ Stop the cluster and remove the service containers
 
     :param name: The name of the cluster
     :param daemon_url: Docker host daemon
     :param api_port: The port of the cluster API
-    :param logging_level: logging level for the cluster output
-    :param consensus_type: Cluster consensus type
+    :param consensus_plugin: Cluster consensus type
+    :param consensus_mode: Cluster consensus mode
+    :param log_type: which log plugin for host
+    :param log_server: syslog server
+    :param cluster_size: the size of the cluster
+    :param timeout: Docker client timeout
     :return:
     """
     logger.debug("Stop compose project {} with logging_level={}, "
-                 "consensus={}".format(name, os.environ[
-        'LOGGING_LEVEL_CLUSTER'], consensus_type))
+                 "consensus={}".format(name, 'INFO', consensus_plugin))
+    # compose use this
     os.environ['DOCKER_HOST'] = daemon_url
-    os.environ['DAEMON_URL'] = daemon_url  # vp use this for chaincode
     os.environ['COMPOSE_PROJECT_NAME'] = name
+    os.environ['COMPOSE_FILE'] = "cluster-{}.yml".format(cluster_size)
+
+    # hyperledger use this
+    os.environ['VM_ENDPOINT'] = daemon_url  # vp use this for chaincode
+    os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = CLUSTER_NETWORK+"_{}".format(
+        consensus_plugin)  # "host"
+    os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
+    os.environ['PBFT_GENERAL_MODE'] = consensus_mode
+    os.environ['PBFT_GENERAL_N'] = str(cluster_size)
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
-    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_type)
-    project = get_project(COMPOSE_FILE_PATH+"/"+consensus_type)
-    try:
-        project.stop()
-        project.remove_stopped(one_off=OneOffFilter.include)
-    except Exception as e:
-        logger.error("Error in stop compose project, do best to cleanup")
-        logger.error(e)
+    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_plugin)
+    os.environ['LOGGING_LEVEL_CLUSTERS'] = "INFO"
+    if log_type != LOG_TYPES[0]:  # not local
+        os.environ['SYSLOG_SERVER'] = log_server
 
+    # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
+    project = get_project(COMPOSE_FILE_PATH+"/" + log_type)
+    project.stop(timeout=timeout)
+    project.remove_stopped(one_off=OneOffFilter.include, force=True)
 
-# no used
-def get_container_from_id(client, container_id):
-    """
-    return the docker container from a given id
-    """
-    return Container.from_id(client, container_id)
-
-
-# no used
-def get_volumes(container):
-    """
-    retrieve container volumes details
-    """
-    return container.get('Config.Volumes')
-
-
-# no used
-def get_yml_path(path):
-    """
-    get path of docker-compose.yml file
-    """
-    return get_default_config_files(path)[0]

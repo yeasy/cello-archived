@@ -6,9 +6,8 @@ from flask import Blueprint, jsonify, render_template
 from flask import request as r
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import log_handler, LOG_LEVEL, CONSENSUS_TYPES, HOST_TYPES, \
-CODE_OK, HOST_TYPES
-from version import version, version_info, author
+from common import log_handler, LOG_LEVEL, CODE_OK, request_debug
+from version import version
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -21,7 +20,7 @@ stat = Blueprint('stat', __name__)
 
 @stat.route('/stat', methods=['GET'])
 def show():
-    logger.info("path={}, action={}".format(r.path, r.method))
+    logger.info("path={}, method={}".format(r.path, r.method))
     hosts = list(host_handler.list())
 
     return render_template("stat.html",hosts=hosts)
@@ -29,7 +28,7 @@ def show():
 
 @stat.route('/_health', methods=['GET'])
 def health():
-    logger.info("path={}, action={}".format(r.path, r.method))
+    request_debug(r, logger)
     result = {
         'health': 'OK',
         'version': version
@@ -40,11 +39,7 @@ def health():
 
 @stat.route('/_stat', methods=['GET'])
 def get():
-    logger.info("path={}, action={}".format(r.path, r.method))
-    for k in r.args:
-        logger.debug("Arg: {0}:{1}".format(k, r.args[k]))
-    for k in r.form:
-        logger.debug("Form: {0}:{1}".format(k, r.form[k]))
+    request_debug(r, logger)
     res = r.args.get('res')
     if res == 'hosts':
         result = stat_handler.hosts()

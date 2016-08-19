@@ -8,30 +8,41 @@
         <dt>Id<dt> <dd>{{item.id}}</dd>
         <dt>Name<dt> <dd>{{item.name}}</dd>
         <dt>API URL<dt> <dd>{{item.api_url}}</dd>
-        <dt>Consensus Type<dt> <dd>{{item.consensus_type}}</dd>
-        <dt>Docker Host<dt> <dd><a href="/host_info/{{item.host_id}}">{{item
+        {% if item.consensus_plugin== consensus_plugins[0] %}
+            <dt>Consensus<dt> <dd>{{item.consensus_plugin}}</dd>
+        {% else %}
+            <dt>Consensus<dt> <dd>{{item.consensus_plugin}}/{{ item.consensus_mode }}</dd>
+        {% endif %}
+        <dt>Host<dt> <dd><a href="/host_info/{{item.host_id}}">{{item
         .host_id}}</a></dd>
+        <dt>User Id<dt> <dd>{{item.user_id}}</dd>
         <dt>Create Time<dt> <dd>{{item.create_ts}}</dd>
         <dt>Apply Time<dt> <dd>{{item.apply_ts}}</dd>
-        <dt>User Id<dt> <dd>{{item.user_id}}</dd>
         <dt>Release Time<dt> <dd>{{item.release_ts}}</dd>
-        <dt>Containers<dt> <dd>
-        {% for c in item.containers.keys()%}
-            <a href="">{{ c }}</a><br>
-        {% endfor %}
-    </dd>
+        <dt>Duration<dt> <dd>{{item.duration}}</dd>
+        <dt>Size<dt> <dd>{{item.size|string}}</dd>
+        {% if item.containers %}
+            <dt>Containers<dt> <dd>
+            {% if item.containers|length >0 %}
+                {% for c in item.containers.keys()%}
+                    <a href="">{{ c }}</a><br>
+                {% endfor %}
+            {% endif %}
+        {% endif %}
+        </dd>
     </dl>
+<!--
     <div class="container-fluid">
-        {% if item.release_ts %}
-        <input value="Delete" type="button"
-               class="btn btn-danger btn-default btn-primary delete_cluster_button"
-               data-id="{{item.id}}" release="1"/>
+        {% if item.user_id %}
+        <input value="Release" type="button" class="btn btn-danger btn-default btn-primary
+               release_cluster_button"
+               data-id="{{item.user_id}}"/>
         {% else %}
-            <input value="Delete" type="button"
-                   class="btn btn-danger btn-default btn-primary delete_cluster_button"
-                   data-id="{{item.id}}"/>
+            <input value="Release" type="button" class="btn btn-danger btn-default btn-primary release_cluster_button" disabled
+                   data-id="{{item.user_id}}"/>
         {% endif %}
     </div>
+-->
 </div>
 
 {% endblock %}

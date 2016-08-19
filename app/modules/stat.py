@@ -1,5 +1,5 @@
 import logging
-from common import LOG_LEVEL, HOST_TYPES, CONSENSUS_TYPES
+from common import LOG_LEVEL, HOST_TYPES, CONSENSUS_PLUGINS, CONSENSUS_MODES
 
 from modules import host_handler, cluster_handler
 
@@ -49,13 +49,26 @@ class StatHandler(object):
             {'name': 'free', 'y': free_clusters_number},
             {'name': 'used', 'y': total_number-free_clusters_number},
         ]
-        for consensus_type in CONSENSUS_TYPES:
-            clusters = list(cluster_handler.list(filter_data={'consensus_type':
-                                                                  consensus_type}))
-            result['type'].append({
-                'name': consensus_type,
-                'y': len(clusters)
-            })
+        for consensus_plugin in CONSENSUS_PLUGINS:
+            if consensus_plugin == CONSENSUS_PLUGINS[0]:
+                consensus_type = consensus_plugin
+                clusters = list(cluster_handler.list(filter_data={
+                    'consensus_plugin': consensus_plugin}))
+                result['type'].append({
+                    'name': consensus_type,
+                    'y': len(clusters)
+                })
+            else:
+                for consensus_mode in CONSENSUS_MODES:
+                    consensus_type = consensus_plugin + "/" + consensus_mode
+                    clusters = list(cluster_handler.list(filter_data={
+                        'consensus_plugin': consensus_plugin,
+                        'consensus_mode': consensus_mode
+                    }))
+                    result['type'].append({
+                        'name': consensus_type,
+                        'y': len(clusters)
+                    })
         return result
 
 

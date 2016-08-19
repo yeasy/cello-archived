@@ -1,4 +1,4 @@
-from .version import version, version_info, author
+from .version import version, author
 
 __title__ = 'pool manager'
 __version__ = version

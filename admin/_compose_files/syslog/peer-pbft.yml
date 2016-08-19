@@ -12,7 +12,7 @@ version: '2'
 
 services:
   vp:
-    image: yeasy/hyperledger-peer:pbft
+    image: yeasy/hyperledger-peer:latest
     restart: unless-stopped
     labels:
       - monitor=true
@@ -21,13 +21,18 @@ services:
     environment:
       - CORE_PEER_ADDRESSAUTODETECT=true
       - CORE_PEER_NETWORKID=${PEER_NETWORKID}
-      - CORE_LOGGING_LEVEL=${LOGGING_LEVEL_CLUSTER} #critical, error, warning, notice, info, debug
-      # The following section enables bpft consensus
-      - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=pbft  # noops, pbft
-      - CORE_PBFT_GENERAL_MODE=classic  # batch, classic, sieve
-      - CORE_PBFT_GENERAL_N=4
-      - CORE_PBFT_GENERAL_TIMEOUT_REQUEST=10s
-      - CORE_VM_ENDPOINT=${DAEMON_URL}
+      - CORE_LOGGING_LEVEL=${LOGGING_LEVEL_CLUSTERS} #critical, error, warning, notice, info, debug
+      - CORE_VM_ENDPOINT=${VM_ENDPOINT}
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${VM_DOCKER_HOSTCONFIG_NETWORKMODE} # host, bridge, ipvlan, none
+      - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=${PEER_VALIDATOR_CONSENSUS_PLUGIN} # noops, pbft
+      # The following section enables noops consensus
+      - CORE_NOOPS_BLOCK_TIMEOUT=2 # only useful when in noops
+      - CORE_NOOPS_BLOCK_WAIT=2 # only useful when in noops
+      # The following section enables pbft consensus
+      - CORE_PBFT_GENERAL_MODE=${PBFT_GENERAL_MODE}  # batch, classic, sieve
+      - CORE_PBFT_GENERAL_N=${PBFT_GENERAL_N}
+      - CORE_PBFT_GENERAL_BATCHSIZE=2  # only useful when in batch mode
+      - CORE_PBFT_GENERAL_TIMEOUT_REQUEST=5s
     expose:
       - "30303"
       - "30304"
@@ -43,8 +48,3 @@ services:
       options:
         syslog-address: ${SYSLOG_SERVER}
         tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
-    #logging:
-    #  driver: json-file
-    #  options:
-    #    max-size: 10m
-
