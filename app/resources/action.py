@@ -8,9 +8,9 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import log_handler, LOG_LEVEL, \
-    response_ok, response_fail, CODE_OK, CODE_BAD_REQUEST, CONSENSUS_PLUGINS, \
-    CONSENSUS_MODES, CLUSTER_SIZES, request_debug, request_get, request_json_body
+from common import log_handler, LOG_LEVEL, response_ok, response_fail, \
+    CODE_OK, CODE_BAD_REQUEST, CONSENSUS_PLUGINS, CONSENSUS_MODES, \
+    CLUSTER_SIZES, request_debug, request_get, request_json_body
 
 from modules import cluster_handler
 logger = logging.getLogger(__name__)
@@ -96,8 +96,8 @@ def cluster_release():
         elif user_id:
             result = cluster_handler.release_cluster_for_user(user_id=user_id)
         if not result:
-            logger.warn("cluster_release failed user_id={} cluster_id={"
-                        "}".format(user_id, cluster_id))
+            logger.warn("cluster_release failed user_id={} cluster_id={}".
+                        format(user_id, cluster_id))
             response_fail["error"] = "release fail"
             response_fail["data"] = {
                 "user_id": user_id,

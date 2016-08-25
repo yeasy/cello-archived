@@ -1,7 +1,8 @@
 import logging
 import time
 from threading import Thread
-from common import LOG_LEVEL, HOST_TYPES, CONSENSUS_PLUGINS, CONSENSUS_MODES
+from common import LOG_LEVEL, HOST_TYPES, CONSENSUS_PLUGINS, \
+    CONSENSUS_MODES, SYS_UNHEALTHY
 
 from modules import host_handler, cluster_handler
 
@@ -39,7 +40,9 @@ class StatHandler(object):
         # may check the cluster health status on the active host
         def check_clusters_health(clusters):
             for c in clusters:
-                cluster_handler.check_health(c['id'])
+                if not cluster_handler.check_health(c['id']) \
+                        and c['user_id'] != SYS_UNHEALTHY:
+                    cluster_handler.release_cluster(c['id'], record=False)
                 time.sleep(0.2)
         for h in actives:
             clusters = cluster_handler.list(filter_data={"host_id": h["id"]})
@@ -61,7 +64,7 @@ class StatHandler(object):
         free_clusters_number = len(free_clusters)
         result['status'] = [
             {'name': 'free', 'y': free_clusters_number},
-            {'name': 'used', 'y': total_number-free_clusters_number},
+            {'name': 'used', 'y': total_number - free_clusters_number}
         ]
         for consensus_plugin in CONSENSUS_PLUGINS:
             if consensus_plugin == CONSENSUS_PLUGINS[0]:

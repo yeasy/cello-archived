@@ -9,10 +9,10 @@ from threading import Thread
 from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import db, cleanup_container_host, LOG_LEVEL, setup_container_host, \
-    test_daemon, detect_daemon_type, reset_container_host, \
-    CLUSTER_API_PORT_START, LOG_TYPES, CLUSTER_SIZES, CONSENSUS_TYPES, \
-LOGGING_LEVEL_CLUSTERS
+from common import db, cleanup_container_host, LOG_LEVEL, LOG_TYPES, \
+    CLUSTER_SIZES, CLUSTER_API_PORT_START, CONSENSUS_TYPES, \
+    LOGGING_LEVEL_CLUSTERS, test_daemon, detect_daemon_type, \
+    reset_container_host, setup_container_host
 
 from modules import cluster_handler
 
@@ -215,7 +215,7 @@ class HostHandler(object):
 
         def create_cluster_work(port):
             cluster_name = "{}_{}".format(host.get("name"),
-                                          (port-CLUSTER_API_PORT_START))
+                                          (port - CLUSTER_API_PORT_START))
             consensus_plugin, consensus_mode = random.choice(CONSENSUS_TYPES)
             cluster_size = random.choice(CLUSTER_SIZES)
             cid = cluster_handler.create(name=cluster_name, host_id=id,
@@ -254,11 +254,8 @@ class HostHandler(object):
             {"$set": {"status": "inactive"}},
             return_document=ReturnDocument.AFTER)
 
-        def delete_cluster_work(cid):
-            cluster_handler.delete(cid)  # can delete unused or in-deleting
-
         for cid in host.get("clusters"):
-            t = Thread(target=delete_cluster_work, args=(cid,))
+            t = Thread(target=cluster_handler.delete, args=(cid,))
             t.start()
             time.sleep(0.2)
 
@@ -287,7 +284,7 @@ class HostHandler(object):
         """
         Update status of the host
 
-        :param id:
+        :param host: the host to update status
         :return: Updated host
         """
         if not host:
@@ -321,9 +318,9 @@ class HostHandler(object):
         return self._update_status(host)
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
-                                    'type','create_ts', 'status',
-                                    'schedulable','clusters',
-                                    'log_level', 'log_type', 'log_server']):
+                                    'type', 'create_ts', 'status',
+                                    'schedulable', 'clusters', 'log_level',
+                                    'log_type', 'log_server']):
         """ Serialize an obj
 
         :param doc: doc to serialize

@@ -1,5 +1,4 @@
 import os
-
 from common import log_handler, LOG_LEVEL
 from flask import Flask, render_template
 from resources import index, cluster, host, stat

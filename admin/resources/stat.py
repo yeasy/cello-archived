@@ -1,11 +1,10 @@
 import logging
 import os
 import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from flask import Blueprint, jsonify, render_template
 from flask import request as r
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, CODE_OK, request_debug
 from version import version
 
@@ -23,7 +22,7 @@ def show():
     logger.info("path={}, method={}".format(r.path, r.method))
     hosts = list(host_handler.list())
 
-    return render_template("stat.html",hosts=hosts)
+    return render_template("stat.html", hosts=hosts)
 
 
 @stat.route('/_health', methods=['GET'])

@@ -16,8 +16,8 @@ CONSENSUS_MODES = ['batch']  # pbft has various modes
 CONSENSUS_TYPES = [
     ('noops', ''),
     ('pbft', 'batch'),
-    #('pbft', 'classic'),
-    #('pbft', 'sieve'),
+    # ('pbft', 'classic'),
+    # ('pbft', 'sieve'),
 ]
 
 LOG_TYPES = ['local', 'syslog']
@@ -25,10 +25,11 @@ LOG_TYPES = ['local', 'syslog']
 HOST_TYPES = ['single', 'swarm']
 
 LOGGING_LEVEL_CLUSTERS = ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR',
-                         'CRITICAL']
+                          'CRITICAL']
 
 SYS_CREATOR = "__SYSTEM__CREATING__"
 SYS_DELETER = "__SYSTEM__DELETING__"
+SYS_UNHEALTHY = "__SYSTEM__UNHEALTHY__"
 
 
 def json_decode(jsonstr):
@@ -63,7 +64,7 @@ def request_get(request, key, default_value=None):
             return json_body[key]
         else:
             return default_value
-    except Exception as e:
+    except Exception:
         return default_value
 
 
@@ -71,5 +72,5 @@ def request_json_body(request, default_value={}):
     try:
         json_body = request.get_json(force=True, silent=True)
         return json_body
-    except Exception as e:
+    except Exception:
         return default_value

@@ -1,20 +1,18 @@
 # This module provides some static api to operate compose and docker engine
 
-
 import logging
 import os
 
 from compose.cli.command import get_project as compose_get_project, \
     get_config_path_from_options as compose_get_config_path_from_options
-from compose.config.config import get_default_config_files
 from compose.config.environment import Environment
-from compose.container import Container
 from compose.project import OneOffFilter
 from docker import Client
 
 from .log import log_handler, LOG_LEVEL
 from .utils import HOST_TYPES, CLUSTER_API_PORT_START, CLUSTER_NETWORK, \
-    COMPOSE_FILE_PATH, CONSENSUS_PLUGINS, CONSENSUS_MODES, LOG_TYPES, CLUSTER_SIZES
+    COMPOSE_FILE_PATH, CONSENSUS_PLUGINS, CONSENSUS_MODES, LOG_TYPES, \
+    CLUSTER_SIZES
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -50,13 +48,14 @@ def clean_project_containers(daemon_url, name_prefix, timeout=5):
     :param timeout: Time to wait for the response
     :return: None
     """
-    logger.debug("Clean project related containers, daemon_url={}, prefix={"
-                 "}".format(daemon_url, name_prefix))
+    logger.debug("Clean project containers, daemon_url={}, prefix={}".format(
+        daemon_url, name_prefix))
     client = Client(base_url=daemon_url, timeout=timeout)
     containers = client.containers(all=True)
-    id_removes = [e['Id'] for e in containers if e['Names'][0].split("/")[-1].startswith(name_prefix)]
+    id_removes = [e['Id'] for e in containers if
+                  e['Names'][0].split("/")[-1].startswith(name_prefix)]
     for _ in id_removes:
-        logger.debug("Remove container "+_)
+        logger.debug("Remove container {}", _)
         client.remove_container(_, force=True)
 
 
@@ -77,7 +76,7 @@ def clean_exited_containers(daemon_url):
                                    filters={"status": "exited"})
     id_removes = [e['Id'] for e in containers]
     for _ in id_removes:
-        logger.debug("exited container id to removes="+_)
+        logger.debug("exited container to remove, id={}", _)
         try:
             client.remove_container(_)
         except Exception as e:
@@ -139,6 +138,7 @@ def reset_container_host(host_type, daemon_url, timeout=15):
 
     Only wait for timeout seconds.
 
+    :param host_type: Type of host: single or swarm
     :param daemon_url: Docker daemon url
     :param timeout: Time to wait for the response
     :return: host type info
@@ -174,7 +174,7 @@ def reset_container_host(host_type, daemon_url, timeout=15):
     return setup_container_host(host_type=host_type, daemon_url=daemon_url)
 
 
-def detect_container_host(swarm_url, container_name, timeout=5):
+def get_swarm_node_ip(swarm_url, container_name, timeout=5):
     """
     Detect the host ip where the given container locate in the swarm cluster
 
@@ -189,7 +189,9 @@ def detect_container_host(swarm_url, container_name, timeout=5):
         client = Client(base_url=swarm_url, timeout=timeout)
         info = client.inspect_container(container_name)
         return info['NetworkSettings']['Ports']['5000/tcp'][0]['HostIp']
-    except:
+    except Exception as e:
+        logger.error("Exception happens when detect container host!")
+        logger.error(e)
         return ''
 
 
@@ -212,10 +214,10 @@ def setup_container_host(host_type, daemon_url, timeout=5):
         client = Client(base_url=daemon_url, timeout=timeout)
         net_names = [x["Name"] for x in client.networks()]
         for cs_type in CONSENSUS_PLUGINS:
-            net_name = CLUSTER_NETWORK+"_{}".format(cs_type)
+            net_name = CLUSTER_NETWORK + "_{}".format(cs_type)
             if net_name in net_names:
-                logger.warn("Network {} already exists, try using "
-                            "it!".format(net_name))
+                logger.warn("Network {} already exists, try using it!".format(
+                    net_name))
             else:
                 if host_type == HOST_TYPES[0]:  # single
                     client.create_network(net_name, driver='bridge')
@@ -237,7 +239,6 @@ def cleanup_container_host(daemon_url, timeout=5):
 
     Maybe we will remove the networks?
 
-    :param host_type: Docker host type
     :param daemon_url: Docker daemon url
     :param timeout: timeout to wait
     :return:
@@ -249,7 +250,7 @@ def cleanup_container_host(daemon_url, timeout=5):
         client = Client(base_url=daemon_url, timeout=timeout)
         net_names = [x["Name"] for x in client.networks()]
         for cs_type in CONSENSUS_PLUGINS:
-            net_name = CLUSTER_NETWORK+"_{}".format(cs_type)
+            net_name = CLUSTER_NETWORK + "_{}".format(cs_type)
             if net_name in net_names:
                 logger.debug("Remove network {}".format(net_name))
                 client.remove_network(net_name)
@@ -292,12 +293,12 @@ def compose_start(name, host, api_port,
     :return: The name list of the started peer containers
     """
     logger.debug("Compose start: host={}, logging_level={}, "
-                 "consensus={}/{}, size={}".format(
-        host.get("name"),
-        host.get('log_level'),
-        consensus_plugin,
-        consensus_mode,
-        cluster_size))
+                 "consensus={}/{}, size={}".format(host.get("name"),
+                                                   host.get('log_level'),
+                                                   consensus_plugin,
+                                                   consensus_mode,
+                                                   cluster_size)
+                 )
     daemon_url, log_type, log_server = \
         host.get("daemon_url"), host.get("log_type"), host.get("log_server")
     # compose use this
@@ -308,20 +309,21 @@ def compose_start(name, host, api_port,
     # hyperledger use this
     os.environ['VM_ENDPOINT'] = daemon_url  # vp use this for chaincode
     os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = \
-        CLUSTER_NETWORK+"_{}".format(consensus_plugin)  # "host"
-    #os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = "bridge"
+        CLUSTER_NETWORK + "_{}".format(consensus_plugin)  # "host"
+    # os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = "bridge"
     os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
     os.environ['PBFT_GENERAL_MODE'] = consensus_mode
     os.environ['PBFT_GENERAL_N'] = str(cluster_size)
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
-    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_plugin)
+    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK + "_{}".format(
+        consensus_plugin)
     os.environ['LOGGING_LEVEL_CLUSTERS'] = host.get("log_level")
     # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
     if log_type != LOG_TYPES[0]:  # not local
         os.environ['SYSLOG_SERVER'] = log_server
 
-    project = get_project(COMPOSE_FILE_PATH+"/"+log_type)
+    project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
     containers = project.up(detached=True, timeout=timeout)
     result = {}
     for c in containers:
@@ -358,20 +360,20 @@ def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
 
     # hyperledger use this
     os.environ['VM_ENDPOINT'] = daemon_url  # vp use this for chaincode
-    os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = CLUSTER_NETWORK+"_{}".format(
-        consensus_plugin)  # "host"
+    os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = CLUSTER_NETWORK + "_{}".\
+        format(consensus_plugin)  # "host"
     os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
     os.environ['PBFT_GENERAL_MODE'] = consensus_mode
     os.environ['PBFT_GENERAL_N'] = str(cluster_size)
     os.environ['PEER_NETWORKID'] = name
     os.environ['API_PORT'] = str(api_port)
-    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK+"_{}".format(consensus_plugin)
+    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK + "_{}".format(
+        consensus_plugin)
     os.environ['LOGGING_LEVEL_CLUSTERS'] = "INFO"
     if log_type != LOG_TYPES[0]:  # not local
         os.environ['SYSLOG_SERVER'] = log_server
 
     # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
-    project = get_project(COMPOSE_FILE_PATH+"/" + log_type)
+    project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
     project.stop(timeout=timeout)
     project.remove_stopped(one_off=OneOffFilter.include, force=True)
-

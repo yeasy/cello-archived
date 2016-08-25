@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-
 from flask import Blueprint, render_template
 from flask import request as r
 
@@ -28,26 +27,28 @@ def show():
     hosts = list(host_handler.list(filter_data={}, validate=True))
     hosts.sort(key=lambda x: x["name"], reverse=False)
     hosts_active = list(filter(lambda e: e["status"] == "active", hosts))
+    hosts_inactive = list(filter(lambda e: e["status"] != "active", hosts))
     hosts_free = list(filter(
         lambda e: len(e["clusters"]) < e["capacity"], hosts_active))
-    #hosts_available = list(filter(
-    #    lambda e:  e["schedulable"] == "true", hosts_free))
     hosts_available = hosts_free
     clusters_active = len(list(cluster_handler.list(col_name="active")))
     clusters_released = len(list(cluster_handler.list(col_name="released")))
-    clusters_free = len(list(cluster_handler.list(col_name="active",
-                                                  filter_data={"user_id": ""})))
+    clusters_free = len(list(cluster_handler.list(filter_data={"user_id": ""},
+                                                  col_name="active")))
+    clusters_inuse = clusters_active - clusters_free
 
-    clusters_temp = len(list(cluster_handler.list(col_name="active",
-                                                  filter_data={"user_id":
-                                                                   "/^__/"})))
+    clusters_temp = len(list(cluster_handler.list(filter_data={
+        "user_id": "/^__/"}, col_name="active")))
 
     return render_template("index.html", hosts=hosts,
-                           hosts_free=hosts_free, hosts_active=hosts_active,
+                           hosts_free=hosts_free,
+                           hosts_active=hosts_active,
+                           hosts_inactive=hosts_inactive,
                            hosts_available=hosts_available,
                            clusters_active=clusters_active,
                            clusters_released=clusters_released,
                            clusters_free=clusters_free,
+                           clusters_inuse=clusters_inuse,
                            clusters_temp=clusters_temp,
                            cluster_sizes=CLUSTER_SIZES,
                            consensus_plugins=CONSENSUS_PLUGINS,

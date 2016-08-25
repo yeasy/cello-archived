@@ -35,64 +35,42 @@
             </li>
         </ul>
     </div>
-    <h3 class="page-header">System Status</h3>
+
+    <h3 class="page-header">Host Status</h3>
     <div class="container-fluid">
         {% if hosts_active|length < hosts|length %}
-            Host Status: <font color="#ff8c00"> {{ hosts|length - hosts_active|length }}/{{hosts|length }} inactive!
+            <font color="#ff8c00"> {{ hosts|length - hosts_active|length }}/{{hosts|length }} inactive!
         </font>
         {% else %}
-            Host Status: <font color="green"> All active!</font>
+            <font color="green"> All active!</font>
         {% endif %}
-    <p></p>
-        {% if clusters_free <= 0 %}
-            Cluster Status: <font color="red">All {{ clusters_active }} occupied!</font>
-        {% else %}
-            Cluster Status: <font color="green">{{ clusters_free }}/{{
-                clusters_active}} available!</font>
-        {% endif %}
-    <p></p>
-        {% if clusters_temp > 0 %}
-            Processing: <font color="yellow">{{ clusters_temp }}</font>
-        {% else %}
-            Processing: <font color="green">{{ clusters_temp }}</font>
-        {% endif %}
-    </div>
-
-    <h3 class="page-header">Host Health</h3>
-    <div class="container-fluid">
-        {% for h in hosts %}
-            {% if h.status == "active" %}
-                Host {{ h.name }}: <font color="green"> {{ h.status }} </font>
-            {% else %}
-                Host {{ h.name }}: <font color="red"> {{ h.status }} </font>
-            {% endif %}
-            <p></p>
+        <p></p>
+        <font color="green">Active Host:</font>
+        {% for h in hosts_active %}
+            <a href="/host_info/{{h.id}}">{{ h.name }}</a>
+        {% endfor %}
+        <p></p>
+        <font color="red"> Inactive Host: </font>
+        {% for h in hosts_inactive %}
+            <a href="/host_info/{{h.id}}">{{ h.name }}</a>
         {% endfor %}
     </div>
 
-    <!--
-    <h2 class="sub-header">Cluster Management</h2>
+    <h3 class="page-header">Cluster Status</h3>
     <div class="container-fluid">
-        <form class="form-inline">
-            <div class="form-group">
-                <label for="cluster_name">Name</label>
-                <input id="cluster_name" name="name" type="text"
-                       class="form-control"
-                       placeholder="Cluster Name" required autofocus>
-            </div>
-
-            <div class="form-group">
-                <label for="cluster_daemon_url">Host URL</label>
-                <input id="cluster_daemon_url" type="text" name="daemon_url"
-                       class="form-control"
-                       placeholder="192.168.0.1:2375" required>
-            </div>
-            <button class="btn btn-primary btn-success btn-sm btn-default
-        create_cluster_button"
-                    type="button">Create Cluster
-            </button>
-        </form>
+        Utilization:
+        {% if clusters_free <= 0 %}
+            <font color="red">All {{ clusters_active }} occupied!</font>
+        {% else %}
+            <font color="green">{{ clusters_inuse }}/{{clusters_active}}</font>
+        {% endif %}
+        <p></p>
+        In Processing:
+        {% if clusters_temp > 0 %}
+            <font color="yellow">{{ clusters_temp }}</font>
+        {% else %}
+            <font color="green">{{ clusters_temp }}</font>
+        {% endif %}
     </div>
-    -->
 
 {% endblock %}
