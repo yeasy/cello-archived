@@ -28,9 +28,10 @@
                     <thead align="center">
                     <tr>
                         <th>Name</th>
-                        <th>API</th>
                         <th>Type</th>
+                        <th>Health</th>
                         <th>Size</th>
+                        <th>API</th>
                         <th>Host</th>
                         <th></th>
                     </tr>
@@ -43,13 +44,20 @@
                             <tr>
                         {% endif %}
                     <td><a href="/cluster_info/{{item.id}}?released=0">{{item.name}}</a></td>
-                    <td>{{item.api_url}}</td>
                     {% if item.consensus_plugin== consensus_plugins[0] %}
                         <td>{{item.consensus_plugin}}</td>
                     {% else %}
                         <td>{{item.consensus_plugin}}/{{ item.consensus_mode }}</td>
                     {% endif %}
+                    <td>
+                    {% if item.health == "OK" %}
+                        <font color="green">{{item.health}}</font>
+                    {% else %}
+                        <font color="red">{{item.health}}</font>
+                    {% endif %}
+                    </td>
                     <td>{{item.size|string}}</td>
+                    <td>{{item.api_url}}</td>
                     <td><a href="/host_info/{{item.host_id}}">{{item.host_id}}</a></td>
 
                     <td>
@@ -70,6 +78,7 @@
                         <th>Name</th>
                         <th>User</th>
                         <th>Type</th>
+                        <th>Health</th>
                         <th>Size</th>
                         <th>Host</th>
                         <th>Apply Time</th>
@@ -86,6 +95,13 @@
                             {% else %}
                                 <td>{{item.consensus_plugin}}/{{ item.consensus_mode }}</td>
                             {% endif %}
+                            <td>
+                                {% if item.health == "OK" %}
+                                    <font color="green">{{item.health}}</font>
+                                {% else %}
+                                    <font color="red">{{item.health}}</font>
+                                {% endif %}
+                            </td>
                             <td>{{item.size|string}}</td>
                             <td><a href="/host_info/{{item.host_id}}">{{item.host_id}}</a></td>
                             <td>{{item.apply_ts}}</td>

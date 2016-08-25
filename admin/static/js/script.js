@@ -1,7 +1,6 @@
 $(document).ready(function() {
     $('.table_sorted').DataTable(
         {
-            
         }
     );
     $('#newHostModal').on('shown.bs.modal', function (e) {
@@ -649,7 +648,7 @@ $(document).ready(function() {
                 chart_clusters_type.series[0].setData(response.type);
                 chart_clusters_status.series[0].setData(response.status);
 
-                // call it again after one second
+                // call it again after 30 second
                 setTimeout(request_clusters, 30000);    
             },
             cache: false

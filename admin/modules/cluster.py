@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import requests
 import sys
 
 from threading import Thread
@@ -47,7 +48,7 @@ class ClusterHandler(object):
         return result
 
     def get(self, id, serialization=False, col_name="active"):
-        """ Get a cluster
+        """ Get a cluster for the external request
 
         :param id: id of the doc
         :param serialization: whether to get serialized result or object
@@ -56,17 +57,17 @@ class ClusterHandler(object):
         """
         if col_name != "released":
             logger.debug("Get a cluster with id=" + id)
-            ins = self.col_active.find_one({"id": id})
+            cluster = self.col_active.find_one({"id": id})
         else:
             logger.debug("Get a released cluster with id=" + id)
-            ins = self.col_released.find_one({"id": id})
-        if not ins:
+            cluster = self.col_released.find_one({"id": id})
+        if not cluster:
             logger.warn("No cluster found with id=" + id)
             return {}
         if serialization:
-            return self._serialize(ins)
+            return self._serialize(cluster)
         else:
-            return ins
+            return cluster
 
     def create(self, name, host_id, api_port=0, user_id="",
                consensus_plugin=CONSENSUS_PLUGINS[0],
@@ -114,10 +115,11 @@ class ClusterHandler(object):
             'create_ts': datetime.datetime.now(),
             'release_ts': "",
             'duration': "",
-            'api_url': "",  # This will be generate later
+            'api_url': "",  # This will be generated later
             'daemon_url': daemon_url,
             'size': size,
             'containers': [],
+            'health': 'OK',
         }
         cid = self.col_active.insert_one(c).inserted_id  # object type
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
@@ -259,16 +261,16 @@ class ClusterHandler(object):
             self.col_released.insert_one(c)
         return True
 
-    def apply_cluster(self, user_id, condition={}, multi_chain=False):
+    def apply_cluster(self, user_id, condition={}, allow_multiple=False):
         """ Apply a cluster for a user
 
         :param user_id: which user will apply the cluster
         :param condition: the filter to select
-        :param multi_chain: Allow multiple chain for each tenant
+        :param allow_multiple: Allow multiple chain for each tenant
         :return: serialized cluster or None
         """
-        if not multi_chain:
-            filt = {"user_id": user_id, "release_ts": ""}
+        if not allow_multiple:
+            filt = {"user_id": user_id, "release_ts": "", "health": "OK"}
             filt.update(condition)
             c = self.col_active.find_one(filt)
             if c:
@@ -276,13 +278,14 @@ class ClusterHandler(object):
                 return self._serialize(c, keys=['id', 'name', 'user_id',
                                                 'daemon_url', 'api_url',
                                                 'consensus_plugin',
-                                                'consensus_mode', 'size'])
+                                                'consensus_mode', 'size',
+                                                'health'])
         logger.debug("Try find available cluster for " + user_id)
         hosts = col_host.find({"status": "active", "schedulable": "true"})
         host_ids = [h.get("id") for h in hosts]
         logger.debug("Find active and schedulable hosts={}".format(host_ids))
         for h_id in host_ids:  # check each active and schedulable host
-            filt = {"user_id": "", "host_id": h_id}
+            filt = {"user_id": "", "host_id": h_id, "health": "OK"}
             filt.update(condition)
             c = self.col_active.find_one_and_update(filt,
                 {"$set": {"user_id": user_id,
@@ -294,7 +297,8 @@ class ClusterHandler(object):
                 return self._serialize(c, keys=['id', 'name', 'user_id',
                                                 'daemon_url', 'api_url',
                                                 'consensus_plugin',
-                                                'consensus_mode', 'size'])
+                                                'consensus_mode', 'size',
+                                                'health'])
         logger.warn("Not find matched available cluster for " + user_id)
         return {}
 
@@ -384,7 +388,8 @@ class ClusterHandler(object):
                                     'api_url', 'consensus_plugin',
                                     'consensus_mode', 'daemon_url',
                                     'create_ts', 'apply_ts', 'release_ts',
-                                    'duration', 'containers', 'size']):
+                                    'duration', 'containers', 'size',
+                                    'health']):
         """ Serialize an obj
 
         :param doc: doc to serialize
@@ -465,6 +470,32 @@ class ClusterHandler(object):
         logger.debug(result[:number])
         return result[:number]
 
+    def check_health(self, cluster_id):
+        """
+        Check if the peer is healthy by counting its neighbour number
+        :param cluster_id:
+        :return: True or False
+        """
+        logger.debug("checking health of cluster id="+cluster_id)
+        cluster = self.col_active.find_one({"id": cluster_id})
+        if not cluster:
+            logger.warn("Checking health on unfound cluster id="+cluster_id)
+            return False
+        r = requests.get(cluster["api_url"]+"/network/peers")
+        peers = r.json().get("peers")
 
-# This will be exported as single instance for usage.
+        if len(peers) == cluster["size"]:
+            self.col_active.find_one_and_update(
+                {"id": cluster_id},
+                {"$set": {"health": "OK"}},
+                return_document=ReturnDocument.AFTER)
+            return True
+        else:
+            self.col_active.find_one_and_update(
+                {"id": cluster_id},
+                {"$set": {"health": "FAIL"}},
+                return_document=ReturnDocument.AFTER)
+            return False
+
+
 cluster_handler = ClusterHandler()
