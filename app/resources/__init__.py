@@ -1,4 +1,1 @@
-from .index import index
-from .host import host
-from .cluster import cluster
-from .stat import stat
+from .action import action_v1, action_v2

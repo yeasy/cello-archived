@@ -1,4 +1,6 @@
-# API
+# API V1
+
+**Will be deprecated soon.**
 
 ## Front
 These APIs will be called by front web services.

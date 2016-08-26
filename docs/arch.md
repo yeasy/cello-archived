@@ -5,19 +5,23 @@ The architecture will follow those principles:
 
 * Micro-service: Means we decouple various functions to individual micro services. No service will crash others whatever it would do.
 * Fault-resilience: Means we do not assume any service is stable or persistent, such as the database may get disconnected any time.
-* Scalability: Try best to distribute the services, to mitigate centralized
-bottle neck.
+* Scalability: Try best to distribute the services, to mitigate centralized bottle neck.
+
+## Node Types
+
+There are two kinds of nodes: Master and Compute.
+
+Master node will run the poolmanager services, while compute nodes serve as container hosts.
+
+Master will use remote API to start and stop hyperledger clusters in those compute nodes.
 
 ## Components
 
-There are two main components: Master and Node.
-
-Master node will run the poolmanager services, while docker nodes serve as
-docker hosts.
-
-Master will use remote API to start and stop hyperledger clusters in those
-docker hosts.
-
+* `admin`: Provide the dashboard for the pool administrator, also the core
+engine to maintain everything.
+* `app`: Provide the restful api for other system to apply/release/list chains.
+* `watchdog`: periodly checking system status, keep everything healthy and
+clean.
 
 ## Implementation
 
