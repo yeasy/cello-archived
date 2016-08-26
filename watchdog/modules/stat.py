@@ -1,13 +1,14 @@
 import logging
 import time
 from threading import Thread
-from common import LOG_LEVEL, HOST_TYPES, CONSENSUS_PLUGINS, \
+from common import LOG_LEVEL, HOST_TYPES, CONSENSUS_PLUGINS, log_handler, \
     CONSENSUS_MODES, SYS_UNHEALTHY
 
 from modules import host_handler, cluster_handler
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
+logger.addHandler(log_handler)
 
 
 class StatHandler(object):

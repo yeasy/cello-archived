@@ -10,7 +10,7 @@ from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, cleanup_container_host, LOG_LEVEL, LOG_TYPES, \
-    CLUSTER_SIZES, CLUSTER_API_PORT_START, CONSENSUS_TYPES, \
+    CLUSTER_SIZES, CLUSTER_API_PORT_START, CONSENSUS_TYPES, log_handler, \
     LOGGING_LEVEL_CLUSTERS, test_daemon, detect_daemon_type, \
     reset_container_host, setup_container_host
 
@@ -18,6 +18,7 @@ from modules import cluster_handler
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
+logger.addHandler(log_handler)
 
 
 class HostHandler(object):
@@ -158,13 +159,13 @@ class HostHandler(object):
         """ List hosts with given criteria
 
         :param filter_data: Image with the filter properties
-        :param validate: validate the host status
+        :param validate: validate the host status before list
         :return: iteration of serialized doc
         """
         host_docs = self.col.find(filter_data)
 
         def update_work(host):
-            self._update_status(host)
+            self.update_status(host)
         if validate:
             logger.debug("update host status")
             for h in host_docs:
@@ -280,7 +281,7 @@ class HostHandler(object):
         return reset_container_host(host_type=host.get("type"),
                                     daemon_url=host.get("daemon_url"))
 
-    def _update_status(self, host):
+    def update_status(self, host):
         """
         Update status of the host
 
@@ -315,7 +316,7 @@ class HostHandler(object):
         if not host:
             logger.warn("No host found with id=" + id)
             return None
-        return self._update_status(host)
+        return self.update_status(host)
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
                                     'type', 'create_ts', 'status',

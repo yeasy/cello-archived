@@ -47,7 +47,7 @@ def host_api():
             return jsonify(response_fail), CODE_BAD_REQUEST
         else:
             host_id = request_get(r, "id")
-            result = host_handler.get(host_id, serialization=True)
+            result = host_handler.get(host_id)
             if result:
                 return jsonify(result), CODE_OK
             else:
@@ -138,7 +138,7 @@ def host_api():
 def host_info(host_id):
     logger.debug("/ host_info/{0} method={1}".format(host_id, r.method))
     return render_template("host_info.html", item=host_handler.get(
-        host_id, serialization=True)), CODE_OK
+        host_id)), CODE_OK
 
 
 @host.route('/host_action', methods=['POST'])

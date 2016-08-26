@@ -17,11 +17,9 @@ Master will use remote API to start and stop hyperledger clusters in those compu
 
 ## Components
 
-* `admin`: Provide the dashboard for the pool administrator, also the core
-engine to maintain everything.
+* `admin`: Provide the dashboard for the pool administrator, also the core engine to automatically maintain everything.
 * `app`: Provide the restful api for other system to apply/release/list chains.
-* `watchdog`: periodly checking system status, keep everything healthy and
-clean.
+* `watchdog`: Timely checking system status, keep everything healthy and clean.
 
 ## Implementation
 
