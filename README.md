@@ -1,20 +1,23 @@
 # Cello
-Platform to support Blockchain as a Service.
+Blockchain as a Service Platform.
+
+By Cello, user can 
+
+* Request blockchains with specific configurations instantly, e.g., a 6-node chain using PBFT consensus.
+* Keep a pool of numbers of running chains healthy with no human operations. 
+* Check the system status, scale the chain numbers, change resources... in such a easy way.
 
 ## Features
 
-* Smartly manage ledger clusters, e.g., create/delete host,
-* Provide REST API for user and dashboard for operators.
-* Support most kind of IaaS, including bare-metal or virtual machine.
-* Provide dedicated cluster to user instantly after request arrives.
-* User can select what kind of cluster he want.
-* Support naive docker host or swarm cluster API.
-* Automatically maintain clusters resources in pool when error happens.
-* Support monitor functionality with additional components.
+* Smartly manage the lifecycle of blockchains, e.g., create/delete automatically.
+* Nearly instant performance in service response, even with hundreds of chains.
+* Support customized configuration (e.g., size, consensus) in blockchains request, currently we support [hyperledger fabric](https://github.com/hyperledger/fabric).
+* Employ naive docker host or swarm host as the compute nodes.
+* Deploy on top of heterogeneous architecture, e.g., z, power and x86, from bare-metal servers to virtual machines.
+* Support monitor/log functionality with additional components, easy to extend.
 
 ## Docs
-*It is highly recommended to carefully read these documentation before
-taking any other action.*
+*It is highly recommended to carefully read these documentation first.*
 
 * [Terminology](docs/terminology.md)
 * [Deployment](docs/deployment.md)
