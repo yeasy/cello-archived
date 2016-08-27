@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Pull yeasy/hyperledger:latest and renaming"
+echo "Pull yeasy/hyperledger:latest and retagging"
 docker pull yeasy/hyperledger:latest && \
 docker rmi hyperledger/fabric-baseimage:latest && \
 docker tag yeasy/hyperledger:latest hyperledger/fabric-baseimage:latest

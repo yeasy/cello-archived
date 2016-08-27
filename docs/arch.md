@@ -11,7 +11,7 @@ The architecture will follow those principles:
 
 There are two kinds of nodes: Master and Compute.
 
-Master node will run the poolmanager services, while compute nodes serve as container hosts.
+Master node will run the management services, while compute nodes serve as container hosts.
 
 Master will use remote API to start and stop hyperledger clusters in those compute nodes.
 

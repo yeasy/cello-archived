@@ -56,7 +56,7 @@ DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -
 * SSH (Optionally ): Open for Master to monitor.
 
 ## Configuration
-The application configuration can be imported from environment variable `POOLMANAGER_CONFIG_FILE` as
+The application configuration can be imported from environment variable `CELLO_CONFIG_FILE` as
 the file name.
 
 By default, it also loads the `config.py` file for the configurations.
@@ -69,7 +69,7 @@ Configuration can be set through following environment variables in the
 * `DEBUG=True`
 
 ## Data Storage
-The mongo container will use local `/opt/poolmanager/mongo` directory for
+The mongo container will use local `/opt/cello/mongo` directory for
 storage. Please create it manually before starting the service.
 
 ## Production Consideration

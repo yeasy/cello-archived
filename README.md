@@ -1,4 +1,4 @@
-# PoolManager
+# Cello
 Platform to support Blockchain as a Service.
 
 ## Features
@@ -22,22 +22,20 @@ taking any other action.*
 * [API](docs/api_v2.md)
 * [Architecture Design](docs/arch.md)
 * [Database Model](docs/db.md)
-* [Admin](docs/admin.md)
+* [engine](docs/admin.md)
 
 ## TODO
 * ~~Add default 404 and 500 error page.~~
 * ~~Add doc for all methods and classes~~.
-* ~~Admin: Add authentication for user login~~.
-* Admin: Update api definitions yml files (optional).
-* ~~Admin: Add host module to add cluster in batch (optional).~~
+* ~~engine: Add authentication for user login~~.
+* ~~engine: Add host module to add cluster in batch (optional).~~
 * ~~Use async operation for container management (optional).~~
 * ~~Support multiple version in API.~~
 * ~~Support pagination~~.
 * ~~Support updating the host config~~.
 * ~~Support user defined cluster configuration.~~
 * ~~Add form validation~~.
-* Support auto fresh based on websocket.
-* Support metadata field from user apply cluster.
+* ~~Support metadata field from user apply cluster.~~
 * ~~Support monitor.~~
 * ~~Support host fillup and clean buttons.~~
 * ~~Support host reset buttons.~~
@@ -48,6 +46,12 @@ taking any other action.*
 * ~~Support detect host info when adding as swarm type.~~
 * ~~Add limitation on the running containers.~~
 * ~~Security option and log option (rotate)~~.
+* engine: Update api definitions yml files (optional).
+* Support auto fresh based on websocket.
+* Refine setup scripts.
 
 ## Author
 Designed and maintained by [Baohua Yang](yangbaohua@gmail.com).
+
+## Why names Cello?
+Can u find anyone better at playing chains?

@@ -1,18 +1,18 @@
 # This compose file will deploy the services, and bootup a mongo server.
-# Local `/opt/poolmanager/mongo` will be used for the db storage.
-#  admin: admin service of poolmanager, listen on 8080
-#  app: app service of poolmanager, listen on 80
+# Local `/opt/cello/mongo` will be used for the db storage.
+#  engine: engine service of cello, listen on 8080
+#  app: app service of cello, listen on 80
 #  nginx: front end
 #  mongo: mongo db
 
 version: '2'
 services:
-  # poolmanager admin service
-  admin:
-    build: admin
-    image: poolmanager-admin
-    container_name: admin
-    hostname: poolmanager-admin
+  # cello engine service
+  engine:
+    build: engine
+    image: cello-engine
+    container_name: engine
+    hostname: cello-engine
     restart: unless-stopped
     environment:
       - MONGO_URL=mongodb://mongo:27017
@@ -22,14 +22,14 @@ services:
     expose:
       - "8080"
     volumes:  # This should be removed in product env
-      - ./admin:/app
+      - ./engine:/app
 
-  # poolmanager app service
-  app:
-    build: app
-    image: poolmanager-app
-    container_name: app
-    hostname: poolmanager-app
+  # cello api service
+  api:
+    build: api
+    image: cello-api
+    container_name: api
+    hostname: cello-api
     restart: unless-stopped
     environment:
       - MONGO_URL=mongodb://mongo:27017
@@ -39,14 +39,14 @@ services:
     expose:
       - "80"
     volumes:  # This should be removed in product env
-      - ./app:/app
+      - ./api:/app
 
-  # poolmanager watchdog service
+  # cello watchdog service
   watchdog:
     build: watchdog
-    image: poolmanager-watchdog
+    image: cello-watchdog
     container_name: watchdog
-    hostname: poolmanager-watchdog
+    hostname: cello-watchdog
     restart: unless-stopped
     environment:
       - MONGO_URL=mongodb://mongo:27017
@@ -70,7 +70,7 @@ services:
     environment:
       - NO_USED=0
     volumes:
-      - /opt/poolmanager/mongo:/data/db
+      - /opt/cello/mongo:/data/db
 
   # nginx to forward front request, may split it out in future
   nginx:
@@ -80,12 +80,12 @@ services:
     restart: always
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.default.conf
-      #- /opt/poolmanager/nginx/log/:/var/log/nginx/
+      #- /opt/cello/nginx/log/:/var/log/nginx/
     ports:
       - "80:80"
       - "8080:8080"
     environment:
-      - BACKEND=admin
+      - BACKEND=engine
       - PORT=8080
       - USERNAME=admin
       - PASSWORD=pass

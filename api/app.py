@@ -7,7 +7,7 @@ from resources import action_v1, action_v2
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
 app.config.from_object('config.DevelopmentConfig')
-app.config.from_envvar('POOLMANAGER_CONFIG_FILE', silent=True)
+app.config.from_envvar('CELLO_CONFIG_FILE', silent=True)
 
 app.logger.addHandler(log_handler)
 app.logger.setLevel(LOG_LEVEL)

@@ -21,6 +21,106 @@ logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 
+# will be deprecated
+class Host(object):
+    """ Represent a host instance
+    """
+    def __init__(self, id='', name='', daemon_url='', capacity=1,
+                 status='active', log_type=LOG_TYPES[0], log_server="",
+                 log_level=LOGGING_LEVEL_CLUSTERS[0], schedulable=False):
+        self.data = {
+            'id': id,
+            'name': name,
+            'daemon_url': daemon_url,
+            'create_ts': '',
+            'capacity': capacity,
+            'status': status,
+            'clusters': [],
+            'type': '',
+            'log_level': log_level,
+            'log_type': log_type,
+            'log_server': log_server,
+            'schedulable': schedulable
+        }
+        self.col = db["host"]
+
+    def exist_in_db(self):
+        """
+        Detect whether this host is already in db.
+
+        :return: True for existence, otherwise False
+        """
+        if self.col.find_one(self.get_data('daemon_url')):
+            logger.warn("{} already in db".format(self.get('daemon_url')))
+            return True
+        else:
+            return False
+
+    def insert_to_db(self):
+        """
+        Insert this host to the db.
+        This should be only called once for each host
+
+        :return: host data or None
+        """
+        if self.exist_in_db():
+            return None
+        hid = self.col.insert_one(self.data).inserted_id  # object type
+        create_ts = datetime.datetime.now()
+        host = self.col.find_one_and_update(
+            {"_id": hid},
+            {"$set": {
+                "id": str(hid),
+                'create_ts': create_ts
+            }
+            },
+            return_document=ReturnDocument.AFTER)
+        self.set(id=str(hid), create_ts=create_ts)
+        return self.get_data()
+
+    def set(self, sync=False, **kwargs):
+        """
+        Set the key:value pairs to the data
+        :param sync: Whether to sync to db
+        :param kwargs: kv pairs
+        :return: True of False
+        """
+        self.data.update(kwargs)
+        if sync:
+            host = self.col.find_one_and_update(
+                {"id": self.get('id')},
+                {"$set": kwargs},
+                return_document=ReturnDocument.AFTER)
+            if not host:
+                return False
+        return True
+
+    def get(self, key):
+        """
+        Get the specific key's value in data.
+
+        :param key:
+        :return:
+        """
+        return self.data.get(key)
+
+    def get_data(self, *keys):
+        """
+        Get the data as a dict
+
+        :param keys: filter which key in the results
+        :return: dict obj
+        """
+        if not keys:
+            return self.data
+        else:
+            result = {}
+            for k in keys:
+                if k in self.data:
+                    result[k] = self.data[k]
+            return result
+
+
 class HostHandler(object):
     """ Main handler to operate the Docker hosts
     """
@@ -40,6 +140,7 @@ class HostHandler(object):
         :param daemon_url: daemon_url of the host
         :param capacity: The number of clusters to hold
         :param log_type: type of the log
+        :param log_level: level of the log
         :param log_server: server addr of the syslog
         :param fillup: Whether fillup after creation
         :param schedulable: Whether can schedule cluster request to it
@@ -52,6 +153,11 @@ class HostHandler(object):
                              log_server, fillup, schedulable))
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
+
+        if self.col.find_one({"daemon_url": daemon_url}):
+            logger.warn("{} already existed in db".format(daemon_url))
+            return {}
+
         if "://" not in log_server:
             log_server = "udp://" + log_server
         if log_type == LOG_TYPES[0]:
@@ -64,10 +170,6 @@ class HostHandler(object):
             status = "inactive"
 
         detected_type = detect_daemon_type(daemon_url)
-
-        if self.col.find_one({"daemon_url": daemon_url}):
-            logger.warn("{} already existed in db".format(daemon_url))
-            return {}
 
         if not setup_container_host(detected_type, daemon_url):
             logger.warn("{} cannot be setup".format(name))
@@ -100,11 +202,10 @@ class HostHandler(object):
         else:
             return host
 
-    def get(self, id, serialization=False):
+    def get(self, id):
         """ Get a host
 
         :param id: id of the doc
-        :param serialization: whether to get serialized result or object
         :return: serialized result or obj
         """
         logger.debug("Get a host with id=" + id)
@@ -112,19 +213,15 @@ class HostHandler(object):
         if not ins:
             logger.warn("No cluster found with id=" + id)
             return {}
-        if serialization:
-            return self._serialize(ins)
-        else:
-            return ins
+        return self._serialize(ins)
 
-    def update(self, id, d, serialization=True):
+    def update(self, id, d):
         """ Update a host
 
         TODO: may check when changing host type
 
         :param id: id of the host
         :param d: dict to use as updated values
-        :param serialization: whether to serialize the result
         :return: serialized result or obj
         """
         logger.debug("Get a host with id=" + id)
@@ -145,15 +242,8 @@ class HostHandler(object):
             d["log_server"] = "udp://" + d["log_server"]
         if "log_type" in d and d["log_type"] == LOG_TYPES[0]:
             d["log_server"] = ""
-        h_new = self.col.find_one_and_update(
-            {"id": id},
-            {"$set": d},
-            return_document=ReturnDocument.AFTER)
-
-        if serialization:
-            return self._serialize(h_new)
-        else:
-            return h_new
+        h_new = self.update_to_db(id, d)
+        return self._serialize(h_new)
 
     def list(self, filter_data={}, validate=False):
         """ List hosts with given criteria
@@ -165,7 +255,7 @@ class HostHandler(object):
         host_docs = self.col.find(filter_data)
 
         def update_work(host):
-            self.update_status(host)
+            self.refresh_status(host.get("id"))
         if validate:
             logger.debug("update host status")
             for h in host_docs:
@@ -250,20 +340,14 @@ class HostHandler(object):
         if len(host.get("clusters")) <= 0:
             return True
 
-        host = self.col.find_one_and_update(
-            {"id": id},
-            {"$set": {"status": "inactive"}},
-            return_document=ReturnDocument.AFTER)
+        host = self.update_to_db(id, schedulable=False)
 
         for cid in host.get("clusters"):
             t = Thread(target=cluster_handler.delete, args=(cid,))
             t.start()
             time.sleep(0.2)
+        self.update_to_db(id, schedulable=True)
 
-        self.col.find_one_and_update(
-            {"id": id},
-            {"$set": {"status": "active"}},
-            return_document=ReturnDocument.AFTER)
         return True
 
     def reset(self, id):
@@ -281,7 +365,24 @@ class HostHandler(object):
         return reset_container_host(host_type=host.get("type"),
                                     daemon_url=host.get("daemon_url"))
 
-    def update_status(self, host):
+    def refresh_status(self, id):
+        """
+        Refresh the status of the host by detection
+
+        :param host: the host to update status
+        :return: Updated host
+        """
+        host = self.col.find_one({"id": id, "status": "active"})
+        if not host:
+            logger.warn("No host found with id=" + id)
+            return None
+        if not test_daemon(host.get("daemon_url")):
+            logger.warn("Host {} is inactive".format(id))
+            return self.update_to_db(id, status="inactive")
+        else:
+            return self.update_to_db(id, status="active")
+
+    def is_active(self, host):
         """
         Update status of the host
 
@@ -290,19 +391,8 @@ class HostHandler(object):
         """
         if not host:
             logger.warn("invalid host is given")
-            return None
-        host_id = host.get("id")
-        if not test_daemon(host.get("daemon_url")):
-            logger.warn("Host {} is inactive".format(host_id))
-            return self.col.find_one_and_update(
-                {"id": host_id},
-                {"$set": {"status": "inactive"}},
-                return_document=ReturnDocument.AFTER)
-        else:
-            return self.col.find_one_and_update(
-                {"id": host_id},
-                {"$set": {"status": "active"}},
-                return_document=ReturnDocument.AFTER)
+            return False
+        return host.get("status") == "active"
 
     def _get_active_host(self, id):
         """
@@ -312,11 +402,11 @@ class HostHandler(object):
         :return: host or None
         """
         logger.debug("check host with id = {}".format(id))
-        host = self.col.find_one({"id": id})
+        host = self.col.find_one({"id": id, "status": "active"})
         if not host:
             logger.warn("No host found with id=" + id)
             return None
-        return self.update_status(host)
+        return self._serialize(host)
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
                                     'type', 'create_ts', 'status',
@@ -332,5 +422,19 @@ class HostHandler(object):
         for k in keys:
             result[k] = doc.get(k, '')
         return result
+
+    def update_to_db(self, id, **kwargs):
+        """
+        Set the key:value pairs to the data
+        :param id: Which host to update
+        :param kwargs: kv pairs
+        :return: The updated host
+        """
+        host = self.col.find_one_and_update(
+            {"id": id},
+            {"$set": kwargs},
+            return_document=ReturnDocument.AFTER)
+        return host
+
 
 host_handler = HostHandler()

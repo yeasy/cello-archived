@@ -6,7 +6,7 @@ from resources import index, cluster, host, stat
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
 app.config.from_object('config.DevelopmentConfig')
-app.config.from_envvar('POOLMANAGER_CONFIG_FILE', silent=True)
+app.config.from_envvar('CELLO_CONFIG_FILE', silent=True)
 
 app.logger.setLevel(LOG_LEVEL)
 app.logger.addHandler(log_handler)
