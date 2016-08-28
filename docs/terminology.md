@@ -1,4 +1,4 @@
 # Terminology
-* Cluster: a hyperledger cluster with unique access REST API addr.
-* Docker Node: a single docker host API, maybe a vm, host or cluster.
-* Master | Server: this pool manager service.
+* Cluster | Chain: A blockchain with unique access REST API address.
+* Master Node: Running the cello platform, to manage the compute nodes.
+* Compute Node: The server to have blockchains running inside, can be a Docker host or Swarm host.

@@ -1,24 +1,25 @@
 #!/usr/bin/env bash
-
 # This script will only build and redeploy the specific service.
 # It should be triggered at the upper directory
 
+source ./header.sh
+
 if [ "$#" -ne 1 ]; then
-    echo "give service name as arguments, e.g., app, admin"
+    echo "Redeploy the service, e.g., engine, api, watchdog, mongo, nginx"
     exit
 fi
 
 SERVICE=$1
 
 echo "Remove the old image"
-docker rmi poolmanager-${SERVICE}
+docker rmi ${PROJECT}-${SERVICE}
 
-echo "Rebuilding the poolmanager-${SERVICE} image"
+echo "Rebuilding the ${PROJECT}-${SERVICE} image"
 docker-compose build ${SERVICE}
 
 echo "Remove the old containers"
 docker-compose stop ${SERVICE}
 docker-compose rm -f --all ${SERVICE}
 
-echo "Redeploy the poolmanager-${SERVICE} container"
+echo "Redeploy the ${PROJECT}-${SERVICE} container"
 docker-compose up --no-deps -d ${SERVICE}

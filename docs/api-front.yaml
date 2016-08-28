@@ -1,13 +1,13 @@
-# this is an example of the PoolManager API
+# this is an example of the Cello API
 # as a demonstration of an API spec in YAML
 swagger: '2.0'
 info:
-  title: PoolManager API
-  description: PoolManager API for the front web end
+  title: Cello API
+  description: Cello API for the front web end
   contact:
     name: Baohua Yang
-    url: https://github.rtp.raleigh.ibm.com/blockchain/poolmanager
-    email: baohyang@cn.ibm.com
+    url: https://github.com/yeasy/cello
+    email: yangbaohua@gmail.com
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html

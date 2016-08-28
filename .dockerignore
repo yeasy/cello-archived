@@ -1,4 +1,6 @@
 .git
-Dockerfile
+.tox
+test*
+Dockerfile*
 *~
 screenshots
