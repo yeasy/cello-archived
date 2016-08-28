@@ -8,13 +8,15 @@ from threading import Thread
 from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import db, log_handler, LOG_LEVEL, col_host, \
-    clean_project_containers, clean_chaincode_images, test_daemon, \
+from common import db, log_handler, LOG_LEVEL, \
+    clean_project_containers, clean_chaincode_images, \
     get_swarm_node_ip, compose_start, compose_stop
 
 from common import CLUSTER_API_PORT_START, CONSENSUS_PLUGINS, \
     CONSENSUS_MODES, HOST_TYPES, SYS_CREATOR, SYS_DELETER, SYS_UNHEALTHY, \
     CLUSTER_SIZES
+
+from modules import host
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -28,6 +30,7 @@ class ClusterHandler(object):
     def __init__(self):
         self.col_active = db["cluster_active"]
         self.col_released = db["cluster_released"]
+        self.host_handler = host.host_handler
 
     def list(self, filter_data={}, col_name="active"):
         """ List clusters with given criteria
@@ -36,23 +39,23 @@ class ClusterHandler(object):
         :param col_name: Use data in which col_name
         :return: iteration of serialized doc
         """
+        result = []
         if col_name == "active":
             logger.debug("List all active clusters")
-            result = map(self._serialize, self.col_active.find(filter_data))
+            result = list(map(self._serialize, self.col_active.find(
+                filter_data)))
         elif col_name == "released":
             logger.debug("List all released clusters")
-            result = map(self._serialize, self.col_released.find(
-                filter_data))
+            result = list(map(self._serialize, self.col_released.find(
+                filter_data)))
         else:
             logger.warn("Unknown cluster col_name=" + col_name)
-            return []
         return result
 
-    def get(self, id, serialization=False, col_name="active"):
+    def get_by_id(self, id, col_name="active"):
         """ Get a cluster for the external request
 
         :param id: id of the doc
-        :param serialization: whether to get serialized result or object
         :param col_name: collection to check
         :return: serialized result or obj
         """
@@ -65,10 +68,7 @@ class ClusterHandler(object):
         if not cluster:
             logger.warn("No cluster found with id=" + id)
             return {}
-        if serialization:
-            return self._serialize(cluster)
-        else:
-            return cluster
+        return self._serialize(cluster)
 
     def create(self, name, host_id, api_port=0, user_id="",
                consensus_plugin=CONSENSUS_PLUGINS[0],
@@ -89,7 +89,7 @@ class ClusterHandler(object):
                     "size={}".format(name, host_id, consensus_plugin,
                                      consensus_mode, size))
 
-        h = self._get_active_host(host_id)
+        h = self.host_handler.get_active_host_by_id(host_id)
         if not h:
             return None
 
@@ -125,13 +125,12 @@ class ClusterHandler(object):
         cid = self.col_active.insert_one(c).inserted_id  # object type
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
         # try to add one cluster to host
-        h = col_host.find_one_and_update({"id": host_id},
-                                         {"$addToSet": {"clusters": str(cid)}},
-                                         return_document=ReturnDocument.AFTER)
+        h = self.host_handler.db_update_one(
+            {"id": host_id}, {"$addToSet": {"clusters": str(cid)}})
         if not h or len(h.get("clusters")) > h.get("capacity"):
             self.col_active.delete_one({"_id": cid})
-            col_host.update_one({"id": host_id},
-                                {"$pull": {"clusters": str(cid)}}),
+            self.host_handler.db_update_one({"id": host_id},
+                                            {"$pull": {"clusters": str(cid)}})
             return None
 
         # from now on, we should be safe
@@ -189,10 +188,8 @@ class ClusterHandler(object):
         if col_name != "active":  # released col only removes record
             self.col_released.find_one_and_delete({"id": id})
             return True
-        c = self.col_active.find_one_and_update(
-            {"id": id},
-            {"$set": {"user_id": SYS_DELETER}},
-            return_document=ReturnDocument.BEFORE)  # db has new user_id
+        c = self.db_update_one({"id": id}, {"$set": {"user_id": SYS_DELETER}},
+                               after=False)
         if not c:
             logger.warn("Cannot find cluster {} in {}".format(id, col_name))
             return False
@@ -221,10 +218,11 @@ class ClusterHandler(object):
             c.get("host_id"), c.get("daemon_url"), c.get("api_url", ""), \
             c.get("consensus_plugin", CONSENSUS_PLUGINS[0])
         port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
-        h = col_host.find_one({"id": host_id})
-        if not h:
+
+        if not self.host_handler.get_by_id(host_id):
             logger.warn("No host found with id=" + host_id)
             return False
+
         has_exception = False
         try:
             compose_stop(name=id, daemon_url=daemon_url, api_port=port,
@@ -248,8 +246,8 @@ class ClusterHandler(object):
         if has_exception:
             logger.warn("Cluster {} delete: stop with exceptions".format(id))
             return False
-        col_host.update_one({"id": c.get("host_id")},
-                            {"$pull": {"clusters": id}}),
+        self.host_handler.db_update_one({"id": c.get("host_id")},
+                                        {"$pull": {"clusters": id}})
         self.col_active.delete_one({"id": id})
         if record:  # record to release collection
             logger.debug("Record the cluster info into released collection")
@@ -282,16 +280,17 @@ class ClusterHandler(object):
                                                 'consensus_mode', 'size',
                                                 'health'])
         logger.debug("Try find available cluster for " + user_id)
-        hosts = col_host.find({"status": "active", "schedulable": "true"})
+        hosts = self.host_handler.list({"status": "active",
+                                        "schedulable": "true"})
         host_ids = [h.get("id") for h in hosts]
         logger.debug("Find active and schedulable hosts={}".format(host_ids))
         for h_id in host_ids:  # check each active and schedulable host
             filt = {"user_id": "", "host_id": h_id, "health": "OK"}
             filt.update(condition)
-            c = self.col_active.find_one_and_update(
-                filt, {"$set": {"user_id": user_id,
-                                "apply_ts": datetime.datetime.now()}},
-                return_document=ReturnDocument.AFTER)
+            c = self.db_update_one(
+                filt,
+                {"$set": {"user_id": user_id,
+                          "apply_ts": datetime.datetime.now()}})
             if c and c.get("user_id") == user_id:
                 logger.info("Now have cluster {} at {} for user {}".format(
                     c.get("id"), h_id, user_id))
@@ -327,10 +326,9 @@ class ClusterHandler(object):
         :param record: Whether to record this cluster to release table
         :return: True or False
         """
-        c = self.col_active.find_one_and_update(
+        c = self.db_update_one(
             {"id": cluster_id, "release_ts": ""},
-            {"$set": {"release_ts": datetime.datetime.now()}},
-            return_document=ReturnDocument.AFTER)
+            {"$set": {"release_ts": datetime.datetime.now()}})
         if not c or not c.get("release_ts"):  # not have one
             logger.warn("No cluster can be released for id {}".format(
                 cluster_id))
@@ -338,7 +336,7 @@ class ClusterHandler(object):
 
         def delete_recreate_work():
             logger.debug("Run recreate_work in background thread")
-            cluster_id, cluster_name, consensus_plugin, consensus_mode, size \
+            c_id, cluster_name, consensus_plugin, consensus_mode, size \
                 = \
                 c.get("id"), c.get("name"), c.get("consensus_plugin"), \
                 c.get("consensus_mode"), c.get("size")
@@ -347,8 +345,8 @@ class ClusterHandler(object):
             # if not h or h.get("status") != "active":
             #     logger.warn("No host found with id=" + host_id)
             #     return
-            if not self.delete(cluster_id, record=record, forced=True):
-                logger.warn("Delete cluster failed with id=" + cluster_id)
+            if not self.delete(c_id, record=record, forced=True):
+                logger.warn("Delete cluster failed with id=" + c_id)
             else:
                 if not self.create(name=cluster_name, host_id=host_id,
                                    api_port=int(api_url.split(":")[-1]),
@@ -361,30 +359,6 @@ class ClusterHandler(object):
         t.start()
 
         return True
-
-    def _get_active_host(self, id):
-        """
-        Check if id exists, and status is active. Otherwise update to inactive.
-
-        :param id: host id
-        :return: host or None
-        """
-        logger.debug("check host with id = {}".format(id))
-        host = col_host.find_one({"id": id})
-        if not host:
-            logger.warn("No host found with id=" + id)
-            return None
-        if host.get("status") != "active":
-            logger.warn("Host's status is marked inactive with id=" + id)
-            return None
-        if not test_daemon(host.get("daemon_url")):
-            logger.warn("Host {} is inactive".format(id))
-            host = col_host.find_one_and_update(
-                {"id": id},
-                {"$set": {"status": "inactive"}},
-                return_document=ReturnDocument.AFTER)
-            return None
-        return host
 
     def _serialize(self, doc, keys=['id', 'name', 'user_id', 'host_id',
                                     'api_url', 'consensus_plugin',
@@ -450,8 +424,7 @@ class ClusterHandler(object):
         if number <= 0:
             logger.warn("Available number {} <= 0".format(number))
             return []
-        host = col_host.find_one({"id": host_id})
-        if not host:
+        if not self.host_handler.get_by_id(host_id):
             logger.warn("Cannot find host with id={}", host_id)
             return ""
 
@@ -479,30 +452,45 @@ class ClusterHandler(object):
         :return: True or False
         """
         logger.debug("checking health of cluster id={}", cluster_id)
-        cluster = self.col_active.find_one({"id": cluster_id})
+        cluster = self.get_by_id(cluster_id)
         if not cluster:
             logger.warn("Cannot found cluster id={}", cluster_id)
-            return False
+            return {}
         r = requests.get(cluster["api_url"] + "/network/peers")
         peers = r.json().get("peers")
 
         if len(peers) == cluster["size"]:
-            self.col_active.find_one_and_update(
-                {"id": cluster_id},
-                {"$set": {"health": "OK"}},
-                return_document=ReturnDocument.AFTER)
-            return True
+            return self.db_update_one({"id": cluster_id},
+                                      {"$set": {"health": "OK"}})
         else:
-            c = self.col_active.find_one_and_update(
-                {"id": cluster_id},
-                {"$set": {"health": "FAIL"}},
-                return_document=ReturnDocument.AFTER)
+            c = self.db_update_one({"id": cluster_id},
+                                   {"$set": {"health": "FAIL"}})
             if not c['user_id']:  # the chain is not in use, mark the user_id
-                self.col_active.find_one_and_update(
-                    {"id": cluster_id},
-                    {"$set": {"user_id": SYS_UNHEALTHY}},
-                    return_document=ReturnDocument.AFTER)
-            return False
+                c = self.db_update_one({"id": cluster_id},
+                                       {"$set": {"user_id": SYS_UNHEALTHY}})
+            return c
+
+    def db_update_one(self, filter, operations, after=True, col="active"):
+        """
+        Update the data into the active db
+
+        :param filter: Which instance to update, e.g., {"id": "xxx"}
+        :param operations: data to update to db, e.g., {"$set": {}}
+        :param after: return AFTER or BEFORE
+        :param col: collection to operate on
+        :return: The updated host json dict
+        """
+        if after:
+            return_type = ReturnDocument.AFTER
+        else:
+            return_type = ReturnDocument.BEFORE
+        if col == "active":
+            doc = self.col_active.find_one_and_update(
+                filter, operations, return_document=return_type)
+        else:
+            doc = self.col_released.find_one_and_update(
+                filter, operations, return_document=return_type)
+        return self._serialize(doc)
 
 
 cluster_handler = ClusterHandler()

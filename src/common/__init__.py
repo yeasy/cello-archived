@@ -1,5 +1,5 @@
 from .agent import get_project, clean_project_containers, \
-    clean_chaincode_images, test_daemon, detect_daemon_type, \
+    clean_chaincode_images, check_daemon, detect_daemon_type, \
     get_swarm_node_ip, compose_start, compose_stop, \
     setup_container_host, cleanup_container_host, reset_container_host
 

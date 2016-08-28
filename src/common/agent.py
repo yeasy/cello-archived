@@ -84,7 +84,7 @@ def clean_exited_containers(daemon_url):
             logger.error(e)
 
 
-def test_daemon(daemon_url, timeout=5):
+def check_daemon(daemon_url, timeout=5):
     """ Check if the daemon is active
 
     Only wait for timeout seconds.

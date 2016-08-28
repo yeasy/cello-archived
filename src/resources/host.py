@@ -24,8 +24,9 @@ def hosts_show():
     logger.info("/hosts method=" + r.method)
     request_debug(r, logger)
     col_filter = dict((key, r.args.get(key)) for key in r.args)
-    items = list(host_handler.list(filter_data=col_filter, validate=True))
+    items = list(host_handler.list(filter_data=col_filter))
     items.sort(key=lambda x: str(x["name"]), reverse=True)
+    logger.debug(items)
 
     return render_template("hosts.html",
                            items_count=len(items),
@@ -47,7 +48,7 @@ def host_api():
             return jsonify(response_fail), CODE_BAD_REQUEST
         else:
             host_id = request_get(r, "id")
-            result = host_handler.get(host_id)
+            result = host_handler.get_by_id(host_id)
             if result:
                 return jsonify(result), CODE_OK
             else:
@@ -137,7 +138,7 @@ def host_api():
 @host.route('/host_info/<host_id>', methods=['GET'])
 def host_info(host_id):
     logger.debug("/ host_info/{0} method={1}".format(host_id, r.method))
-    return render_template("host_info.html", item=host_handler.get(
+    return render_template("host_info.html", item=host_handler.get_by_id(
         host_id)), CODE_OK
 
 

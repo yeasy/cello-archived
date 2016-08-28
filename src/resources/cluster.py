@@ -66,7 +66,7 @@ def cluster_api():
             return jsonify(response_fail), CODE_BAD_REQUEST
         else:
             logger.debug("id=" + r.form['id'])
-            result = cluster_handler.get(r.form['id'], serialization=True)
+            result = cluster_handler.get_by_id(r.form['id'])
             if result:
                 return jsonify(result), CODE_OK
             else:
@@ -139,12 +139,10 @@ def cluster_info(cluster_id):
     released = (r.args.get('released', '0') != '0')
     if not released:
         return render_template("cluster_info.html",
-                               item=cluster_handler.get(
-                                   cluster_id, serialization=True),
+                               item=cluster_handler.get_by_id(cluster_id),
                                consensus_plugins=CONSENSUS_PLUGINS), CODE_OK
     else:
         return render_template("cluster_info.html",
-                               item=cluster_handler.get(
-                                   cluster_id, serialization=True,
-                                   col_name="released"),
+                               item=cluster_handler.get_by_id(
+                                   cluster_id, col_name="released"),
                                consensus_plugins=CONSENSUS_PLUGINS), CODE_OK

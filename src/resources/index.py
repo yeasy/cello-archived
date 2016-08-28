@@ -24,7 +24,7 @@ index = Blueprint('index', __name__)
 @index.route('/index', methods=['GET'])
 def show():
     request_debug(r, logger)
-    hosts = list(host_handler.list(filter_data={}, validate=True))
+    hosts = list(host_handler.list(filter_data={}))
     hosts.sort(key=lambda x: x["name"], reverse=False)
     hosts_active = list(filter(lambda e: e["status"] == "active", hosts))
     hosts_inactive = list(filter(lambda e: e["status"] != "active", hosts))

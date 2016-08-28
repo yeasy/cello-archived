@@ -11,114 +11,24 @@ from pymongo.collection import ReturnDocument
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, cleanup_container_host, LOG_LEVEL, LOG_TYPES, \
     CLUSTER_SIZES, CLUSTER_API_PORT_START, CONSENSUS_TYPES, log_handler, \
-    LOGGING_LEVEL_CLUSTERS, test_daemon, detect_daemon_type, \
+    LOGGING_LEVEL_CLUSTERS, check_daemon, detect_daemon_type, \
     reset_container_host, setup_container_host
 
-from modules import cluster_handler
+from modules import cluster
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 
-# will be deprecated
-class Host(object):
-    """ Represent a host instance
-    """
-    def __init__(self, id='', name='', daemon_url='', capacity=1,
-                 status='active', log_type=LOG_TYPES[0], log_server="",
-                 log_level=LOGGING_LEVEL_CLUSTERS[0], schedulable=False):
-        self.data = {
-            'id': id,
-            'name': name,
-            'daemon_url': daemon_url,
-            'create_ts': '',
-            'capacity': capacity,
-            'status': status,
-            'clusters': [],
-            'type': '',
-            'log_level': log_level,
-            'log_type': log_type,
-            'log_server': log_server,
-            'schedulable': schedulable
-        }
-        self.col = db["host"]
-
-    def exist_in_db(self):
-        """
-        Detect whether this host is already in db.
-
-        :return: True for existence, otherwise False
-        """
-        if self.col.find_one(self.get_data('daemon_url')):
-            logger.warn("{} already in db".format(self.get('daemon_url')))
-            return True
-        else:
+def check_status(func):
+    def wrapper(self, *arg):
+        if not self.is_active(*arg):
+            logger.warn("Host inactive")
             return False
-
-    def insert_to_db(self):
-        """
-        Insert this host to the db.
-        This should be only called once for each host
-
-        :return: host data or None
-        """
-        if self.exist_in_db():
-            return None
-        hid = self.col.insert_one(self.data).inserted_id  # object type
-        create_ts = datetime.datetime.now()
-        host = self.col.find_one_and_update(
-            {"_id": hid},
-            {"$set": {
-                "id": str(hid),
-                'create_ts': create_ts
-            }
-            },
-            return_document=ReturnDocument.AFTER)
-        self.set(id=str(hid), create_ts=create_ts)
-        return self.get_data()
-
-    def set(self, sync=False, **kwargs):
-        """
-        Set the key:value pairs to the data
-        :param sync: Whether to sync to db
-        :param kwargs: kv pairs
-        :return: True of False
-        """
-        self.data.update(kwargs)
-        if sync:
-            host = self.col.find_one_and_update(
-                {"id": self.get('id')},
-                {"$set": kwargs},
-                return_document=ReturnDocument.AFTER)
-            if not host:
-                return False
-        return True
-
-    def get(self, key):
-        """
-        Get the specific key's value in data.
-
-        :param key:
-        :return:
-        """
-        return self.data.get(key)
-
-    def get_data(self, *keys):
-        """
-        Get the data as a dict
-
-        :param keys: filter which key in the results
-        :return: dict obj
-        """
-        if not keys:
-            return self.data
         else:
-            result = {}
-            for k in keys:
-                if k in self.data:
-                    result[k] = self.data[k]
-            return result
+            return func(self, *arg)
+    return wrapper
 
 
 class HostHandler(object):
@@ -130,7 +40,7 @@ class HostHandler(object):
     def create(self, name, daemon_url, capacity=1,
                log_level=LOGGING_LEVEL_CLUSTERS[0],
                log_type=LOG_TYPES[0], log_server="", fillup=False,
-               schedulable=False, serialization=True):
+               schedulable="false", serialization=True):
         """ Create a new docker host node
 
         A docker host is potentially a single node or a swarm.
@@ -162,7 +72,7 @@ class HostHandler(object):
             log_server = "udp://" + log_server
         if log_type == LOG_TYPES[0]:
             log_server = ""
-        if test_daemon(daemon_url):
+        if check_daemon(daemon_url):
             logger.warn("The daemon_url is active:" + daemon_url)
             status = "active"
         else:
@@ -189,10 +99,9 @@ class HostHandler(object):
             'schedulable': schedulable
         }
         hid = self.col.insert_one(h).inserted_id  # object type
-        host = self.col.find_one_and_update(
+        host = self.db_update_one(
             {"_id": hid},
-            {"$set": {"id": str(hid)}},
-            return_document=ReturnDocument.AFTER)
+            {"$set": {"id": str(hid)}})
 
         if capacity > 0 and fillup:  # should fillup it
             self.fillup(str(hid))
@@ -202,7 +111,7 @@ class HostHandler(object):
         else:
             return host
 
-    def get(self, id):
+    def get_by_id(self, id):
         """ Get a host
 
         :param id: id of the doc
@@ -225,7 +134,7 @@ class HostHandler(object):
         :return: serialized result or obj
         """
         logger.debug("Get a host with id=" + id)
-        h_old = self.col.find_one({"id": id})
+        h_old = self.get_by_id(id)
         if not h_old:
             logger.warn("No host found with id=" + id)
             return {}
@@ -242,28 +151,17 @@ class HostHandler(object):
             d["log_server"] = "udp://" + d["log_server"]
         if "log_type" in d and d["log_type"] == LOG_TYPES[0]:
             d["log_server"] = ""
-        h_new = self.update_to_db(id, d)
+        h_new = self.db_set_by_id(id, d)
         return self._serialize(h_new)
 
-    def list(self, filter_data={}, validate=False):
+    def list(self, filter_data={}):
         """ List hosts with given criteria
 
         :param filter_data: Image with the filter properties
-        :param validate: validate the host status before list
         :return: iteration of serialized doc
         """
-        host_docs = self.col.find(filter_data)
-
-        def update_work(host):
-            self.refresh_status(host.get("id"))
-        if validate:
-            logger.debug("update host status")
-            for h in host_docs:
-                t = Thread(target=update_work, args=(h,))
-                t.start()
         hosts = self.col.find(filter_data)
-        result = map(self._serialize, hosts)
-        return result
+        return list(map(self._serialize, hosts))
 
     def delete(self, id):
         """ Delete a host instance
@@ -273,7 +171,7 @@ class HostHandler(object):
         """
         logger.debug("Delete a host with id={0}".format(id))
 
-        h = self.col.find_one({"id": id})
+        h = self.get_by_id(id)
         if not h:
             logger.warn("Cannot delete non-existed host")
             return False
@@ -284,6 +182,7 @@ class HostHandler(object):
         self.col.delete_one({"id": id})
         return True
 
+    @check_status
     def fillup(self, id):
         """
         Fullfil a host with clusters to its capacity limit
@@ -292,16 +191,15 @@ class HostHandler(object):
         :return: True or False
         """
         logger.debug("fillup host with id = {}".format(id))
-        host = self._get_active_host(id)
+        host = self.get_by_id(id)
         if not host:
-            logger.warn("host fillup failed as inactive status")
             return False
         num_new = host.get("capacity") - len(host.get("clusters"))
         if num_new <= 0:
             logger.warn("host already full")
             return True
 
-        free_ports = cluster_handler.find_free_api_ports(id, num_new)
+        free_ports = cluster.cluster_handler.find_free_api_ports(id, num_new)
         logger.debug("Free_ports = {}".format(free_ports))
 
         def create_cluster_work(port):
@@ -309,7 +207,7 @@ class HostHandler(object):
                                           (port - CLUSTER_API_PORT_START))
             consensus_plugin, consensus_mode = random.choice(CONSENSUS_TYPES)
             cluster_size = random.choice(CLUSTER_SIZES)
-            cid = cluster_handler.create(name=cluster_name, host_id=id,
+            cid = cluster.cluster_handler.create(name=cluster_name, host_id=id,
                                          api_port=port,
                                          consensus_plugin=consensus_plugin,
                                          consensus_mode=consensus_mode,
@@ -326,6 +224,7 @@ class HostHandler(object):
 
         return True
 
+    @check_status
     def clean(self, id):
         """
         Clean a host's free clusters.
@@ -334,22 +233,23 @@ class HostHandler(object):
         :return: True or False
         """
         logger.debug("clean host with id = {}".format(id))
-        host = self._get_active_host(id)
+        host = self.get_by_id(id)
         if not host:
             return False
         if len(host.get("clusters")) <= 0:
             return True
 
-        host = self.update_to_db(id, schedulable=False)
+        host = self.db_set_by_id(id, schedulable=False)
 
         for cid in host.get("clusters"):
-            t = Thread(target=cluster_handler.delete, args=(cid,))
+            t = Thread(target=cluster.cluster_handler.delete, args=(cid,))
             t.start()
             time.sleep(0.2)
-        self.update_to_db(id, schedulable=True)
+        self.db_set_by_id(id, schedulable=True)
 
         return True
 
+    @check_status
     def reset(self, id):
         """
         Clean a host's free clusters.
@@ -358,7 +258,7 @@ class HostHandler(object):
         :return: True or False
         """
         logger.debug("clean host with id = {}".format(id))
-        host = self._get_active_host(id)
+        host = self.get_by_id(id)
         if not host or len(host.get("clusters")) > 0:
             logger.warn("no resettable host is found with id ={}".format(id))
             return False
@@ -372,29 +272,30 @@ class HostHandler(object):
         :param host: the host to update status
         :return: Updated host
         """
-        host = self.col.find_one({"id": id, "status": "active"})
+        host = self.get_by_id(id)
         if not host:
             logger.warn("No host found with id=" + id)
-            return None
-        if not test_daemon(host.get("daemon_url")):
+            return {}
+        if not check_daemon(host.get("daemon_url")):
             logger.warn("Host {} is inactive".format(id))
-            return self.update_to_db(id, status="inactive")
+            return self.db_set_by_id(id, status="inactive")
         else:
-            return self.update_to_db(id, status="active")
+            return self.db_set_by_id(id, status="active")
 
-    def is_active(self, host):
+    def is_active(self, host_id):
         """
         Update status of the host
 
-        :param host: the host to update status
+        :param host_id: the id of the host to update status
         :return: Updated host
         """
+        host = self.get_by_id(host_id)
         if not host:
             logger.warn("invalid host is given")
             return False
         return host.get("status") == "active"
 
-    def _get_active_host(self, id):
+    def get_active_host_by_id(self, id):
         """
         Check if id exists, and status is active. Otherwise update to inactive.
 
@@ -404,8 +305,8 @@ class HostHandler(object):
         logger.debug("check host with id = {}".format(id))
         host = self.col.find_one({"id": id, "status": "active"})
         if not host:
-            logger.warn("No host found with id=" + id)
-            return None
+            logger.warn("No active host found with id=" + id)
+            return {}
         return self._serialize(host)
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
@@ -424,18 +325,31 @@ class HostHandler(object):
                 result[k] = doc.get(k, '')
         return result
 
-    def update_to_db(self, id, **kwargs):
+    def db_set_by_id(self, id, **kwargs):
         """
         Set the key:value pairs to the data
         :param id: Which host to update
         :param kwargs: kv pairs
         :return: The updated host json dict
         """
-        host = self.col.find_one_and_update(
-            {"id": id},
-            {"$set": kwargs},
-            return_document=ReturnDocument.AFTER)
-        return self._serialize(host)
+        return self.db_update_one({"id": id}, {"$set": kwargs})
+
+    def db_update_one(self, filter, operations, after=True):
+        """
+        Update the data into the active db
+
+        :param filter: Which instance to update, e.g., {"id": "xxx"}
+        :param operations: data to update to db, e.g., {"$set": {}}
+        :param after: return AFTER or BEFORE
+        :return: The updated host json dict
+        """
+        if after:
+            return_type = ReturnDocument.AFTER
+        else:
+            return_type = ReturnDocument.BEFORE
+        doc = self.col.find_one_and_update(
+            filter, operations, return_document=return_type)
+        return self._serialize(doc)
 
 
 host_handler = HostHandler()

@@ -52,6 +52,7 @@ By Cello, user can
 * engine: Update api definitions yml files (optional).
 * Support auto fresh based on websocket.
 * Refine setup scripts.
+* Support advanced scheduling.
 
 ## Author
 Designed and maintained by [Baohua Yang](yangbaohua@gmail.com).

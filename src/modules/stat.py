@@ -38,17 +38,6 @@ class StatHandler(object):
                 'y': len(hosts)
             })
 
-        # may check the cluster health status on the active host
-        def check_clusters_health(clusters):
-            for c in clusters:
-                if not cluster_handler.check_health(c['id']) \
-                        and c['user_id'] != SYS_UNHEALTHY:
-                    cluster_handler.release_cluster(c['id'], record=False)
-                time.sleep(0.2)
-        for h in actives:
-            clusters = cluster_handler.list(filter_data={"host_id": h["id"]})
-            t = Thread(target=check_clusters_health, args=(clusters,))
-            t.start()
         return result
 
     def clusters(self):

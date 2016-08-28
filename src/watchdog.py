@@ -11,17 +11,32 @@ logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 
-def chain_check_health(chain_id, period=2, retries=3):
+def chain_check_health(chain_id, retries=3):
+    """
+    Check the chain health.
+
+    :param chain_id:
+    :param retries:
+    :return:
+    """
+    #if not cluster_handler.check_health(chain_id) \
+    #        and c['user_id'] != SYS_UNHEALTHY:
+    #    cluster_handler.release_cluster(c['id'], record=False)
     pass
 
 
 def host_check_chains(host_id):
+    """
+    Check one host.
+
+    :param host_id:
+    :return:
+    """
     clusters = cluster_handler.list(filter_data={"host_id": host_id})
     for c in clusters:
         t = Thread(target=chain_check_health, args=(c.get("id"),))
         t.start()
         t.join(timeout=5)
-    pass
 
 
 def host_check(host_id, period=2, retries=3):
@@ -36,7 +51,7 @@ def host_check(host_id, period=2, retries=3):
     """
     for i in range(retries):
         h_freshed = host_handler.refresh_status(host_id)
-        if h_freshed.get("status") == "active":  # host is active
+        if h_freshed.get_by_id("status") == "active":  # host is active
             logger.debug("host {} is active, check its chain".format(host_id))
             host_check_chains(host_id)
 
