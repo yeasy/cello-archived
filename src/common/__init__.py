@@ -11,6 +11,6 @@ from .error import response_ok, response_fail, CODE_NOT_FOUND,\
 from .log import log_handler, LOG_LEVEL
 from .utils import CLUSTER_API_PORT_START, COMPOSE_FILE_PATH, \
     CONSENSUS_PLUGINS, CONSENSUS_MODES, HOST_TYPES, \
-    CLUSTER_NETWORK, LOG_TYPES, SYS_CREATOR, SYS_DELETER, SYS_UNHEALTHY,  \
-    CLUSTER_SIZES, request_debug, request_get, request_json_body, \
+    CLUSTER_NETWORK, LOG_TYPES, SYS_CREATOR, SYS_DELETER, SYS_UNHEALTHY, \
+    SYS_USER, CLUSTER_SIZES, request_debug, request_get, request_json_body, \
     CONSENSUS_TYPES, LOGGING_LEVEL_CLUSTERS

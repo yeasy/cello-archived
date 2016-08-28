@@ -24,7 +24,7 @@ logger.addHandler(log_handler)
 def check_status(func):
     def wrapper(self, *arg):
         if not self.is_active(*arg):
-            logger.warn("Host inactive")
+            logger.warning("Host inactive")
             return False
         else:
             return func(self, *arg)
@@ -65,7 +65,7 @@ class HostHandler(object):
             daemon_url = "tcp://" + daemon_url
 
         if self.col.find_one({"daemon_url": daemon_url}):
-            logger.warn("{} already existed in db".format(daemon_url))
+            logger.warning("{} already existed in db".format(daemon_url))
             return {}
 
         if "://" not in log_server:
@@ -73,16 +73,16 @@ class HostHandler(object):
         if log_type == LOG_TYPES[0]:
             log_server = ""
         if check_daemon(daemon_url):
-            logger.warn("The daemon_url is active:" + daemon_url)
+            logger.warning("The daemon_url is active:" + daemon_url)
             status = "active"
         else:
-            logger.warn("The daemon_url is inactive:" + daemon_url)
+            logger.warning("The daemon_url is inactive:" + daemon_url)
             status = "inactive"
 
         detected_type = detect_daemon_type(daemon_url)
 
         if not setup_container_host(detected_type, daemon_url):
-            logger.warn("{} cannot be setup".format(name))
+            logger.warning("{} cannot be setup".format(name))
             return {}
 
         h = {
@@ -120,7 +120,7 @@ class HostHandler(object):
         logger.debug("Get a host with id=" + id)
         ins = self.col.find_one({"id": id})
         if not ins:
-            logger.warn("No cluster found with id=" + id)
+            logger.warning("No cluster found with id=" + id)
             return {}
         return self._serialize(ins)
 
@@ -136,7 +136,7 @@ class HostHandler(object):
         logger.debug("Get a host with id=" + id)
         h_old = self.get_by_id(id)
         if not h_old:
-            logger.warn("No host found with id=" + id)
+            logger.warning("No host found with id=" + id)
             return {}
 
         if "daemon_url" in d and not d["daemon_url"].startswith("tcp://"):
@@ -145,7 +145,7 @@ class HostHandler(object):
         if "capacity" in d:
             d["capacity"] = int(d["capacity"])
         if d["capacity"] < len(h_old.get("clusters")):
-            logger.warn("Cannot set cap smaller than running clusters")
+            logger.warning("Cannot set cap smaller than running clusters")
             return {}
         if "log_server" in d and "://" not in d["log_server"]:
             d["log_server"] = "udp://" + d["log_server"]
@@ -173,10 +173,10 @@ class HostHandler(object):
 
         h = self.get_by_id(id)
         if not h:
-            logger.warn("Cannot delete non-existed host")
+            logger.warning("Cannot delete non-existed host")
             return False
         if h.get("clusters", ""):
-            logger.warn("There are clusters on that host, cannot delete.")
+            logger.warning("There are clusters on that host, cannot delete.")
             return False
         cleanup_container_host(h.get("daemon_url"))
         self.col.delete_one({"id": id})
@@ -196,7 +196,7 @@ class HostHandler(object):
             return False
         num_new = host.get("capacity") - len(host.get("clusters"))
         if num_new <= 0:
-            logger.warn("host already full")
+            logger.warning("host already full")
             return True
 
         free_ports = cluster.cluster_handler.find_free_api_ports(id, num_new)
@@ -216,7 +216,7 @@ class HostHandler(object):
                 logger.debug("Create cluster %s with id={}".format(
                     cluster_name, cid))
             else:
-                logger.warn("Create cluster failed")
+                logger.warning("Create cluster failed")
         for p in free_ports:
             t = Thread(target=create_cluster_work, args=(p,))
             t.start()
@@ -260,7 +260,7 @@ class HostHandler(object):
         logger.debug("clean host with id = {}".format(id))
         host = self.get_by_id(id)
         if not host or len(host.get("clusters")) > 0:
-            logger.warn("no resettable host is found with id ={}".format(id))
+            logger.warning("no resettable host is found with id ={}".format(id))
             return False
         return reset_container_host(host_type=host.get("type"),
                                     daemon_url=host.get("daemon_url"))
@@ -274,13 +274,15 @@ class HostHandler(object):
         """
         host = self.get_by_id(id)
         if not host:
-            logger.warn("No host found with id=" + id)
-            return {}
+            logger.warning("No host found with id=" + id)
+            return False
         if not check_daemon(host.get("daemon_url")):
-            logger.warn("Host {} is inactive".format(id))
-            return self.db_set_by_id(id, status="inactive")
+            logger.warning("Host {} is inactive".format(id))
+            self.db_set_by_id(id, status="inactive")
+            return False
         else:
-            return self.db_set_by_id(id, status="active")
+            self.db_set_by_id(id, status="active")
+            return True
 
     def is_active(self, host_id):
         """
@@ -291,7 +293,7 @@ class HostHandler(object):
         """
         host = self.get_by_id(host_id)
         if not host:
-            logger.warn("invalid host is given")
+            logger.warning("invalid host is given")
             return False
         return host.get("status") == "active"
 
@@ -305,7 +307,7 @@ class HostHandler(object):
         logger.debug("check host with id = {}".format(id))
         host = self.col.find_one({"id": id, "status": "active"})
         if not host:
-            logger.warn("No active host found with id=" + id)
+            logger.warning("No active host found with id=" + id)
             return {}
         return self._serialize(host)
 

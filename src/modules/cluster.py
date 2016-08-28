@@ -13,7 +13,7 @@ from common import db, log_handler, LOG_LEVEL, \
     get_swarm_node_ip, compose_start, compose_stop
 
 from common import CLUSTER_API_PORT_START, CONSENSUS_PLUGINS, \
-    CONSENSUS_MODES, HOST_TYPES, SYS_CREATOR, SYS_DELETER, SYS_UNHEALTHY, \
+    CONSENSUS_MODES, HOST_TYPES, SYS_CREATOR, SYS_DELETER, SYS_USER, \
     CLUSTER_SIZES
 
 from modules import host
@@ -49,7 +49,7 @@ class ClusterHandler(object):
             result = list(map(self._serialize, self.col_released.find(
                 filter_data)))
         else:
-            logger.warn("Unknown cluster col_name=" + col_name)
+            logger.warning("Unknown cluster col_name=" + col_name)
         return result
 
     def get_by_id(self, id, col_name="active"):
@@ -66,7 +66,7 @@ class ClusterHandler(object):
             logger.debug("Get a released cluster with id=" + id)
             cluster = self.col_released.find_one({"id": id})
         if not cluster:
-            logger.warn("No cluster found with id=" + id)
+            logger.warning("No cluster found with id=" + id)
             return {}
         return self._serialize(cluster)
 
@@ -94,7 +94,7 @@ class ClusterHandler(object):
             return None
 
         if len(h.get("clusters")) >= h.get("capacity"):
-            logger.warn("host {} is full already".format(host_id))
+            logger.warning("host {} is full already".format(host_id))
             return None
 
         daemon_url = h.get("daemon_url")
@@ -103,7 +103,7 @@ class ClusterHandler(object):
         if api_port <= 0:
             ports = self.find_free_api_ports(host_id, 1)
             if not ports:
-                logger.warn("No free port is found")
+                logger.warning("No free port is found")
                 return None
             api_port = ports[0]
 
@@ -144,13 +144,13 @@ class ClusterHandler(object):
                                        consensus_mode=consensus_mode,
                                        cluster_size=size)
         except Exception as e:
-            logger.warn(e)
-            logger.warn("Compose start error, then delete project and record")
+            logger.warning(e)
+            logger.warning("Compose start error, then delete project and record")
             self.delete(id=str(cid), col_name="active", record=False,
                         forced=True)
             return None
         if not containers or int(size) != len(containers):
-            logger.warn("failed containers={}, then delete cluster".format(
+            logger.warning("failed containers={}, then delete cluster".format(
                 len(containers)))
             self.delete(id=str(cid), col_name="active", record=False,
                         forced=True)
@@ -188,27 +188,26 @@ class ClusterHandler(object):
         if col_name != "active":  # released col only removes record
             self.col_released.find_one_and_delete({"id": id})
             return True
+
         c = self.db_update_one({"id": id}, {"$set": {"user_id": SYS_DELETER}},
                                after=False)
         if not c:
-            logger.warn("Cannot find cluster {} in {}".format(id, col_name))
+            logger.warning("Cannot find cluster {} in {}".format(id, col_name))
             return False
         # we are safe from applying now
         user_id = c.get("user_id")  # original user_id
         logger.debug("user_id={}".format(user_id))
         if not forced and user_id != "" and \
-                not user_id.startswith(SYS_DELETER) and \
-                not user_id.startswith(SYS_CREATOR):
-            # not forced, then only process unused or in-deleting
-            logger.warn("Cannot find deletable cluster {} in {} by "
-                        "user {}".format(id, col_name, user_id))
+                not user_id.startswith(SYS_USER):
+            # not forced, and chain is used by normal user, then no process
+            logger.warning("Cannot find deletable cluster {} in {} by "
+                           "user {}".format(id, col_name, user_id))
             self.col_active.update_one({"id": id},
                                        {"$set": {"user_id": user_id}})
             return False
 
-        #  0. in db, user_id = SYS_DELETER
-        #  1. forced, user_id="", user_id='xxx', or user_id=^SYS_DELETER
-        #  2. not forced, user_id == "" or user_id=^SYS_DELETER
+        #  0. forced
+        #  1. user_id == SYS_DELETER or ""
         #  Then, add deleting flag to the db, and start deleting
         if not user_id.startswith(SYS_DELETER):
             self.col_active.update_one(
@@ -220,7 +219,7 @@ class ClusterHandler(object):
         port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
 
         if not self.host_handler.get_by_id(host_id):
-            logger.warn("No host found with id=" + host_id)
+            logger.warning("No host found with id=" + host_id)
             return False
 
         has_exception = False
@@ -244,7 +243,7 @@ class ClusterHandler(object):
             logger.error(e)
             # has_exception = True  # may ignore this case
         if has_exception:
-            logger.warn("Cluster {} delete: stop with exceptions".format(id))
+            logger.warning("Cluster {} delete: stop with exceptions".format(id))
             return False
         self.host_handler.db_update_one({"id": c.get("host_id")},
                                         {"$pull": {"clusters": id}})
@@ -279,6 +278,8 @@ class ClusterHandler(object):
                                                 'consensus_plugin',
                                                 'consensus_mode', 'size',
                                                 'health'])
+            else:
+                return {}
         logger.debug("Try find available cluster for " + user_id)
         hosts = self.host_handler.list({"status": "active",
                                         "schedulable": "true"})
@@ -299,7 +300,7 @@ class ClusterHandler(object):
                                                 'consensus_plugin',
                                                 'consensus_mode', 'size',
                                                 'health'])
-        logger.warn("Not find matched available cluster for " + user_id)
+        logger.warning("Not find matched available cluster for " + user_id)
         return {}
 
     def release_cluster_for_user(self, user_id):
@@ -330,7 +331,7 @@ class ClusterHandler(object):
             {"id": cluster_id, "release_ts": ""},
             {"$set": {"release_ts": datetime.datetime.now()}})
         if not c or not c.get("release_ts"):  # not have one
-            logger.warn("No cluster can be released for id {}".format(
+            logger.warning("No cluster can be released for id {}".format(
                 cluster_id))
             return False
 
@@ -343,16 +344,16 @@ class ClusterHandler(object):
             host_id, api_url = c.get("host_id"), c.get("api_url")
             # h = col_host.find_one({"id": host_id})
             # if not h or h.get("status") != "active":
-            #     logger.warn("No host found with id=" + host_id)
+            #     logger.warning("No host found with id=" + host_id)
             #     return
             if not self.delete(c_id, record=record, forced=True):
-                logger.warn("Delete cluster failed with id=" + c_id)
+                logger.warning("Delete cluster failed with id=" + c_id)
             else:
                 if not self.create(name=cluster_name, host_id=host_id,
                                    api_port=int(api_url.split(":")[-1]),
                                    consensus_plugin=consensus_plugin,
                                    consensus_mode=consensus_mode, size=size):
-                    logger.warn("ReCreate cluster failed with name=" +
+                    logger.warning("ReCreate cluster failed with name=" +
                                 cluster_name)
 
         t = Thread(target=delete_recreate_work, args=())
@@ -390,7 +391,7 @@ class ClusterHandler(object):
         daemon_url, host_type = host.get('daemon_url'), host.get('type')
         logger.debug("daemon_url={}, port={}".format(daemon_url, api_port))
         if api_port <= 0 or host_type not in HOST_TYPES:
-            logger.warn("Invalid input: api_port=%d, host_type=%s".format(
+            logger.warning("Invalid input: api_port=%d, host_type=%s".format(
                 api_port, host_type))
             return ""
         # we should diff with simple host and swarm host here
@@ -422,10 +423,10 @@ class ClusterHandler(object):
         """
         logger.debug("Try find {} ports for host {}".format(number, host_id))
         if number <= 0:
-            logger.warn("Available number {} <= 0".format(number))
+            logger.warning("Available number {} <= 0".format(number))
             return []
         if not self.host_handler.get_by_id(host_id):
-            logger.warn("Cannot find host with id={}", host_id)
+            logger.warning("Cannot find host with id={}", host_id)
             return ""
 
         clusters_exists = self.col_active.find({"host_id": host_id})
@@ -435,7 +436,7 @@ class ClusterHandler(object):
         logger.debug("The ports existed:")
         logger.debug(ports_existed)
         if len(ports_existed) + number >= 10000:
-            logger.warn("Too much ports are already used.")
+            logger.warning("Too much ports are already used.")
             return []
         candidates = [CLUSTER_API_PORT_START + i for i in range(len(
             ports_existed) + number)]  # 10 is the room for tolerance
@@ -445,30 +446,28 @@ class ClusterHandler(object):
         logger.debug(result[:number])
         return result[:number]
 
-    def check_health(self, cluster_id):
+    def refresh_health(self, cluster_id):
         """
         Check if the peer is healthy by counting its neighbour number
         :param cluster_id:
         :return: True or False
         """
-        logger.debug("checking health of cluster id={}", cluster_id)
+        logger.debug("checking health of cluster id={}".format(cluster_id))
         cluster = self.get_by_id(cluster_id)
         if not cluster:
-            logger.warn("Cannot found cluster id={}", cluster_id)
-            return {}
+            logger.warning("Cannot found cluster id={}".format(cluster_id))
+            return False
         r = requests.get(cluster["api_url"] + "/network/peers")
         peers = r.json().get("peers")
 
         if len(peers) == cluster["size"]:
-            return self.db_update_one({"id": cluster_id},
-                                      {"$set": {"health": "OK"}})
+            self.db_update_one({"id": cluster_id},
+                               {"$set": {"health": "OK"}})
+            return True
         else:
             c = self.db_update_one({"id": cluster_id},
                                    {"$set": {"health": "FAIL"}})
-            if not c['user_id']:  # the chain is not in use, mark the user_id
-                c = self.db_update_one({"id": cluster_id},
-                                       {"$set": {"user_id": SYS_UNHEALTHY}})
-            return c
+            return False
 
     def db_update_one(self, filter, operations, after=True, col="active"):
         """

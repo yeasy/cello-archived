@@ -53,6 +53,7 @@ By Cello, user can
 * Support auto fresh based on websocket.
 * Refine setup scripts.
 * Support advanced scheduling.
+* Support new port number rule, and support multiple mapping.
 
 ## Author
 Designed and maintained by [Baohua Yang](yangbaohua@gmail.com).
