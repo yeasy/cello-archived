@@ -1,4 +1,6 @@
 # Cello
+[![Build Status](https://travis-ci.org/yeasy/cello.svg?branch=dev)](https://travis-ci.org/yeasy/cello)
+
 Blockchain as a Service Platform.
 
 By Cello, user can 
