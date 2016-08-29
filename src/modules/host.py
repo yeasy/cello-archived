@@ -207,11 +207,10 @@ class HostHandler(object):
                                           (port - CLUSTER_API_PORT_START))
             consensus_plugin, consensus_mode = random.choice(CONSENSUS_TYPES)
             cluster_size = random.choice(CLUSTER_SIZES)
-            cid = cluster.cluster_handler.create(name=cluster_name, host_id=id,
-                                         api_port=port,
-                                         consensus_plugin=consensus_plugin,
-                                         consensus_mode=consensus_mode,
-                                         size=cluster_size)
+            cid = cluster.cluster_handler.create(
+                name=cluster_name, host_id=id, api_port=port,
+                consensus_plugin=consensus_plugin,
+                consensus_mode=consensus_mode, size=cluster_size)
             if cid:
                 logger.debug("Create cluster %s with id={}".format(
                     cluster_name, cid))
@@ -260,7 +259,7 @@ class HostHandler(object):
         logger.debug("clean host with id = {}".format(id))
         host = self.get_by_id(id)
         if not host or len(host.get("clusters")) > 0:
-            logger.warning("no resettable host is found with id ={}".format(id))
+            logger.warning("No find resettable host with id ={}".format(id))
             return False
         return reset_container_host(host_type=host.get("type"),
                                     daemon_url=host.get("daemon_url"))
