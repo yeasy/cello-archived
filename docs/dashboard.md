@@ -1,33 +1,44 @@
 # Dashboard
 
-Dashboard service is not for front users, but only for operator to take quick
-look of system status or manually change configurations.
+System operators can utilize dashboard service to check system status or change configurations.
 
-The front page is `/admin` to get a web page, with links to sub pages.
+The dashboard service will listen on port `8080`.
 
-## clusters
+## Overview
 
-Visit `/clusters`.
+URL: `/index`.
 
-* Create a cluster, with specific `daemon_url`.
-* Delete a cluster, with specific uuid.
+See a high-level overview on system status.
 
-## clusters_released
+## System Status
 
-Visit `/clusters_released`.
+URL: `/stat`.
 
-History data of the released clusters.
+See statistics on the system.
 
-## Monitor
+## Hosts
 
-TODO.
+URL: `/hosts`.
 
-Quickly show how many active docker nodes, active block chain clusters, etc.
+Operate on the hosts managed by the system.
 
-E.g., visit `/admin/stat` to get a web page, show basic statistic info:
+## Clusters_active
 
-* How many chain clusters are existing.
-* How many users visit within a period.
+URL: `/clusters?type=active`.
+
+Operate on existing running chains in the pool.
+
+## Clusters_inused
+
+URL: `/clusters?type=inused`.
+
+Operate on user occupied chains in the system.
+
+## Clusters_released
+
+URL: `/clusters?type=released`.
+
+See cluster releasing history data.
 
 ## Screenshots
 
