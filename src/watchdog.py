@@ -30,18 +30,27 @@ def chain_check_health(chain_id, retries=3, period=2):
         return
     chain_user_id = chain.get("user_id")
     if chain_user_id.startswith(SYS_USER):  # in system processing
-        time.sleep(5)
+        for i in range(retries):
+            if cluster_handler.get_by_id(chain_id).get("user_id") != \
+                    chain_user_id or \
+                    cluster_handler.refresh_health(chain_id):
+                return
+            else:
+                time.sleep(period)
         if cluster_handler.get_by_id(chain_id).get("user_id") == chain_user_id:
+            logger.info("Deleting frozen-in-process chain {}".format(chain_id))
             cluster_handler.delete(chain_id)
         return
-    else:  # free or used by user
-        for i in range(retries):
-            if cluster_handler.refresh_health(chain_id):  # chain is healthy
-                return
+    # free or used by user
+    for i in range(retries):
+        if cluster_handler.refresh_health(chain_id):  # chain is healthy
+            return
+        else:
             time.sleep(period)
-    if cluster_handler.get_by_id(chain_id).get("user_id") == "":
-        cluster_handler.reset_free_one(chain_id)
     logger.debug("Chain {} is unhealthy!".format(chain_id))
+    if cluster_handler.get_by_id(chain_id).get("user_id") == "":
+        logger.info("Resetting free unhealthy chain {}".format(chain_id))
+        cluster_handler.reset_free_one(chain_id)
 
 
 def host_check_chains(host_id):
@@ -69,7 +78,7 @@ def host_check(host_id, retries=3, period=2):
     :param period: retry wait
     :return:
     """
-    for i in range(retries):
+    for _ in range(retries):
         if host_handler.refresh_status(host_id):  # host is active
             logger.debug("host {} is active, check its chains".format(host_id))
             host_check_chains(host_id)
@@ -85,7 +94,7 @@ def watch_run(period=15):
     :return:
     """
     while True:
-        logger.info("Watch dog run with period = %d s", period)
+        logger.info("Watchdog run checks with period = %d s", period)
         hosts = list(host_handler.list())
         for h in hosts:
             t = Thread(target=host_check, args=(h.get("id"),))
