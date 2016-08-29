@@ -5,18 +5,18 @@ Blockchain as a Service Platform.
 
 By Cello, user can 
 
-* Request blockchains with specific configurations instantly, e.g., a 6-node chain using PBFT consensus.
-* Keep a pool of numbers of running chains healthy with no human operations. 
-* Check the system status, scale the chain numbers, change resources... in such a easy way.
+* Obtain blockchains with customized configurations instantly, e.g., a 6-node chain using PBFT consensus.
+* Maintain a pool of running blockchains healthy with no human operations. 
+* Check the system status, scale the chain numbers, change resources... through a dashboard.
 
 ## Features
 
-* Smartly manage the lifecycle of blockchains, e.g., create/delete automatically.
-* Nearly instant performance in service response, even with hundreds of chains.
-* Support customized configuration (e.g., size, consensus) in blockchains request, currently we support [hyperledger fabric](https://github.com/hyperledger/fabric).
-* Employ naive docker host or swarm host as the compute nodes.
-* Deploy on top of heterogeneous architecture, e.g., z, power and x86, from bare-metal servers to virtual machines.
-* Support monitor/log functionality with additional components, easy to extend.
+* Manage the lifecycle of blockchains, e.g., create/delete automatically.
+* Response nearly instantly, even with hundreds of chains.
+* Support customized (e.g., size, consensus) blockchains request, currently we support [hyperledger fabric](https://github.com/hyperledger/fabric).
+* Support native Docker host or swarm host as the compute nodes, more supports on the way.
+* Support heterogeneous architecture, e.g., Z, Power and X86, from bare-metal servers to virtual machines.
+* Extend with monitor/log/health features by employing additional components.
 
 ## Docs
 
