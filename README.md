@@ -1,4 +1,4 @@
-![Cello](docs/imgs/logo.png)
+![Cello](docs/imgs/logo_small.png)
 
 [![Build Status](https://travis-ci.org/yeasy/cello.svg?branch=dev)](https://travis-ci.org/yeasy/cello)
 
