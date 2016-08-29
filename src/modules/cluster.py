@@ -14,7 +14,7 @@ from common import db, log_handler, LOG_LEVEL, \
 
 from common import CLUSTER_API_PORT_START, CONSENSUS_PLUGINS, \
     CONSENSUS_MODES, HOST_TYPES, SYS_CREATOR, SYS_DELETER, SYS_USER, \
-    CLUSTER_SIZES
+    SYS_RESETTING, CLUSTER_SIZES
 
 from modules import host
 
@@ -334,32 +334,53 @@ class ClusterHandler(object):
                 cluster_id))
             return False
 
-        def delete_recreate_work():
-            logger.debug("Run recreate_work in background thread")
-            c_id, cluster_name, host_id, api_url, consensus_plugin, \
-                consensus_mode, size \
-                = c.get("id"), c.get("name"), c.get("host_id"), \
-                c.get("api_url"), c.get("consensus_plugin"), \
-                c.get("consensus_mode"), c.get("size")
-            api_port = int(api_url.split(":")[-1])
-            # h = col_host.find_one({"id": host_id})
-            # if not h or h.get("status") != "active":
-            #     logger.warning("No host found with id=" + host_id)
-            #     return
-            if not self.delete(c_id, record=record, forced=True):
-                logger.warning("Delete cluster failed with id=" + c_id)
-            else:
-                if not self.create(name=cluster_name, host_id=host_id,
-                                   api_port=api_port,
-                                   consensus_plugin=consensus_plugin,
-                                   consensus_mode=consensus_mode, size=size):
-                    logger.warning("Fail to recreate cluster {}".format(
-                        cluster_name))
+        return self.reset(cluster_id, record)
 
-        t = Thread(target=delete_recreate_work, args=())
-        t.start()
+    def reset(self, cluster_id, record=False):
+        """
+        Reset a chain.
 
+        Delete it and recreate with the same configuration.
+        :param cluster_id: id of the reset cluster
+        :param record: whether to record into released db
+        :return:
+        """
+
+        c = self.get_by_id(cluster_id)
+        logger.debug("Run recreate_work in background thread")
+        cluster_name, host_id, api_url, consensus_plugin, \
+            consensus_mode, size \
+            = c.get("name"), c.get("host_id"), \
+            c.get("api_url"), c.get("consensus_plugin"), \
+            c.get("consensus_mode"), c.get("size")
+        api_port = int(api_url.split(":")[-1])
+        if not self.delete(cluster_id, record=record, forced=True):
+            logger.warning("Delete cluster failed with id=" + cluster_id)
+            return False
+        else:
+            if not self.create(name=cluster_name, host_id=host_id,
+                               api_port=api_port,
+                               consensus_plugin=consensus_plugin,
+                               consensus_mode=consensus_mode, size=size):
+                logger.warning("Fail to recreate cluster {}".format(
+                    cluster_name))
+                return False
         return True
+
+    def reset_free_one(self, cluster_id):
+        """
+        Reset some free chain, mostly because it's broken.
+
+        :param cluster_id: id to reset
+        :return: True or False
+        """
+        c = self.db_update_one({"id": cluster_id, "user_id": ""},
+                               {"$set": {"user_id": SYS_RESETTING}})
+        if c.get("user_id") != SYS_RESETTING:  # not have one
+            logger.warning("No free cluster can be reset for id {}".format(
+                cluster_id))
+            return False
+        return self.reset(cluster_id)
 
     def _serialize(self, doc, keys=['id', 'name', 'user_id', 'host_id',
                                     'api_url', 'consensus_plugin',
@@ -446,10 +467,11 @@ class ClusterHandler(object):
         logger.debug(result[:number])
         return result[:number]
 
-    def refresh_health(self, cluster_id):
+    def refresh_health(self, cluster_id, timeout=5):
         """
         Check if the peer is healthy by counting its neighbour number
-        :param cluster_id:
+        :param cluster_id: id of the cluster
+        :param timeout: how many seconds to wait for receiving response
         :return: True or False
         """
         logger.debug("checking health of cluster id={}".format(cluster_id))
@@ -457,7 +479,12 @@ class ClusterHandler(object):
         if not cluster:
             logger.warning("Cannot found cluster id={}".format(cluster_id))
             return False
-        r = requests.get(cluster["api_url"] + "/network/peers")
+        try:
+            r = requests.get(cluster["api_url"] + "/network/peers",
+                             timeout=timeout)
+        except Exception as e:
+            logger.error("Error to refresh health by requests {}".format(e))
+            return False
         peers = r.json().get("peers")
 
         if len(peers) == cluster["size"]:

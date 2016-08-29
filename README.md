@@ -1,9 +1,11 @@
 # Cello
 [![Build Status](https://travis-ci.org/yeasy/cello.svg?branch=dev)](https://travis-ci.org/yeasy/cello)
 
-Blockchain as a Service Platform.
+Blockchain as a Service!
 
-By Cello, user can 
+![Typical Scenario](docs/imgs/scenario.png)
+
+Using Cello, we can 
 
 * Obtain blockchains with customized configurations instantly, e.g., a 6-node chain using PBFT consensus.
 * Maintain a pool of running blockchains healthy with no human operations. 

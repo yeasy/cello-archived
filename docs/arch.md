@@ -1,5 +1,7 @@
 # Architecture Design
 
+Here we discuss the architecture design for the mangement services on the Master node.
+
 ## Terminology
 * Cluster | Chain: A blockchain with unique access REST API address.
 * Master Node: Running the cello platform, to manage the compute nodes.
@@ -12,20 +14,10 @@ The architecture will follow the following principles:
 * Fault-resilience: Means the service should be tolerant for fault, such as database crash. 
 * Scalability: Try best to distribute the services, to mitigate centralized bottle neck.
 
-## Operation Structure
-
-*TODO: Need a figure here.*
-
-There are two kinds of nodes: 
-
-* Master Node
-* Compute Node
-
-Master node will run the management service, while compute nodes serve as chain hosts.
-
-Master will use remote API to start and stop the chains in those compute nodes.
 
 ## Components
+
+![Architecture Overview](imgs/architecture.png)
 
 * `dashboard`: Provide the dashboard for the pool administrator, also the core engine to automatically maintain everything.
 * `restserver`: Provide the restful api for other system to apply/release/list chains.

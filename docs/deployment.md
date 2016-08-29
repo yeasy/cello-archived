@@ -1,6 +1,11 @@
 # Deployment
 
-Master node owns all management services, while Work nodes serve as compute host.
+There are two kinds of nodes : 
+
+* Master Node
+* Compute (Work) Node
+
+Master node will run the management service, while Compute nodes serve as chain hosts. Master will use remote API to start and stop the chains in those compute nodes.
 
 If you are not familiar, it is recommended to config all nodes using provided scripts.
 
