@@ -55,8 +55,8 @@ def clean_project_containers(daemon_url, name_prefix, timeout=5):
     id_removes = [e['Id'] for e in containers if
                   e['Names'][0].split("/")[-1].startswith(name_prefix)]
     for _ in id_removes:
-        logger.debug("Remove container {}", _)
         client.remove_container(_, force=True)
+        logger.debug("Remove container {}".format(_))
 
 
 #  Deprecated
