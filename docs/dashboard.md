@@ -29,3 +29,11 @@ E.g., visit `/admin/stat` to get a web page, show basic statistic info:
 * How many chain clusters are existing.
 * How many users visit within a period.
 
+## Screenshots
+
+![dashboard-main](imgs/dashboard_main.png)
+![dashboard-status](imgs/dashboard_status.png)
+![dashboard-hosts](imgs/dashboard_hosts.png)
+![dashboard-clusters](imgs/dashboard_clusters.png)
+![dashboard-add-host](imgs/dashboard_add_host.png)
+![dashboard-add-cluster](imgs/dashboard_add_cluster.png)

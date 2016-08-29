@@ -18,22 +18,15 @@ By Cello, user can
 
 ## Docs
 
+### User Docs
 * [Deployment](docs/deployment.md)
-* [Architecture Design](docs/arch.md)
+* [Dashboard](docs/dashboard.md)
+
+### Development Docs
 * [Scenarios](docs/scenario.md)
+* [Architecture Design](docs/arch.md)
 * [Database Model](docs/db.md)
-* [dashboard](docs/dashboard.md)
 * [API](api)
-
-
-## Screenshots
-
-![dashboard-main](imgs/dashboard_main.png)
-![dashboard-status](imgs/dashboard_status.png)
-![dashboard-hosts](imgs/dashboard_hosts.png)
-![dashboard-clusters](imgs/dashboard_clusters.png)
-![dashboard-add-host](imgs/dashboard_add_host.png)
-![dashboard-add-cluster](imgs/dashboard_add_cluster.png)
 
 ## TODO
 * ~~Add default 404 and 500 error page.~~
