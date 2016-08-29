@@ -281,7 +281,7 @@ class ClusterHandler(object):
                                                 'health'])
         logger.debug("Try find available cluster for " + user_id)
         hosts = self.host_handler.list({"status": "active",
-                                        "schedulable": "true"})
+                                        "schedulable": True})
         host_ids = [h.get("id") for h in hosts]
         logger.debug("Find active and schedulable hosts={}".format(host_ids))
         for h_id in host_ids:  # check each active and schedulable host

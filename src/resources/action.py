@@ -36,39 +36,40 @@ def cluster_apply():
 
     user_id = request_get(r, "user_id")
     if not user_id:
-        logger.warn("cluster_apply without user_id")
+        logger.warning("cluster_apply without user_id")
         return make_response_invalid("cluster_apply without user_id")
 
-    condition = {}
+    allow_multiple, condition = request_get(r, "allow_multiple"), {}
 
     consensus_plugin = request_get(r, "consensus_plugin")
     consensus_mode = request_get(r, "consensus_mode")
     cluster_size = int(request_get(r, "size") or -1)
     if consensus_plugin:
         if consensus_plugin not in CONSENSUS_PLUGINS:
-            logger.warn("Invalid consensus_plugin")
+            logger.warning("Invalid consensus_plugin")
             return make_response_invalid("Invalid consensus_plugin")
         else:
             condition["consensus_plugin"] = consensus_plugin
 
     if consensus_mode:
         if consensus_mode not in CONSENSUS_MODES:
-            logger.warn("Invalid consensus_mode")
+            logger.warning("Invalid consensus_mode")
             return make_response_invalid("Invalid consensus_mode")
         else:
             condition["consensus_mode"] = consensus_mode
 
     if cluster_size >= 0:
         if cluster_size not in CLUSTER_SIZES:
-            logger.warn("Invalid cluster_size")
+            logger.warning("Invalid cluster_size")
             return make_response_invalid("Invalid cluster_size")
         else:
             condition["size"] = cluster_size
 
     logger.debug("condition={}".format(condition))
-    c = cluster_handler.apply_cluster(user_id=user_id, condition=condition)
+    c = cluster_handler.apply_cluster(user_id=user_id, condition=condition,
+                                      allow_multiple=allow_multiple)
     if not c:
-        logger.warn("cluster_apply failed")
+        logger.warning("cluster_apply failed")
         return make_response_invalid("No available res for {}".format(user_id))
     else:
         response_ok["data"] = c
@@ -85,7 +86,7 @@ def cluster_release():
     user_id = request_get(r, "user_id")
     cluster_id = request_get(r, "cluster_id")
     if not user_id and not cluster_id:
-        logger.warn("cluster_release without id")
+        logger.warning("cluster_release without id")
         response_fail["error"] = "No id in release"
         response_fail["data"] = r.args
         return make_response(jsonify(response_fail), CODE_BAD_REQUEST)
@@ -96,8 +97,8 @@ def cluster_release():
         elif user_id:
             result = cluster_handler.release_cluster_for_user(user_id=user_id)
         if not result:
-            logger.warn("cluster_release failed user_id={} cluster_id={}".
-                        format(user_id, cluster_id))
+            logger.warning("cluster_release failed user_id={} cluster_id={}".
+                           format(user_id, cluster_id))
             response_fail["error"] = "release fail"
             response_fail["data"] = {
                 "user_id": user_id,
@@ -115,9 +116,9 @@ def cluster_list():
     """
     request_debug(r, logger)
     user_id = request_get(r, "user_id")
-    logger.warn("user_id={}".format(user_id))
+    logger.warning("user_id={}".format(user_id))
     if not user_id:
-        logger.warn("cluster_apply without user_id")
+        logger.warning("cluster_apply without user_id")
         response_fail["error"] = "No user_id is given"
         response_fail["data"] = r.args
         return jsonify(response_fail), CODE_BAD_REQUEST
