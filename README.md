@@ -1,4 +1,6 @@
 # Cello
+[![Build Status](https://travis-ci.org/yeasy/cello.svg?branch=dev)](https://travis-ci.org/yeasy/cello)
+
 Blockchain as a Service Platform.
 
 By Cello, user can 
@@ -18,12 +20,15 @@ By Cello, user can
 
 ## Docs
 
+### User Docs
 * [Deployment](docs/deployment.md)
-* [Architecture Design](docs/arch.md)
+* [Dashboard](docs/dashboard.md)
+
+### Development Docs
 * [Scenarios](docs/scenario.md)
-* [API](api)
+* [Architecture Design](docs/arch.md)
 * [Database Model](docs/db.md)
-* [dashboard](docs/dashboard.md)
+* [API](api)
 
 ## TODO
 * ~~Add default 404 and 500 error page.~~
