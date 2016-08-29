@@ -1,6 +1,6 @@
 # Deployment
 
-There are two kinds of nodes : 
+There are two kinds of nodes: 
 
 * Master Node
 * Compute (Work) Node
