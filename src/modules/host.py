@@ -244,7 +244,7 @@ class HostHandler(object):
             t = Thread(target=cluster.cluster_handler.delete, args=(cid,))
             t.start()
             time.sleep(0.2)
-        self.db_set_by_id(id, schedulable="false")
+        self.db_set_by_id(id, schedulable="true")
 
         return True
 
