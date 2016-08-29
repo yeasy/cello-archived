@@ -3,30 +3,30 @@
 
 source ./header.sh
 
-USER="opuser"
+USER="whoami"
 
 DB_DIR=/opt/${PROJECT}/mongo
 
-apt-get update && apt-get install -y -m curl docker-engine python-pip
+sudo apt-get update && apt-get install -y -m curl docker-engine python-pip
 
-pip install --upgrade pip
+sudo pip install --upgrade pip
 
 echo "Checking Docker-engine..."
-command -v docker >/dev/null 2>&1 || { echo_r >&2 "No docker-engine found, try installing"; curl -sSL https://get.docker.com/ | sh; service docker restart; }
+command -v docker >/dev/null 2>&1 || { echo_r >&2 "No docker-engine found, try installing"; curl -sSL https://get.docker.com/ | sh; sudo service docker restart; }
 
 echo "Add existing user to docker group"
-usermod -aG docker ${USER}
+sudo usermod -aG docker ${USER}
 
 echo "Checking Docker-compose..."
-command -v docker-compose >/dev/null 2>&1 || { echo_r >&2 "No docker-compose found, try installing"; pip install -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com docker-compose; }
+command -v docker-compose >/dev/null 2>&1 || { echo_r >&2 "No docker-compose found, try installing"; sudo pip install -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com docker-compose; }
 
 echo "Checking local for mounted database path..."
-[ ! -d ${DB_DIR} ] && echo_r "Local database path not existed, creating one" && mkdir -p ${DB_DIR} && chown -R ${USER}:${USER} ${DB_DIR}
+[ ! -d ${DB_DIR} ] && echo_r "Local database path not existed, creating one" && mkdir -p ${DB_DIR} && sudo chown -R ${USER}:${USER} ${DB_DIR}
 
 echo "Checking local Docker image..."
-pull_image "mongo:3.2"
-pull_image "python:3.2"
-pull_image "yeasy/nginx:latest"
+sudo pull_image "mongo:3.2"
+sudo pull_image "python:3.2"
+sudo pull_image "yeasy/nginx:latest"
 
 [ `docker ps -qa|wc -l` -gt 0 ] && echo_r "Warn: existing containers may cause unpredictable failure"
 
