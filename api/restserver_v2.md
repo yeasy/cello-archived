@@ -16,11 +16,11 @@ user_id:xxx,
 consensus_plugin:pbft,
 consensus_mode:batch,
 size:4,
-new:0
+allow_multiple:False
 }
 ```
 
-if `new:1`, then ignore matched clusters that user already occupy.
+if `allow_multiple:True`, then ignore matched clusters that user already occupied.
 
 When `cluster_apply` request arrives, the server will try checking  available cluster in the pool.
 
