@@ -268,7 +268,7 @@ class ClusterHandler(object):
         :param allow_multiple: Allow multiple chain for each tenant
         :return: serialized cluster or None
         """
-        if not allow_multiple:
+        if not allow_multiple:  # check if already having one
             filt = {"user_id": user_id, "release_ts": "", "health": "OK"}
             filt.update(condition)
             c = self.col_active.find_one(filt)
@@ -279,8 +279,6 @@ class ClusterHandler(object):
                                                 'consensus_plugin',
                                                 'consensus_mode', 'size',
                                                 'health'])
-            else:
-                return {}
         logger.debug("Try find available cluster for " + user_id)
         hosts = self.host_handler.list({"status": "active",
                                         "schedulable": "true"})
