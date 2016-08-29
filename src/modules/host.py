@@ -151,7 +151,7 @@ class HostHandler(object):
             d["log_server"] = "udp://" + d["log_server"]
         if "log_type" in d and d["log_type"] == LOG_TYPES[0]:
             d["log_server"] = ""
-        h_new = self.db_set_by_id(id, d)
+        h_new = self.db_set_by_id(id, **d)
         return self._serialize(h_new)
 
     def list(self, filter_data={}):
@@ -238,13 +238,13 @@ class HostHandler(object):
         if len(host.get("clusters")) <= 0:
             return True
 
-        host = self.db_set_by_id(id, schedulable=False)
+        host = self.db_set_by_id(id, schedulable="false")
 
         for cid in host.get("clusters"):
             t = Thread(target=cluster.cluster_handler.delete, args=(cid,))
             t.start()
             time.sleep(0.2)
-        self.db_set_by_id(id, schedulable=True)
+        self.db_set_by_id(id, schedulable="false")
 
         return True
 

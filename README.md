@@ -17,15 +17,13 @@ By Cello, user can
 * Support monitor/log functionality with additional components, easy to extend.
 
 ## Docs
-*It is highly recommended to carefully read these documentation first.*
 
-* [Terminology](docs/terminology.md)
 * [Deployment](docs/deployment.md)
-* [Scenarios](docs/scenario.md)
-* [API](docs/api_v2.md)
 * [Architecture Design](docs/arch.md)
+* [Scenarios](docs/scenario.md)
+* [API](api)
 * [Database Model](docs/db.md)
-* [engine](docs/admin.md)
+* [dashboard](docs/dashboard.md)
 
 ## TODO
 * ~~Add default 404 and 500 error page.~~
@@ -49,14 +47,14 @@ By Cello, user can
 * ~~Support detect host info when adding as swarm type.~~
 * ~~Add limitation on the running containers.~~
 * ~~Security option and log option (rotate)~~.
-* engine: Update api definitions yml files (optional).
+* ~~Refine setup scripts.~~
+* engine: Update api definitions yml files.
 * Support auto fresh based on websocket.
-* Refine setup scripts.
 * Support advanced scheduling.
-* Support new port number rule, and support multiple mapping.
-
-## Author
-Designed and maintained by [Baohua Yang](yangbaohua@gmail.com).
+* Support new version: multiple port mapping, new chaincode operation api.
 
 ## Why names Cello?
 Can u find anyone better at playing chains?
+
+## Author
+Designed and maintained by [Baohua Yang](yangbaohua@gmail.com).

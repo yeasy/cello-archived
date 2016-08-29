@@ -1,48 +1,60 @@
 # Deployment
 
-For the first time running, please setup the master node with
+Master node owns all management services, while Work nodes serve as compute host.
 
-```sh
-$ bash scripts/setup.sh
-```
+If you are not familiar, it is recommended to config all nodes using provided scripts.
 
-To (Re)start the whole service, please run
+## Master Node
 
-```sh
-$ bash scripts/restart.sh
-```
-
-To redeploy one sub service, e.g., admin, please run
-
-```sh
-$ bash scripts/redeploy.sh admin
-```
-
-All services are recommended to setup through Docker containers by default.
-
-The work node is recommended to config manually.
-
-## Master Requirement
-* system: 8c16g100g
-* docker engine: 1.11.2+
-* docker-compose: 1.7.0+
-* docker images:
+### System Requirement
+* Hardware: 8c16g100g
+* Docker engine: 1.11.2+
+* Docker images:
     - python:3.5
     - mongo:3.2
     - yeasy/nginx:latest
     - mongo-express:0.30 (optional)
+* docker-compose: 1.7.0+
 
-## Node Requirement
-* system: 8c16g100g
-* docker engine:
-    - 1.11.2,
-    - Let daemon listen on port 2375, and make sure Master can reach Node from port 2375.
+### Setup
 
+All setup scripts are under [scripts](scripts).
+
+For the first time running, please setup the master node with
+
+```sh
+$ bash setup.sh
+```
+
+To (re)start the whole services, please run
+
+```sh
+$ bash restart.sh
+```
+
+To redeploy one sub service, e.g., dashboard, please run
+
+```sh
+$ bash redeploy.sh dashboard
+```
+
+Make sure local path `/opt/cello/mongo` exists.
+
+
+## Work Node 
+
+### System Requirement
+* Hardware: 8c16g100g
+* `sysctl net.ipv4.ip_forward=1`, and make sure host ports are open (e.g., 2375, 5000)
+* Docker engine:
+    - 1.11.2+,
+    - Let daemon listen on port 2375, and make sure Master can reach Node from this port.
+    - Config Docker daemon as the following:
 ```sh
 # Add this into /etc/default/docker
 DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*' --default-ulimit=nofile=1024:2048 --default-ulimit=nproc=4096:8192"
 ```
-* docker images:
+* Docker images:
     - `yeasy/hyperledger:latest`
 
         ```sh
@@ -51,32 +63,28 @@ DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -
         ```
     - `yeasy/hyperledger-peer:latest`
     - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the authentication service)
-* aufs-tools: required on ubuntu 14.04.
-* `sysctl net.ipv4.ip_forward=1`, and make sure peer can reach host server ports (e.g., 2375, 5000)
-* SSH (Optionally ): Open for Master to monitor.
+* aufs-tools (optional): Only required on ubuntu 14.04.
 
 ## Configuration
-The application configuration can be imported from environment variable `CELLO_CONFIG_FILE` as
-the file name.
+The application configuration can be imported from file named `CELLO_CONFIG_FILE`.
 
-By default, it also loads the `config.py` file for the configurations.
+By default, it also loads the `config.py` file as the configurations.
 
-Configuration can be set through following environment variables in the
-[docker-compose.yml](docker-compose.yml):
+Configuration can be set through following environment variables in the [docker-compose.yml](docker-compose.yml):
 
 * `MONGO_URL=mongodb://mongo:27017`
 * `MONGO_COLLECTION=dev`
 * `DEBUG=True`
 
 ## Data Storage
-The mongo container will use local `/opt/cello/mongo` directory for
-storage. Please create it manually before starting the service.
+The mongo container will use local `/opt/cello/mongo` directory for storage. 
+
+Please create it manually before starting the service.
 
 ## Production Consideration
 
-* Use the code from `master` branch.
-* Configuration: Set all parameters to production, including image, compose,
-and app.
+* Use the code from `release` branch.
+* Configuration: Set all parameters to production, including image, compose, and application.
 * Security: Use firewall to filter traffic, enable TLS and authentication.
 * Backup: Enable automatic data backup.
 * Monitoring: Enable monitoring services.

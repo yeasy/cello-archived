@@ -14,7 +14,7 @@ POST /v2/cluster_apply
 {
 user_id:xxx,
 consensus_plugin:pbft,
-consensus_mode:classic,
+consensus_mode:batch,
 size:4,
 new:0
 }
@@ -30,8 +30,8 @@ Accordingly, the server will return a json response (succeed or fail).
   "code": 200,
   "data": {
     "api_url": "http://192.168.7.62:5004",
-    "consensus_mode": "classic",
-    "consensus_plugin": "noops",
+    "consensus_mode": "batch",
+    "consensus_plugin": "pbft",
     "daemon_url": "tcp://192.168.7.62:2375",
     "id": "576ba021414b0502864d0306",
     "name": "compute2_4",

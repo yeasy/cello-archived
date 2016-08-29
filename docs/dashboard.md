@@ -1,6 +1,6 @@
-# Admin
+# Dashboard
 
-Admin service is not for front users, but only for operator to take quick
+Dashboard service is not for front users, but only for operator to take quick
 look of system status or manually change configurations.
 
 The front page is `/admin` to get a web page, with links to sub pages.
