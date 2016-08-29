@@ -20,7 +20,7 @@ def chain_check_health(chain_id, retries=3, period=1):
     :param period: wait between two retries
     :return:
     """
-    #if not cluster_handler.check_health(chain_id) \
+    # if not cluster_handler.check_health(chain_id) \
     #        and c['user_id'] != SYS_UNHEALTHY:
     #    cluster_handler.release_cluster(c['id'], record=False)
     logger.debug("Chain {}: checking health".format(chain_id))

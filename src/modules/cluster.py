@@ -145,7 +145,7 @@ class ClusterHandler(object):
                                        cluster_size=size)
         except Exception as e:
             logger.warning(e)
-            logger.warning("Compose start error, then delete project and record")
+            logger.warning("Compose start error, then delete and record")
             self.delete(id=str(cid), col_name="active", record=False,
                         forced=True)
             return None
@@ -174,7 +174,9 @@ class ClusterHandler(object):
         return str(cid)
 
     def delete(self, id, col_name="active", record=False, forced=False):
-        """ Delete a cluster instance, clean containers, remove db entry
+        """ Delete a cluster instance
+
+        Clean containers, remove db entry. Only operate on active host.
 
         :param id: id of the cluster to delete
         :param col_name: name of the cluster to operate
@@ -197,8 +199,7 @@ class ClusterHandler(object):
         # we are safe from applying now
         user_id = c.get("user_id")  # original user_id
         logger.debug("user_id={}".format(user_id))
-        if not forced and user_id != "" and \
-                not user_id.startswith(SYS_USER):
+        if not forced and user_id != "" and not user_id.startswith(SYS_USER):
             # not forced, and chain is used by normal user, then no process
             logger.warning("Cannot find deletable cluster {} in {} by "
                            "user {}".format(id, col_name, user_id))
@@ -218,8 +219,8 @@ class ClusterHandler(object):
             c.get("consensus_plugin", CONSENSUS_PLUGINS[0])
         port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
 
-        if not self.host_handler.get_by_id(host_id):
-            logger.warning("No host found with id=" + host_id)
+        if not self.host_handler.get_active_host_by_id(host_id):
+            logger.warning("No active host found with id=" + host_id)
             return False
 
         has_exception = False
@@ -243,7 +244,7 @@ class ClusterHandler(object):
             logger.error(e)
             # has_exception = True  # may ignore this case
         if has_exception:
-            logger.warning("Cluster {} delete: stop with exceptions".format(id))
+            logger.warning("Exception when deleting cluster {}".format(id))
             return False
         self.host_handler.db_update_one({"id": c.get("host_id")},
                                         {"$pull": {"clusters": id}})
@@ -319,9 +320,9 @@ class ClusterHandler(object):
         return result
 
     def release_cluster(self, cluster_id, record=False):
-        """ Release a specific cluster
+        """ Release a specific cluster.
 
-        Release means delete and try recreating it.
+        Release means delete and try best to recreate it with same config.
 
         :param cluster_id: specific cluster to release
         :param record: Whether to record this cluster to release table
@@ -337,11 +338,12 @@ class ClusterHandler(object):
 
         def delete_recreate_work():
             logger.debug("Run recreate_work in background thread")
-            c_id, cluster_name, consensus_plugin, consensus_mode, size \
-                = \
-                c.get("id"), c.get("name"), c.get("consensus_plugin"), \
+            c_id, cluster_name, host_id, api_url, consensus_plugin, \
+                consensus_mode, size \
+                = c.get("id"), c.get("name"), c.get("host_id"), \
+                c.get("api_url"), c.get("consensus_plugin"), \
                 c.get("consensus_mode"), c.get("size")
-            host_id, api_url = c.get("host_id"), c.get("api_url")
+            api_port = int(api_url.split(":")[-1])
             # h = col_host.find_one({"id": host_id})
             # if not h or h.get("status") != "active":
             #     logger.warning("No host found with id=" + host_id)
@@ -350,11 +352,11 @@ class ClusterHandler(object):
                 logger.warning("Delete cluster failed with id=" + c_id)
             else:
                 if not self.create(name=cluster_name, host_id=host_id,
-                                   api_port=int(api_url.split(":")[-1]),
+                                   api_port=api_port,
                                    consensus_plugin=consensus_plugin,
                                    consensus_mode=consensus_mode, size=size):
-                    logger.warning("ReCreate cluster failed with name=" +
-                                cluster_name)
+                    logger.warning("Fail to recreate cluster {}".format(
+                        cluster_name))
 
         t = Thread(target=delete_recreate_work, args=())
         t.start()
@@ -465,8 +467,8 @@ class ClusterHandler(object):
                                {"$set": {"health": "OK"}})
             return True
         else:
-            c = self.db_update_one({"id": cluster_id},
-                                   {"$set": {"health": "FAIL"}})
+            self.db_update_one({"id": cluster_id},
+                               {"$set": {"health": "FAIL"}})
             return False
 
     def db_update_one(self, filter, operations, after=True, col="active"):
