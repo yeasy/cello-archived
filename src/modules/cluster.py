@@ -467,10 +467,11 @@ class ClusterHandler(object):
         logger.debug(result[:number])
         return result[:number]
 
-    def refresh_health(self, cluster_id):
+    def refresh_health(self, cluster_id, timeout=5):
         """
         Check if the peer is healthy by counting its neighbour number
-        :param cluster_id:
+        :param cluster_id: id of the cluster
+        :param timeout: how many seconds to wait for receiving response
         :return: True or False
         """
         logger.debug("checking health of cluster id={}".format(cluster_id))
@@ -478,7 +479,12 @@ class ClusterHandler(object):
         if not cluster:
             logger.warning("Cannot found cluster id={}".format(cluster_id))
             return False
-        r = requests.get(cluster["api_url"] + "/network/peers")
+        try:
+            r = requests.get(cluster["api_url"] + "/network/peers",
+                             timeout=timeout)
+        except Exception as e:
+            logger.error("Error to refresh health by requests {}".format(e))
+            return False
         peers = r.json().get("peers")
 
         if len(peers) == cluster["size"]:
