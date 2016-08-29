@@ -11,7 +11,7 @@ logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 
-def chain_check_health(chain_id, retries=3, period=2):
+def chain_check_health(chain_id, retries=3, period=5):
     """
     Check the chain health.
 
