@@ -2,7 +2,7 @@
 # This script will only build and redeploy the specific service.
 # It should be triggered at the upper directory
 
-source ./header.sh
+source scripts/header.sh
 
 if [ "$#" -ne 1 ]; then
     echo "Redeploy the service, e.g., engine, api, watchdog, mongo, nginx"

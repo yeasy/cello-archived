@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo "Starting cadvisor..."
+
 docker run -d \
   --volume=/:/rootfs:ro \
   --volume=/var/run:/var/run:rw \
