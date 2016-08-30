@@ -1,27 +1,31 @@
 # Architecture Design
 
-## Philosophy and principles
-The architecture will follow those principles:
+Here we discuss the architecture design for the mangement services on the Master node.
 
-* Micro-service: Means we decouple various functions to individual micro services. No service will crash others whatever it would do.
-* Fault-resilience: Means we do not assume any service is stable or persistent, such as the database may get disconnected any time.
-* Scalability: Try best to distribute the services, to mitigate centralized
-bottle neck.
+## Terminology
+* Cluster | Chain: A blockchain with unique access REST API address.
+* Master Node: Running the cello platform, to manage the compute nodes.
+* Compute Node: The server to have blockchains running inside, can be a Docker host or Swarm host.
+
+## Philosophy and principles
+The architecture will follow the following principles:
+
+* Micro-service: Means we decouple various functions to individual micro services. No service will crash others whatever it does.
+* Fault-resilience: Means the service should be tolerant for fault, such as database crash. 
+* Scalability: Try best to distribute the services, to mitigate centralized bottle neck.
+
 
 ## Components
 
-There are two main components: Master and Node.
+![Architecture Overview](imgs/architecture.png)
 
-Master node will run the poolmanager services, while docker nodes serve as
-docker hosts.
-
-Master will use remote API to start and stop hyperledger clusters in those
-docker hosts.
-
+* `dashboard`: Provide the dashboard for the pool administrator, also the core engine to automatically maintain everything.
+* `restserver`: Provide the restful api for other system to apply/release/list chains.
+* `watchdog`: Timely checking system status, keep everything healthy and clean.
 
 ## Implementation
 
-The implementation is based on [Flask](flask.pocoo.org), a microframework for Python based on Werkzeug.
+The restful related implementation is based on [Flask](flask.pocoo.org), a Werkzeug based micro-framework for web service.
 
 I choose it for:
 

@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+{% block title %}Clusters{% endblock %}
+{% block body %}
+    {{ super() }}
+    <!-- Glyphicon in a H1 tag -->
+    <h2 class="page-header">Hosts: {{items_count}}
+        <button
+                type="button" class="btn btn-primary btn-success btn-default
+            pull-sm-right" style="float:right" data-toggle="modal"
+                data-target="#newHostModal">Add Host
+        </button>
+    </h2>
+
+    {% if items_count > 0 %}
+        <div class="row">
+            <table id="table_hosts" class="hover table table-striped
+            table-bordered table_sorted">
+                <thead align="center">
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Health</th>
+                    <th>Clusters</th>
+                    <th>Cap</th>
+                    <th>Log Config</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in items %}
+                    {% if item.schedulable == "false" %}
+                        <tr style="background-color:lightgray">
+                            {% else %}
+                        <tr>
+                    {% endif %}
+                <td><a href="/host_info/{{item.id}}">{{item.name}}</a></td>
+                <td>{{item.type|upper}}</td>
+                <td>
+                    {% if item.status == "active" %}
+                        <font color="green">{{item.status}}</font>
+                    {% else %}
+                        <font color="red">{{item.status}}</font>
+                    {% endif %}
+                </td>
+                <td>{{item.clusters|length}}</td>
+                <td>{{item.capacity|string}}</td>
+                <td>{{item.log_level}}/{{item.log_type}}</td>
+                <td>
+                    <button type="button" data-id="{{item.id}}"
+                            class="btn btn-xs btn-sm btn-primary btn-info btn-default edit_host_button"
+                            style="float: right;"
+                    >
+                        <span class="glyphicon glyphicon-cog"
+                              aria-hidden="true"></span>
+                    </button>
+
+                    <button title="Try best to clean unused clusters at this host"
+                            class="btn btn-xs btn-sm btn-warning btn-default
+                             btn-primary clean_host_button"
+                            data-id="{{item.id}}"
+                            style="float: right;"
+                            {% if item.clusters|length <= 0 %}
+                            disabled
+                            {% endif %} >
+                        <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                    </button>
+
+                    <button
+                            class="btn btn-xs btn-sm btn-default btn-primary fillup_host_button"
+                            data-id="{{item.id}}"
+                            title="Fill up this host to its capacity = {{ item.capacity|string }}"
+                            style="float: right;"
+                            {% if item.clusters|length >= item.capacity %}
+                            disabled
+                            {% endif %}>
+                        <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span>
+                    </button>
+
+                </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+
+
+{% endblock %}
