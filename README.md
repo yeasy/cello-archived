@@ -1,15 +1,16 @@
-# Cello
+![Cello](docs/imgs/logo.png)
+
 [![Build Status](https://travis-ci.org/yeasy/cello.svg?branch=dev)](https://travis-ci.org/yeasy/cello)
 
-Blockchain as a Service!
-
-![Typical Scenario](docs/imgs/scenario.png)
+PaaS to provide Blockchain as a Service!
 
 Using Cello, we can 
 
 * Obtain blockchains with customized configurations instantly, e.g., a 6-node chain using PBFT consensus.
 * Maintain a pool of running blockchains healthy with no human operations. 
 * Check the system status, scale the chain numbers, change resources... through a dashboard.
+
+![Typical Scenario](docs/imgs/scenario.png)
 
 ## Features
 
@@ -55,10 +56,11 @@ Using Cello, we can
 * ~~Add limitation on the running containers.~~
 * ~~Security option and log option (rotate)~~.
 * ~~Refine setup scripts.~~
-* engine: Update api definitions yml files.
-* Support auto fresh based on websocket.
+* restserver: update api definitions yml files.
+* dashboard: support auto fresh based on websocket.
 * Support advanced scheduling.
-* Support new version: multiple port mapping, new chaincode operation api.
+* Support fabric new version: multiple port mapping, new chaincode operation api.
+* Enhance the robustness for chain operations.
 
 ## Why names Cello?
 Can u find anyone better at playing chains?
