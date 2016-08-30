@@ -3,13 +3,13 @@
 # This script will (re)start all services.
 # It should be triggered at the upper directory, and safe to repeat.
 
-source ./header.sh
+source scripts/header.sh
 
 echo_b "Stop all services..."
 docker-compose stop
 
 echo_b "Remove all services..."
-docker-compose rm -f -all
+docker-compose rm -f -a
 
 echo_b "Restart all services..."
 docker-compose up -d --no-recreate

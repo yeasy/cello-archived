@@ -24,8 +24,11 @@ Using Cello, we can
 ## Docs
 
 ### User Docs
-* [Deployment](docs/deployment.md)
 * [Dashboard](docs/dashboard.md)
+
+### Operator Docs
+* [System Requirement](docs/system_requirement.md)
+* [Deployment](docs/deployment.md)
 
 ### Development Docs
 * [Scenarios](docs/scenario.md)
