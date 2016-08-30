@@ -118,8 +118,11 @@ def cluster_api():
         else:
             logger.debug("cluster delete with id={0}, col_name={1}".format(
                 r.form["id"], r.form["col_name"]))
-            if cluster_handler.delete(id=r.form["id"],
-                                      col_name=r.form["col_name"]):
+            if r.form["col_name"] == "active":
+                result = cluster_handler.delete(id=r.form["id"])
+            else:
+                result = cluster_handler.delete_released(id=r.form["id"])
+            if result:
                 return jsonify(response_ok), CODE_OK
             else:
                 logger.debug("cluster deletion failed")
