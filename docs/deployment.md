@@ -60,13 +60,17 @@ Make sure local path `/opt/cello/mongo` exists.
 DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*' --default-ulimit=nofile=1024:2048 --default-ulimit=nproc=4096:8192"
 ```
 * Docker images:
-    - `yeasy/hyperledger:latest`
+    - `yeasy/hyperledger:0.5-dp`
 
         ```sh
-        $ docker pull yeasy/hyperledger:latest
-        $ docker tag yeasy/hyperledger:latest hyperledger/fabric-baseimage:latest
+        $ docker pull yeasy/hyperledger:0.5-dp
+        $ docker tag yeasy/hyperledger:0.5-dp hyperledger/fabric-baseimage:latest
         ```
-    - `yeasy/hyperledger-peer:latest`
+    - `yeasy/hyperledger-peer:0.5-dp`
+        ```sh
+        $ docker pull yeasy/hyperledger-peer:0.5-dp
+        $ docker tag yeasy/hyperledger-peer:0.5-dp yeasy/hyperledger-peer:latest
+        ```
     - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the authentication service)
 * aufs-tools (optional): Only required on ubuntu 14.04.
 
