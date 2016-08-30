@@ -56,10 +56,11 @@ Using Cello, we can
 * ~~Add limitation on the running containers.~~
 * ~~Security option and log option (rotate)~~.
 * ~~Refine setup scripts.~~
-* engine: Update api definitions yml files.
-* Support auto fresh based on websocket.
+* restserver: update api definitions yml files.
+* dashboard: support auto fresh based on websocket.
 * Support advanced scheduling.
-* Support new version: multiple port mapping, new chaincode operation api.
+* Support fabric new version: multiple port mapping, new chaincode operation api.
+* Enhance the robustness for chain operations.
 
 ## Why names Cello?
 Can u find anyone better at playing chains?
