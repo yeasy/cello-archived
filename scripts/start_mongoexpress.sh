@@ -3,7 +3,7 @@
 # This script will start a mongo-express node for debugging.
 # It should be triggered at the upper directory
 
-source ./header.sh
+source scripts/header.sh
 
 NET=${PROJECT}_default
 BIND_ADDR=0.0.0.0
