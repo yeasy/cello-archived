@@ -111,6 +111,15 @@ user_id:xxx
 }
 ```
 
-## Admin
-Those APIs should not be called by outside applications. Just for
-information, please see [api-admin.yaml](api-admin.yaml)
+### cluster_info
+
+Return the json object whose data may contain detailed information of cluster.
+
+
+```
+POST /v2/cluster_info
+{
+cluster_id:xxxxxx
+}
+```
+
