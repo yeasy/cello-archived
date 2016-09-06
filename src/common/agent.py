@@ -32,7 +32,8 @@ def clean_chaincode_images(daemon_url, name_prefix, timeout=5):
     images = client.images()
     id_removes = [e['Id'] for e in images if e['RepoTags'][0].startswith(
         name_prefix)]
-    logger.debug("chaincode image id to removes=" + ", ".join(id_removes))
+    if id_removes:
+        logger.debug("chaincode image id to removes=" + ", ".join(id_removes))
     for _ in id_removes:
         client.remove_image(_, force=True)
 
@@ -125,9 +126,9 @@ def detect_daemon_type(daemon_url, timeout=5):
         client = Client(base_url=daemon_url, timeout=timeout)
         server_version = client.info()['ServerVersion']
         if server_version.startswith('swarm'):
-            return 'swarm'
+            return HOST_TYPES[1]
         else:
-            return 'single'
+            return HOST_TYPES[0]
     except Exception as e:
         logger.error(e)
         return None
@@ -323,8 +324,14 @@ def compose_start(name, host, api_port,
     if log_type != LOG_TYPES[0]:  # not local
         os.environ['SYSLOG_SERVER'] = log_server
 
-    project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
-    containers = project.up(detached=True, timeout=timeout)
+    try:
+        project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
+        containers = project.up(detached=True, timeout=timeout)
+    except Exception as e:
+        logger.warning("Exception when compose start={}".format(e))
+        return {}
+    if not containers or cluster_size != len(containers):
+        return {}
     result = {}
     for c in containers:
         result[c.name] = c.id
@@ -332,12 +339,47 @@ def compose_start(name, host, api_port,
     return result
 
 
-def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
-                 consensus_plugin=CONSENSUS_PLUGINS[0],
-                 consensus_mode=CONSENSUS_MODES[0],
-                 log_type=LOG_TYPES[0], log_server="",
-                 cluster_size=CLUSTER_SIZES[0],
-                 timeout=5):
+def compose_clean(name, daemon_url, port, consensus_plugin):
+    """
+    Try best to clean a compose project and clean related containers.
+
+    :param name: name of the project
+    :param daemon_url: Docker Host url
+    :param port: Which api port
+    :param consensus_plugin: which consensus plugin
+    :return: True or False
+    """
+    has_exception = False
+    try:
+        compose_remove(name=name, daemon_url=daemon_url, api_port=port,
+                       consensus_plugin=consensus_plugin)
+    except Exception as e:
+        logger.error("Error in stop compose project, will clean")
+        logger.debug(e)
+        has_exception = True
+    try:
+        clean_project_containers(daemon_url=daemon_url, name_prefix=name)
+    except Exception as e:
+        logger.error("Error in clean compose project containers")
+        logger.error(e)
+        has_exception = True
+    try:
+        clean_chaincode_images(daemon_url=daemon_url, name_prefix=name)
+    except Exception as e:
+        logger.error("Error clean chaincode images")
+        logger.error(e)
+        # has_exception = True  # may ignore this case
+    if has_exception:
+        logger.warning("Exception when cleaning project {}".format(name))
+        return False
+    return True
+
+
+def compose_remove(name, daemon_url, api_port=CLUSTER_API_PORT_START,
+                   consensus_plugin=CONSENSUS_PLUGINS[0],
+                   consensus_mode=CONSENSUS_MODES[0],
+                   log_type=LOG_TYPES[0], log_server="",
+                   cluster_size=CLUSTER_SIZES[0], timeout=5):
     """ Stop the cluster and remove the service containers
 
     :param name: The name of the cluster
@@ -351,8 +393,8 @@ def compose_stop(name, daemon_url, api_port=CLUSTER_API_PORT_START,
     :param timeout: Docker client timeout
     :return:
     """
-    logger.debug("Stop compose project {} with logging_level={}, "
-                 "consensus={}".format(name, 'INFO', consensus_plugin))
+    logger.debug("Compose remove {} with api_port={}, "
+                 "consensus={}".format(name, api_port, consensus_plugin))
     # compose use this
     os.environ['DOCKER_HOST'] = daemon_url
     os.environ['COMPOSE_PROJECT_NAME'] = name

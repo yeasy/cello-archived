@@ -9,8 +9,7 @@ from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, LOG_LEVEL, \
-    clean_project_containers, clean_chaincode_images, \
-    get_swarm_node_ip, compose_start, compose_stop
+    get_swarm_node_ip, compose_start, compose_clean
 
 from common import CLUSTER_API_PORT_START, CONSENSUS_PLUGINS, \
     CONSENSUS_MODES, HOST_TYPES, SYS_CREATOR, SYS_DELETER, SYS_USER, \
@@ -37,7 +36,7 @@ class ClusterHandler(object):
 
         :param filter_data: Image with the filter properties
         :param col_name: Use data in which col_name
-        :return: iteration of serialized doc
+        :return: list of serialized doc
         """
         result = []
         if col_name == "active":
@@ -60,10 +59,10 @@ class ClusterHandler(object):
         :return: serialized result or obj
         """
         if col_name != "released":
-            logger.debug("Get a cluster with id=" + id)
+            # logger.debug("Get a cluster with id=" + id)
             cluster = self.col_active.find_one({"id": id})
         else:
-            logger.debug("Get a released cluster with id=" + id)
+            # logger.debug("Get a released cluster with id=" + id)
             cluster = self.col_released.find_one({"id": id})
         if not cluster:
             logger.warning("No cluster found with id=" + id)
@@ -108,19 +107,21 @@ class ClusterHandler(object):
             api_port = ports[0]
 
         c = {
+            'id': '',
             'name': name,
             'user_id': user_id or SYS_CREATOR,  # avoid applied
             'host_id': host_id,
+            'daemon_url': daemon_url,
             'consensus_plugin': consensus_plugin,
             'consensus_mode': consensus_mode,
             'create_ts': datetime.datetime.now(),
-            'release_ts': "",
-            'duration': "",
-            'api_url': "",  # This will be generated later
-            'daemon_url': daemon_url,
+            'apply_ts': '',
+            'release_ts': '',
+            'duration': '',
+            'api_url': '',  # This will be generated later
             'size': size,
             'containers': [],
-            'health': 'OK',
+            'health': ''
         }
         cid = self.col_active.insert_one(c).inserted_id  # object type
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
@@ -136,32 +137,22 @@ class ClusterHandler(object):
         # from now on, we should be safe
 
         # start compose project, failed then clean and return
-        try:
-            logger.debug("Start compose project with name={}".format(str(cid)))
-            containers = compose_start(name=str(cid), api_port=api_port,
-                                       host=h,
-                                       consensus_plugin=consensus_plugin,
-                                       consensus_mode=consensus_mode,
-                                       cluster_size=size)
-        except Exception as e:
-            logger.warning(e)
-            logger.warning("Compose start error, then delete and record")
-            self.delete(id=str(cid), col_name="active", record=False,
-                        forced=True)
-            return None
-        if not containers or int(size) != len(containers):
+        logger.debug("Start compose project with name={}".format(str(cid)))
+        containers = compose_start(
+            name=str(cid), api_port=api_port, host=h,
+            consensus_plugin=consensus_plugin, consensus_mode=consensus_mode,
+            cluster_size=size)
+        if not containers:
             logger.warning("failed containers={}, then delete cluster".format(
                 len(containers)))
-            self.delete(id=str(cid), col_name="active", record=False,
-                        forced=True)
+            self.delete(id=str(cid), record=False, forced=True)
             return None
 
         # no api_url, then clean and return
         api_url = self._gen_api_url(str(cid), h, api_port)
         if not api_url:  # not valid api_url
             logger.error("Error to gen api_url, cleanup the record and quit")
-            self.delete(id=str(cid), col_name="active", record=False,
-                        forced=True)
+            self.delete(id=str(cid), record=False, forced=True)
             return None
 
         # update api_url, container, and user_id field
@@ -173,36 +164,29 @@ class ClusterHandler(object):
         logger.info("Create cluster OK, id={}".format(str(cid)))
         return str(cid)
 
-    def delete(self, id, col_name="active", record=False, forced=False):
+    def delete(self, id, record=False, forced=False):
         """ Delete a cluster instance
 
         Clean containers, remove db entry. Only operate on active host.
 
         :param id: id of the cluster to delete
-        :param col_name: name of the cluster to operate
         :param record: Whether to record into the released collections
-        :param forced: Whether to force removing user-using cluster
+        :param forced: Whether to removing user-using cluster, for release
         :return:
         """
-        logger.debug("Delete cluster: id={}, col_name={}, forced={}".format(
-            id, col_name, forced))
-
-        if col_name != "active":  # released col only removes record
-            self.col_released.find_one_and_delete({"id": id})
-            return True
+        logger.debug("Delete cluster: id={}, forced={}".format(id, forced))
 
         c = self.db_update_one({"id": id}, {"$set": {"user_id": SYS_DELETER}},
                                after=False)
         if not c:
-            logger.warning("Cannot find cluster {} in {}".format(id, col_name))
+            logger.warning("Cannot find cluster {}".format(id))
             return False
-        # we are safe from applying now
+        # we are safe from occasional applying now
         user_id = c.get("user_id")  # original user_id
-        logger.debug("user_id={}".format(user_id))
         if not forced and user_id != "" and not user_id.startswith(SYS_USER):
             # not forced, and chain is used by normal user, then no process
-            logger.warning("Cannot find deletable cluster {} in {} by "
-                           "user {}".format(id, col_name, user_id))
+            logger.warning("Cannot delete cluster {} by "
+                           "user {}".format(id, user_id))
             self.col_active.update_one({"id": id},
                                        {"$set": {"user_id": user_id}})
             return False
@@ -213,51 +197,45 @@ class ClusterHandler(object):
         if not user_id.startswith(SYS_DELETER):
             self.col_active.update_one(
                 {"id": id},
-                {"$set": {"user_id": SYS_DELETER + user_id}})  # keep user info
+                {"$set": {"user_id": SYS_DELETER + user_id}})
         host_id, daemon_url, api_url, consensus_plugin = \
             c.get("host_id"), c.get("daemon_url"), c.get("api_url", ""), \
             c.get("consensus_plugin", CONSENSUS_PLUGINS[0])
         port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
 
         if not self.host_handler.get_active_host_by_id(host_id):
-            logger.warning("No active host found with id=" + host_id)
+            logger.warning("Host {} inactive".format(host_id))
+            self.col_active.update_one({"id": id},
+                                       {"$set": {"user_id": user_id}})
             return False
 
-        has_exception = False
-        try:
-            compose_stop(name=id, daemon_url=daemon_url, api_port=port,
-                         consensus_plugin=consensus_plugin)
-        except Exception as e:
-            logger.error("Error in stop compose project, will clean")
-            logger.debug(e)
-            has_exception = True
-        try:
-            clean_project_containers(daemon_url=daemon_url, name_prefix=id)
-        except Exception as e:
-            logger.error("Error in clean compose project containers")
-            logger.error(e)
-            has_exception = True
-        try:
-            clean_chaincode_images(daemon_url=daemon_url, name_prefix=id)
-        except Exception as e:
-            logger.error("Error clean chaincode images")
-            logger.error(e)
-            # has_exception = True  # may ignore this case
-        if has_exception:
-            logger.warning("Exception when deleting cluster {}".format(id))
+        if not compose_clean(id, daemon_url, port, consensus_plugin):
+            logger.warning("Error to run compose clean work")
+            self.col_active.update_one({"id": id},
+                                       {"$set": {"user_id": user_id}})
             return False
+
         self.host_handler.db_update_one({"id": c.get("host_id")},
                                         {"$pull": {"clusters": id}})
         self.col_active.delete_one({"id": id})
-        if record:  # record to release collection
+        if record:  # record original c into release collection
             logger.debug("Record the cluster info into released collection")
             c["release_ts"] = datetime.datetime.now()
             c["duration"] = str(c["release_ts"] - c["apply_ts"])
             # seems mongo reject timedelta type
             if user_id.startswith(SYS_DELETER):
                 c["user_id"] = user_id[len(SYS_DELETER):]
-            logger.debug(c)
             self.col_released.insert_one(c)
+        return True
+
+    def delete_released(self, id):
+        """ Delete a released cluster record from db
+
+        :param id: id of the cluster to delete
+        :return: True or False
+        """
+        logger.debug("Delete cluster: id={} from release records.".format(id))
+        self.col_released.find_one_and_delete({"id": id})
         return True
 
     def apply_cluster(self, user_id, condition={}, allow_multiple=False):
@@ -338,7 +316,7 @@ class ClusterHandler(object):
 
     def reset(self, cluster_id, record=False):
         """
-        Reset a chain.
+        Force to reset a chain.
 
         Delete it and recreate with the same configuration.
         :param cluster_id: id of the reset cluster
@@ -357,14 +335,12 @@ class ClusterHandler(object):
         if not self.delete(cluster_id, record=record, forced=True):
             logger.warning("Delete cluster failed with id=" + cluster_id)
             return False
-        else:
-            if not self.create(name=cluster_name, host_id=host_id,
-                               api_port=api_port,
-                               consensus_plugin=consensus_plugin,
-                               consensus_mode=consensus_mode, size=size):
-                logger.warning("Fail to recreate cluster {}".format(
-                    cluster_name))
-                return False
+        if not self.create(name=cluster_name, host_id=host_id,
+                           api_port=api_port,
+                           consensus_plugin=consensus_plugin,
+                           consensus_mode=consensus_mode, size=size):
+            logger.warning("Fail to recreate cluster {}".format(cluster_name))
+            return False
         return True
 
     def reset_free_one(self, cluster_id):
@@ -374,6 +350,7 @@ class ClusterHandler(object):
         :param cluster_id: id to reset
         :return: True or False
         """
+        logger.debug("Try reseting cluster {}".format(cluster_id))
         c = self.db_update_one({"id": cluster_id, "user_id": ""},
                                {"$set": {"user_id": SYS_RESETTING}})
         if c.get("user_id") != SYS_RESETTING:  # not have one
@@ -483,8 +460,10 @@ class ClusterHandler(object):
             r = requests.get(cluster["api_url"] + "/network/peers",
                              timeout=timeout)
         except Exception as e:
-            logger.error("Error to refresh health by requests {}".format(e))
-            return False
+            logger.error("Error to refresh health of cluster {}: {}".format(
+                cluster_id, e))
+            return True
+
         peers = r.json().get("peers")
 
         if len(peers) == cluster["size"]:

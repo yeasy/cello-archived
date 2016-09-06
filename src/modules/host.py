@@ -39,7 +39,7 @@ class HostHandler(object):
 
     def create(self, name, daemon_url, capacity=1,
                log_level=LOGGING_LEVEL_CLUSTERS[0],
-               log_type=LOG_TYPES[0], log_server="", fillup=False,
+               log_type=LOG_TYPES[0], log_server="", autofill="false",
                schedulable="false", serialization=True):
         """ Create a new docker host node
 
@@ -52,15 +52,15 @@ class HostHandler(object):
         :param log_type: type of the log
         :param log_level: level of the log
         :param log_server: server addr of the syslog
-        :param fillup: Whether fillup after creation
+        :param autofill: Whether automatically fillup with chains
         :param schedulable: Whether can schedule cluster request to it
         :param serialization: whether to get serialized result or object
         :return: True or False
         """
         logger.debug("Create host: name={}, daemon_url={}, capacity={}, "
-                     "log={}/{}, fillup={}, schedulable={}"
+                     "log={}/{}, autofill={}, schedulable={}"
                      .format(name, daemon_url, capacity, log_type,
-                             log_server, fillup, schedulable))
+                             log_server, autofill, schedulable))
         if not daemon_url.startswith("tcp://"):
             daemon_url = "tcp://" + daemon_url
 
@@ -86,6 +86,7 @@ class HostHandler(object):
             return {}
 
         h = {
+            'id': '',
             'name': name,
             'daemon_url': daemon_url,
             'create_ts': datetime.datetime.now(),
@@ -96,6 +97,7 @@ class HostHandler(object):
             'log_level': log_level,
             'log_type': log_type,
             'log_server': log_server,
+            'autofill': autofill,
             'schedulable': schedulable
         }
         hid = self.col.insert_one(h).inserted_id  # object type
@@ -103,7 +105,7 @@ class HostHandler(object):
             {"_id": hid},
             {"$set": {"id": str(hid)}})
 
-        if capacity > 0 and fillup:  # should fillup it
+        if capacity > 0 and autofill == "true":  # should autofill it
             self.fillup(str(hid))
 
         if serialization:
@@ -117,10 +119,10 @@ class HostHandler(object):
         :param id: id of the doc
         :return: serialized result or obj
         """
-        logger.debug("Get a host with id=" + id)
+        # logger.debug("Get a host with id=" + id)
         ins = self.col.find_one({"id": id})
         if not ins:
-            logger.warning("No cluster found with id=" + id)
+            logger.warning("No host found with id=" + id)
             return {}
         return self._serialize(ins)
 
@@ -212,13 +214,14 @@ class HostHandler(object):
                 consensus_plugin=consensus_plugin,
                 consensus_mode=consensus_mode, size=cluster_size)
             if cid:
-                logger.debug("Create cluster %s with id={}".format(
+                logger.debug("Create cluster {} with id={}".format(
                     cluster_name, cid))
             else:
                 logger.warning("Create cluster failed")
         for p in free_ports:
             t = Thread(target=create_cluster_work, args=(p,))
             t.start()
+            t.join(15)
             time.sleep(1.0)
 
         return True
@@ -238,13 +241,17 @@ class HostHandler(object):
         if len(host.get("clusters")) <= 0:
             return True
 
-        host = self.db_set_by_id(id, schedulable="false")
+        schedulable_status = host.get("schedulable")
+        if schedulable_status == "true":
+            host = self.db_set_by_id(id, schedulable="false")
 
         for cid in host.get("clusters"):
             t = Thread(target=cluster.cluster_handler.delete, args=(cid,))
             t.start()
             time.sleep(0.2)
-        self.db_set_by_id(id, schedulable="true")
+
+        if schedulable_status == "true":
+            self.db_set_by_id(id, schedulable=schedulable_status)
 
         return True
 
@@ -311,7 +318,7 @@ class HostHandler(object):
         return self._serialize(host)
 
     def _serialize(self, doc, keys=['id', 'name', 'daemon_url', 'capacity',
-                                    'type', 'create_ts', 'status',
+                                    'type', 'create_ts', 'status', 'autofill',
                                     'schedulable', 'clusters', 'log_level',
                                     'log_type', 'log_server']):
         """ Serialize an obj

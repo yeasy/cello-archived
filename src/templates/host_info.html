@@ -43,18 +43,19 @@
         <dl class="dl-horizontal">
             <dt>Name<dt> <dd>{{item.name}}</dd>
             <dt>Id<dt> <dd>{{item.id}}</dd>
-        <dt>Status<dt> <dd>{{item.status}}</dd>
-        <dt>Schedulable<dt> <dd>{{item.schedulable}}</dd>
-        <dt>Type<dt> <dd>{{item.type}}</dd>
-        <dt>Capacity<dt> <dd>{{item.capacity|string}}</dd>
-        <dt>Host URL<dt> <dd>{{item.daemon_url}}</dd>
-        <dt>Logging Level<dt> <dd>{{item.log_level}}</dd>
-        <dt>Log Collector<dt> <dd>{{item.log_type}} {{item.log_server}}</dd>
-        <dt>Create Time<dt> <dd>{{item.create_ts}}</dd>
-        <dt>Clusters<dt> <dd>
-        {% for c in item.clusters %}
-           <a href="/cluster_info/{{ c }}">{{ c }}</a><br>
-        {% endfor %}
+            <dt>Status<dt> <dd>{{item.status}}</dd>
+            <dt>Schedulable<dt> <dd>{{item.schedulable}}</dd>
+            <dt>Autofill<dt> <dd>{{item.autofill}}</dd>
+            <dt>Type<dt> <dd>{{item.type}}</dd>
+            <dt>Capacity<dt> <dd>{{item.capacity|string}}</dd>
+            <dt>Host URL<dt> <dd>{{item.daemon_url}}</dd>
+            <dt>Logging Level<dt> <dd>{{item.log_level}}</dd>
+            <dt>Log Collector<dt> <dd>{{item.log_type}} {{item.log_server}}</dd>
+            <dt>Create Time<dt> <dd>{{item.create_ts}}</dd>
+            <dt>Clusters<dt> <dd>
+            {% for c in item.clusters %}
+                <a href="/cluster_info/{{ c }}">{{ c }}</a><br>
+            {% endfor %}
     </dd>
     </dl>
     </div>
@@ -64,13 +65,12 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                    <h4 class="modal-title" id="reset_host_confirm_ModalLabel">Confirm Reset</h4>
                 </div>
                 <div class="modal-body">
                     <p>You are about to <font color="red">reset</font> the
                         host <font color="red"><i id="title"></i></font>, this
-                            procedure is
-                        irreversible.</p>
+                            procedure is irreversible.</p>
                     <p>Do you want to proceed?</p>
                 </div>
                 <div class="modal-footer">
@@ -87,7 +87,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                <h4 class="modal-title" id="delete_host_confirm_ModalLabel">Confirm Delete</h4>
             </div>
             <div class="modal-body">
                 <p>You are about to <font color="red">remove</font> the host <font color="red"><i id="title"></i></font>, this procedure is irreversible.</p>
