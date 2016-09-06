@@ -32,7 +32,8 @@ def clean_chaincode_images(daemon_url, name_prefix, timeout=5):
     images = client.images()
     id_removes = [e['Id'] for e in images if e['RepoTags'][0].startswith(
         name_prefix)]
-    logger.debug("chaincode image id to removes=" + ", ".join(id_removes))
+    if id_removes:
+        logger.debug("chaincode image id to removes=" + ", ".join(id_removes))
     for _ in id_removes:
         client.remove_image(_, force=True)
 

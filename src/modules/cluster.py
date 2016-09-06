@@ -59,10 +59,10 @@ class ClusterHandler(object):
         :return: serialized result or obj
         """
         if col_name != "released":
-            logger.debug("Get a cluster with id=" + id)
+            # logger.debug("Get a cluster with id=" + id)
             cluster = self.col_active.find_one({"id": id})
         else:
-            logger.debug("Get a released cluster with id=" + id)
+            # logger.debug("Get a released cluster with id=" + id)
             cluster = self.col_released.find_one({"id": id})
         if not cluster:
             logger.warning("No cluster found with id=" + id)
@@ -121,7 +121,7 @@ class ClusterHandler(object):
             'api_url': '',  # This will be generated later
             'size': size,
             'containers': [],
-            'health': 'OK',
+            'health': ''
         }
         cid = self.col_active.insert_one(c).inserted_id  # object type
         self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
@@ -350,6 +350,7 @@ class ClusterHandler(object):
         :param cluster_id: id to reset
         :return: True or False
         """
+        logger.debug("Try reseting cluster {}".format(cluster_id))
         c = self.db_update_one({"id": cluster_id, "user_id": ""},
                                {"$set": {"user_id": SYS_RESETTING}})
         if c.get("user_id") != SYS_RESETTING:  # not have one

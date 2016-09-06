@@ -119,10 +119,10 @@ class HostHandler(object):
         :param id: id of the doc
         :return: serialized result or obj
         """
-        logger.debug("Get a host with id=" + id)
+        # logger.debug("Get a host with id=" + id)
         ins = self.col.find_one({"id": id})
         if not ins:
-            logger.warning("No cluster found with id=" + id)
+            logger.warning("No host found with id=" + id)
             return {}
         return self._serialize(ins)
 
@@ -221,6 +221,7 @@ class HostHandler(object):
         for p in free_ports:
             t = Thread(target=create_cluster_work, args=(p,))
             t.start()
+            t.join(15)
             time.sleep(1.0)
 
         return True

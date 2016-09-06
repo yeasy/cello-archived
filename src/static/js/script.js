@@ -326,7 +326,7 @@ $(document).ready(function() {
         });
         $modalDiv.modal('hide');
     });
-    $('#reset_host_confirm2').on('show.bs.modal', function(e) {
+    $('#reset_host_confirm').on('show.bs.modal', function(e) {
         var data = $(e.relatedTarget).data();
         $('#title', this).text(data.title);
         $('.btn-ok', this).data('hostId', data.id);

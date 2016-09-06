@@ -29,29 +29,34 @@ def chain_check_health(chain_id, retries=3, period=5):
         logger.warn("Not find chain with id = {}".format(chain_id))
         return
     chain_user_id = chain.get("user_id")
-    if chain_user_id.startswith(SYS_USER):  # in system processing
-        for i in range(retries):
-            if cluster_handler.get_by_id(chain_id).get("user_id") != \
-                    chain_user_id or \
-                    cluster_handler.refresh_health(chain_id):
-                return
-            else:
-                time.sleep(period)
-        if cluster_handler.get_by_id(chain_id).get("user_id") == chain_user_id:
-            logger.info("Deleting frozen-in-process chain {}".format(chain_id))
-            cluster_handler.delete(chain_id)
+
+    # we should never operate on in-processing chains unless deleting one
+    if chain_user_id.startswith(SYS_USER):
+        if chain_user_id.startswith(SYS_DELETER):  # in system processing, TBD
+            for i in range(retries):
+                if cluster_handler.get_by_id(chain_id).get("user_id") == \
+                        chain_user_id:
+                    time.sleep(period)
+                else:
+                    break
+            if cluster_handler.get_by_id(chain_id).get("user_id") == \
+                    chain_user_id:
+                logger.info("Deleting frozen-in-deleting chain {}".format(chain_id))
+                cluster_handler.delete(chain_id)
         return
-    # free or used by user
+
+    # free or used by user, then check its health
     for i in range(retries):
         if cluster_handler.refresh_health(chain_id):  # chain is healthy
             return
         else:
             time.sleep(period)
-    logger.debug("Chain {} is unhealthy!".format(chain_id))
+    logger.warn("Chain {} is unhealthy!".format(chain_id))
+    # only reset free chains
     if cluster_handler.get_by_id(chain_id).get("user_id") == "":
         logger.info("Deleting free unhealthy chain {}".format(chain_id))
-        cluster_handler.delete(chain_id)
-        # cluster_handler.reset_free_one(chain_id)
+        # cluster_handler.delete(chain_id)
+        cluster_handler.reset_free_one(chain_id)
 
 
 def host_check_chains(host_id):
