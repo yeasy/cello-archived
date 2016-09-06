@@ -49,26 +49,40 @@ def chain_check_health(chain_id, retries=3, period=5):
             time.sleep(period)
     logger.debug("Chain {} is unhealthy!".format(chain_id))
     if cluster_handler.get_by_id(chain_id).get("user_id") == "":
-        logger.info("Resetting free unhealthy chain {}".format(chain_id))
-        cluster_handler.reset_free_one(chain_id)
+        logger.info("Deleting free unhealthy chain {}".format(chain_id))
+        cluster_handler.delete(chain_id)
+        # cluster_handler.reset_free_one(chain_id)
 
 
 def host_check_chains(host_id):
     """
-    Check one host.
+    Check the chain health on the host.
 
     :param host_id:
     :return:
     """
     logger.debug("Host {}: checking cluster health".format(host_id))
     clusters = cluster_handler.list(filter_data={"host_id": host_id})
-    for c in clusters:
+    for c in clusters:  # concurrent health check is safe for multi-chains
         t = Thread(target=chain_check_health, args=(c.get("id"),))
         t.start()
-        t.join(timeout=5)
+        t.join(timeout=15)
 
 
-def host_check(host_id, retries=3, period=2):
+def host_check_fillup(host_id):
+    """
+    Check one host.
+
+    :param host_id:
+    :return:
+    """
+    logger.debug("Host {}: checking fillup".format(host_id))
+    host = host_handler.get_by_id(host_id)
+    if host.get("autofill") == "true":
+        host_handler.fillup(host_id)
+
+
+def host_check(host_id, retries=3, period=3):
     """
     Run check on specific host.
     Check status and check each chain's health.
@@ -82,6 +96,8 @@ def host_check(host_id, retries=3, period=2):
         if host_handler.refresh_status(host_id):  # host is active
             logger.debug("host {} is active, check its chains".format(host_id))
             host_check_chains(host_id)
+            time.sleep(period)
+            host_check_fillup(host_id)
             break
         time.sleep(period)
 
@@ -96,7 +112,7 @@ def watch_run(period=15):
     while True:
         logger.info("Watchdog run checks with period = %d s", period)
         hosts = list(host_handler.list())
-        for h in hosts:
+        for h in hosts:  # operating on different host is safe
             t = Thread(target=host_check, args=(h.get("id"),))
             t.start()
             t.join(timeout=period)

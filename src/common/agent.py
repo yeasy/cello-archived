@@ -125,9 +125,9 @@ def detect_daemon_type(daemon_url, timeout=5):
         client = Client(base_url=daemon_url, timeout=timeout)
         server_version = client.info()['ServerVersion']
         if server_version.startswith('swarm'):
-            return 'swarm'
+            return HOST_TYPES[1]
         else:
-            return 'single'
+            return HOST_TYPES[0]
     except Exception as e:
         logger.error(e)
         return None
@@ -392,8 +392,8 @@ def compose_remove(name, daemon_url, api_port=CLUSTER_API_PORT_START,
     :param timeout: Docker client timeout
     :return:
     """
-    logger.debug("Stop compose project {} with logging_level={}, "
-                 "consensus={}".format(name, 'INFO', consensus_plugin))
+    logger.debug("Compose remove {} with api_port={}, "
+                 "consensus={}".format(name, api_port, consensus_plugin))
     # compose use this
     os.environ['DOCKER_HOST'] = daemon_url
     os.environ['COMPOSE_PROJECT_NAME'] = name

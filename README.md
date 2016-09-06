@@ -64,6 +64,7 @@ Using Cello, we can
 * Support advanced scheduling.
 * Support fabric new version: multiple port mapping, new chaincode operation api.
 * Enhance the robustness for chain operations.
+* Fix deleting bug on 2nd page table.
 
 ## Why names Cello?
 Can u find anyone better at playing chains?

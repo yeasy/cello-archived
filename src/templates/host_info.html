@@ -43,18 +43,19 @@
         <dl class="dl-horizontal">
             <dt>Name<dt> <dd>{{item.name}}</dd>
             <dt>Id<dt> <dd>{{item.id}}</dd>
-        <dt>Status<dt> <dd>{{item.status}}</dd>
-        <dt>Schedulable<dt> <dd>{{item.schedulable}}</dd>
-        <dt>Type<dt> <dd>{{item.type}}</dd>
-        <dt>Capacity<dt> <dd>{{item.capacity|string}}</dd>
-        <dt>Host URL<dt> <dd>{{item.daemon_url}}</dd>
-        <dt>Logging Level<dt> <dd>{{item.log_level}}</dd>
-        <dt>Log Collector<dt> <dd>{{item.log_type}} {{item.log_server}}</dd>
-        <dt>Create Time<dt> <dd>{{item.create_ts}}</dd>
-        <dt>Clusters<dt> <dd>
-        {% for c in item.clusters %}
-           <a href="/cluster_info/{{ c }}">{{ c }}</a><br>
-        {% endfor %}
+            <dt>Status<dt> <dd>{{item.status}}</dd>
+            <dt>Schedulable<dt> <dd>{{item.schedulable}}</dd>
+            <dt>Autofill<dt> <dd>{{item.autofill}}</dd>
+            <dt>Type<dt> <dd>{{item.type}}</dd>
+            <dt>Capacity<dt> <dd>{{item.capacity|string}}</dd>
+            <dt>Host URL<dt> <dd>{{item.daemon_url}}</dd>
+            <dt>Logging Level<dt> <dd>{{item.log_level}}</dd>
+            <dt>Log Collector<dt> <dd>{{item.log_type}} {{item.log_server}}</dd>
+            <dt>Create Time<dt> <dd>{{item.create_ts}}</dd>
+            <dt>Clusters<dt> <dd>
+            {% for c in item.clusters %}
+                <a href="/cluster_info/{{ c }}">{{ c }}</a><br>
+            {% endfor %}
     </dd>
     </dl>
     </div>

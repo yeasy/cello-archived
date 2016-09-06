@@ -9,7 +9,6 @@ from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, LOG_LEVEL, \
-    clean_project_containers, clean_chaincode_images, \
     get_swarm_node_ip, compose_start, compose_clean
 
 from common import CLUSTER_API_PORT_START, CONSENSUS_PLUGINS, \
@@ -37,7 +36,7 @@ class ClusterHandler(object):
 
         :param filter_data: Image with the filter properties
         :param col_name: Use data in which col_name
-        :return: iteration of serialized doc
+        :return: list of serialized doc
         """
         result = []
         if col_name == "active":
@@ -108,16 +107,18 @@ class ClusterHandler(object):
             api_port = ports[0]
 
         c = {
+            'id': '',
             'name': name,
             'user_id': user_id or SYS_CREATOR,  # avoid applied
             'host_id': host_id,
+            'daemon_url': daemon_url,
             'consensus_plugin': consensus_plugin,
             'consensus_mode': consensus_mode,
             'create_ts': datetime.datetime.now(),
-            'release_ts': "",
-            'duration': "",
-            'api_url': "",  # This will be generated later
-            'daemon_url': daemon_url,
+            'apply_ts': '',
+            'release_ts': '',
+            'duration': '',
+            'api_url': '',  # This will be generated later
             'size': size,
             'containers': [],
             'health': 'OK',
@@ -458,8 +459,10 @@ class ClusterHandler(object):
             r = requests.get(cluster["api_url"] + "/network/peers",
                              timeout=timeout)
         except Exception as e:
-            logger.error("Error to refresh health by requests {}".format(e))
-            return False
+            logger.error("Error to refresh health of cluster {}: {}".format(
+                cluster_id, e))
+            return True
+
         peers = r.json().get("peers")
 
         if len(peers) == cluster["size"]:
