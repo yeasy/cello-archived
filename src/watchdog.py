@@ -34,15 +34,12 @@ def chain_check_health(chain_id, retries=3, period=5):
     if chain_user_id.startswith(SYS_USER):
         if chain_user_id.startswith(SYS_DELETER):  # in system processing, TBD
             for i in range(retries):
-                if cluster_handler.get_by_id(chain_id).get("user_id") == \
+                time.sleep(period)
+                if cluster_handler.get_by_id(chain_id).get("user_id") != \
                         chain_user_id:
-                    time.sleep(period)
-                else:
-                    break
-            if cluster_handler.get_by_id(chain_id).get("user_id") == \
-                    chain_user_id:
-                logger.info("Deleting frozen-in-deleting chain {}".format(chain_id))
-                cluster_handler.delete(chain_id)
+                    return
+            logger.info("Delete in-deleting chain {}".format(chain_id))
+            cluster_handler.delete(chain_id)
         return
 
     # free or used by user, then check its health
