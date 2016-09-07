@@ -1,13 +1,37 @@
 import json
 import os
 
-# first port that can be assigned as cluster API
-CLUSTER_API_PORT_START = int(os.getenv("CLUSTER_API_PORT_START", 5000))
 
 COMPOSE_FILE_PATH = os.getenv("COMPOSE_FILE_PATH", "./_compose_files")
 
-CLUSTER_NETWORK = "bpm_net"
+CLUSTER_NETWORK = "cello_net"
 CLUSTER_SIZES = [4, 6]
+
+# first port that can be assigned as cluster API
+CLUSTER_PORT_START = int(os.getenv("CLUSTER_PORT_START", 7050))
+
+# number of port allocated to each cluster in case collision
+CLUSTER_PORT_STEP = 100
+
+PEER_SERVICE_PORTS = {
+    'rest': 7050,  # this is the reference starter for cluster port step
+    'grpc': 7051,
+    'cli': 7052,
+    'event': 7053,
+}
+
+CA_SERVICE_PORTS = {
+    'ecap': 7054,
+    'ecaa': 7055,
+    'tcap': 7056,
+    'tcaa': 7057,
+    'tlscap': 7058,
+    'tlscaa': 7059,
+}
+
+SERVICE_PORTS = dict(list(PEER_SERVICE_PORTS.items()) +
+                     list(CA_SERVICE_PORTS.items()))
+
 
 CONSENSUS_PLUGINS = ['noops', 'pbft']  # first one is the default one
 # CONSENSUS_MODES = ['classic', 'batch', 'sieve']  # pbft has various modes

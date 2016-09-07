@@ -9,9 +9,12 @@ from threading import Thread
 from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import db, cleanup_container_host, LOG_LEVEL, LOG_TYPES, \
-    CLUSTER_SIZES, CLUSTER_API_PORT_START, CONSENSUS_TYPES, log_handler, \
-    LOGGING_LEVEL_CLUSTERS, check_daemon, detect_daemon_type, \
+from common import \
+    db, log_handler, cleanup_container_host, \
+    LOG_LEVEL, LOG_TYPES, LOGGING_LEVEL_CLUSTERS, \
+    CLUSTER_SIZES, CLUSTER_PORT_START, CLUSTER_PORT_STEP, \
+    CONSENSUS_TYPES, \
+    check_daemon, detect_daemon_type, \
     reset_container_host, setup_container_host
 
 from modules import cluster
@@ -201,16 +204,17 @@ class HostHandler(object):
             logger.warning("host already full")
             return True
 
-        free_ports = cluster.cluster_handler.find_free_api_ports(id, num_new)
+        free_ports = cluster.cluster_handler.find_free_start_ports(id, num_new)
         logger.debug("Free_ports = {}".format(free_ports))
 
-        def create_cluster_work(port):
-            cluster_name = "{}_{}".format(host.get("name"),
-                                          (port - CLUSTER_API_PORT_START))
+        def create_cluster_work(start_port):
+            cluster_name = "{}_{}".format(
+                host.get("name"),
+                int((start_port - CLUSTER_PORT_START) / CLUSTER_PORT_STEP))
             consensus_plugin, consensus_mode = random.choice(CONSENSUS_TYPES)
             cluster_size = random.choice(CLUSTER_SIZES)
             cid = cluster.cluster_handler.create(
-                name=cluster_name, host_id=id, api_port=port,
+                name=cluster_name, host_id=id, start_port=start_port,
                 consensus_plugin=consensus_plugin,
                 consensus_mode=consensus_mode, size=cluster_size)
             if cid:

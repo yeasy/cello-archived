@@ -11,9 +11,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import db, log_handler, LOG_LEVEL, \
     get_swarm_node_ip, compose_start, compose_clean
 
-from common import CLUSTER_API_PORT_START, CONSENSUS_PLUGINS, \
+from common import CLUSTER_PORT_START, CLUSTER_PORT_STEP, CONSENSUS_PLUGINS, \
     CONSENSUS_MODES, HOST_TYPES, SYS_CREATOR, SYS_DELETER, SYS_USER, \
-    SYS_RESETTING, CLUSTER_SIZES
+    SYS_RESETTING, CLUSTER_SIZES, PEER_SERVICE_PORTS, CA_SERVICE_PORTS
 
 from modules import host
 
@@ -69,7 +69,7 @@ class ClusterHandler(object):
             return {}
         return self._serialize(cluster)
 
-    def create(self, name, host_id, api_port=0, user_id="",
+    def create(self, name, host_id, start_port=0, user_id="",
                consensus_plugin=CONSENSUS_PLUGINS[0],
                consensus_mode=CONSENSUS_MODES[0], size=CLUSTER_SIZES[0]):
         """ Create a cluster based on given data
@@ -78,7 +78,8 @@ class ClusterHandler(object):
 
         :param name: name of the cluster
         :param host_id: id of the host URL
-        :param api_port: cluster api_port, will generate if not given
+        :param start_port: first service port for cluster, will generate
+         if not given
         :param user_id: user_id of the cluster if start to be applied
         :param consensus_plugin: type of the consensus type
         :param size: size of the cluster, int type
@@ -99,12 +100,21 @@ class ClusterHandler(object):
         daemon_url = h.get("daemon_url")
         logger.debug("daemon_url={}".format(daemon_url))
 
-        if api_port <= 0:
-            ports = self.find_free_api_ports(host_id, 1)
+        if start_port <= 0:
+            ports = self.find_free_start_ports(host_id, 1)
             if not ports:
                 logger.warning("No free port is found")
                 return None
-            api_port = ports[0]
+            start_port = ports[0]
+
+        peer_mapped_ports, ca_mapped_ports, mapped_ports = {}, {}, {}
+        for k, v in PEER_SERVICE_PORTS.items():
+            peer_mapped_ports[k] = v - PEER_SERVICE_PORTS['rest'] + start_port
+        for k, v in CA_SERVICE_PORTS.items():
+            ca_mapped_ports[k] = v - PEER_SERVICE_PORTS['rest'] + start_port
+
+        mapped_ports.update(peer_mapped_ports)
+        mapped_ports.update(ca_mapped_ports)
 
         c = {
             'id': '',
@@ -119,50 +129,61 @@ class ClusterHandler(object):
             'release_ts': '',
             'duration': '',
             'api_url': '',  # This will be generated later
+            'service_url': {},  # e.g., {rest: xxx:7050, grpc: xxx:7051}
             'size': size,
             'containers': [],
             'health': ''
         }
-        cid = self.col_active.insert_one(c).inserted_id  # object type
-        self.col_active.update_one({"_id": cid}, {"$set": {"id": str(cid)}})
+        uuid = self.col_active.insert_one(c).inserted_id  # object type
+        cid = str(uuid)
+        self.col_active.update_one({"_id": uuid}, {"$set": {"id": cid}})
         # try to add one cluster to host
         h = self.host_handler.db_update_one(
-            {"id": host_id}, {"$addToSet": {"clusters": str(cid)}})
+            {"id": host_id}, {"$addToSet": {"clusters": cid}})
         if not h or len(h.get("clusters")) > h.get("capacity"):
-            self.col_active.delete_one({"_id": cid})
+            self.col_active.delete_one({"id": cid})
             self.host_handler.db_update_one({"id": host_id},
-                                            {"$pull": {"clusters": str(cid)}})
+                                            {"$pull": {"clusters": cid}})
             return None
 
         # from now on, we should be safe
 
         # start compose project, failed then clean and return
-        logger.debug("Start compose project with name={}".format(str(cid)))
+        logger.debug("Start compose project with name={}".format(cid))
         containers = compose_start(
-            name=str(cid), api_port=api_port, host=h,
+            name=cid, mapped_ports=mapped_ports, host=h,
             consensus_plugin=consensus_plugin, consensus_mode=consensus_mode,
             cluster_size=size)
-        if not containers:
+        if not containers or len(containers) != size:
             logger.warning("failed containers={}, then delete cluster".format(
-                len(containers)))
-            self.delete(id=str(cid), record=False, forced=True)
+                containers))
+            self.delete(id=cid, record=False, forced=True)
             return None
 
+        peer_host_ip = self._get_service_ip(cid, 'vp0')
+        ca_host_ip = self._get_service_ip(cid, 'membersrvc')
         # no api_url, then clean and return
-        api_url = self._gen_api_url(str(cid), h, api_port)
-        if not api_url:  # not valid api_url
-            logger.error("Error to gen api_url, cleanup the record and quit")
-            self.delete(id=str(cid), record=False, forced=True)
+        if not peer_host_ip:  # not valid api_url
+            logger.error("Error to find peer host url, cleanup")
+            self.delete(id=cid, record=False, forced=True)
             return None
+
+        service_urls = {}
+        for k, v in peer_mapped_ports.items():
+            service_urls[k] = "http://{}:{}".format(peer_host_ip, v)
+
+        for k, v in ca_mapped_ports.items():
+            service_urls[k] = "http://{}:{}".format(ca_host_ip, v)
 
         # update api_url, container, and user_id field
-        self.col_active.update_one(
-            {"_id": cid},
+        self.db_update_one(
+            {"id": cid},
             {"$set": {"containers": containers, "user_id": user_id,
-                      'api_url': api_url}})
+                      'api_url': service_urls['rest'],
+                      'service_url': service_urls}})
 
-        logger.info("Create cluster OK, id={}".format(str(cid)))
-        return str(cid)
+        logger.info("Create cluster OK, id={}".format(cid))
+        return cid
 
     def delete(self, id, record=False, forced=False):
         """ Delete a cluster instance
@@ -201,7 +222,7 @@ class ClusterHandler(object):
         host_id, daemon_url, api_url, consensus_plugin = \
             c.get("host_id"), c.get("daemon_url"), c.get("api_url", ""), \
             c.get("consensus_plugin", CONSENSUS_PLUGINS[0])
-        port = api_url.split(":")[-1] or CLUSTER_API_PORT_START
+        port = api_url.split(":")[-1] or CLUSTER_PORT_START
 
         if not self.host_handler.get_active_host_by_id(host_id):
             logger.warning("Host {} inactive".format(host_id))
@@ -336,7 +357,7 @@ class ClusterHandler(object):
             logger.warning("Delete cluster failed with id=" + cluster_id)
             return False
         if not self.create(name=cluster_name, host_id=host_id,
-                           api_port=api_port,
+                           start_port=api_port,
                            consensus_plugin=consensus_plugin,
                            consensus_mode=consensus_mode, size=size):
             logger.warning("Fail to recreate cluster {}".format(cluster_name))
@@ -364,7 +385,7 @@ class ClusterHandler(object):
                                     'consensus_mode', 'daemon_url',
                                     'create_ts', 'apply_ts', 'release_ts',
                                     'duration', 'containers', 'size',
-                                    'health']):
+                                    'health', 'service_url']):
         """ Serialize an obj
 
         :param doc: doc to serialize
@@ -376,21 +397,22 @@ class ClusterHandler(object):
             result[k] = doc.get(k, '')
         return result
 
-    def _gen_api_url(self, cluster_name, host, api_port):
-        """ Generate an api url automatically with given api_port
-
-        Check existing cluster records in the host, find available one.
-
-        :param cluster_name: name of the cluster
-        :param host: Host, a single node or a swarm cluster
-        :param api_port: port of the api
-        :return: The generated api url address
+    def _get_service_ip(self, cluster_id, node='vp0'):
         """
+
+        :param cluster_id: The name of the cluster
+        :param host: On which host to search the cluster
+        :param node: name of the cluster node
+        :return: service IP or ""
+        """
+        host_id = self.get_by_id(cluster_id).get("host_id")
+        host = self.host_handler.get_by_id(host_id)
+        if not host:
+            logger.warning("No host found with cluster {}".format(cluster_id))
+            return ""
         daemon_url, host_type = host.get('daemon_url'), host.get('type')
-        logger.debug("daemon_url={}, port={}".format(daemon_url, api_port))
-        if api_port <= 0 or host_type not in HOST_TYPES:
-            logger.warning("Invalid input: api_port=%d, host_type=%s".format(
-                api_port, host_type))
+        if host_type not in HOST_TYPES:
+            logger.warning("Found invalid host_type=%s".format(host_type))
             return ""
         # we should diff with simple host and swarm host here
         if host_type == HOST_TYPES[0]:  # single
@@ -401,14 +423,15 @@ class ClusterHandler(object):
             host_ip = segs[1][2:]
             logger.debug("single host, ip = {}".format(host_ip))
         elif host_type == HOST_TYPES[1]:  # swarm
-            host_ip = get_swarm_node_ip(daemon_url, cluster_name + '_vp0')
+            host_ip = get_swarm_node_ip(daemon_url, "{}_{}".format(
+                cluster_id, node))
             logger.debug("swarm host, ip = {}".format(host_ip))
         else:
             logger.error("Unknown host type = {}".format(host_type))
-            return ""
-        return "http://{0}:{1}".format(host_ip, api_port)
+            host_ip = ""
+        return host_ip
 
-    def find_free_api_ports(self, host_id, number):
+    def find_free_start_ports(self, host_id, number):
         """ Find the first available port for a new cluster api
 
         This is NOT lock-free. Should keep simple, fast and safe!
@@ -417,31 +440,31 @@ class ClusterHandler(object):
 
         :param host_id: id of the host
         :param number: Number of ports to get
-        :return: The port list
+        :return: The port list, e.g., [7050, 7150, ...]
         """
-        logger.debug("Try find {} ports for host {}".format(number, host_id))
+        logger.debug("Find {} start ports for host {}".format(number, host_id))
         if number <= 0:
-            logger.warning("Available number {} <= 0".format(number))
+            logger.warning("number {} <= 0".format(number))
             return []
         if not self.host_handler.get_by_id(host_id):
             logger.warning("Cannot find host with id={}", host_id)
             return ""
 
         clusters_exists = self.col_active.find({"host_id": host_id})
-        ports_existed = list(map(lambda c: int(c["api_url"].split(":")[-1]),
-                                 clusters_exists))
+        ports_existed = list(map(
+            lambda c: int(c["service_url"]["rest"].split(":")[-1]),
+            clusters_exists))
 
-        logger.debug("The ports existed:")
-        logger.debug(ports_existed)
-        if len(ports_existed) + number >= 10000:
-            logger.warning("Too much ports are already used.")
+        logger.debug("The ports existed: {}".format(ports_existed))
+        if len(ports_existed) + number >= 1000:
+            logger.warning("Too much ports are already in used.")
             return []
-        candidates = [CLUSTER_API_PORT_START + i for i in range(len(
-            ports_existed) + number)]  # 10 is the room for tolerance
-        result = [item for item in candidates if item not in ports_existed]
+        candidates = [CLUSTER_PORT_START + i*CLUSTER_PORT_STEP
+                      for i in range(len(ports_existed) + number)]
 
-        logger.debug("available ports are:")
-        logger.debug(result[:number])
+        result = list(filter(lambda x: x not in ports_existed, candidates))
+
+        logger.debug("Free ports are {}".format(result[:number]))
         return result[:number]
 
     def refresh_health(self, cluster_id, timeout=5):

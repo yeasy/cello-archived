@@ -361,7 +361,7 @@ $(document).ready(function() {
         // Confirm
         var data_id = $(this).attr('data-id');
         var col_name = $(this).attr('data-col_name');
-        console.log("Deleting"+data_id)
+        console.log("Deleting"+data_id);
 
         $.ajax({
             url: "/cluster",
