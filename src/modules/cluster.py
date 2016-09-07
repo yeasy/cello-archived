@@ -219,10 +219,10 @@ class ClusterHandler(object):
             self.col_active.update_one(
                 {"id": id},
                 {"$set": {"user_id": SYS_DELETER + user_id}})
-        host_id, daemon_url, api_url, consensus_plugin = \
-            c.get("host_id"), c.get("daemon_url"), c.get("api_url", ""), \
+        host_id, daemon_url, consensus_plugin = \
+            c.get("host_id"), c.get("daemon_url"), \
             c.get("consensus_plugin", CONSENSUS_PLUGINS[0])
-        port = api_url.split(":")[-1] or CLUSTER_PORT_START
+        # port = api_url.split(":")[-1] or CLUSTER_PORT_START
 
         if not self.host_handler.get_active_host_by_id(host_id):
             logger.warning("Host {} inactive".format(host_id))
@@ -230,7 +230,7 @@ class ClusterHandler(object):
                                        {"$set": {"user_id": user_id}})
             return False
 
-        if not compose_clean(id, daemon_url, port, consensus_plugin):
+        if not compose_clean(id, daemon_url, consensus_plugin):
             logger.warning("Error to run compose clean work")
             self.col_active.update_one({"id": id},
                                        {"$set": {"user_id": user_id}})
@@ -393,8 +393,9 @@ class ClusterHandler(object):
         :return: serialized obj
         """
         result = {}
-        for k in keys:
-            result[k] = doc.get(k, '')
+        if doc:
+            for k in keys:
+                result[k] = doc.get(k, '')
         return result
 
     def _get_service_ip(self, cluster_id, node='vp0'):
@@ -459,7 +460,7 @@ class ClusterHandler(object):
         if len(ports_existed) + number >= 1000:
             logger.warning("Too much ports are already in used.")
             return []
-        candidates = [CLUSTER_PORT_START + i*CLUSTER_PORT_STEP
+        candidates = [CLUSTER_PORT_START + i * CLUSTER_PORT_STEP
                       for i in range(len(ports_existed) + number)]
 
         result = list(filter(lambda x: x not in ports_existed, candidates))

@@ -12,12 +12,12 @@ from docker import Client
 from .log import log_handler, LOG_LEVEL
 from .utils import \
     HOST_TYPES, \
-    CLUSTER_PORT_START, CLUSTER_NETWORK, \
+    CLUSTER_NETWORK, \
     COMPOSE_FILE_PATH, \
     CONSENSUS_PLUGINS, CONSENSUS_MODES, \
     LOG_TYPES, \
     CLUSTER_SIZES, \
-    PEER_SERVICE_PORTS, CA_SERVICE_PORTS, SERVICE_PORTS
+    SERVICE_PORTS
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -298,12 +298,11 @@ def compose_start(name, host, mapped_ports,
     :param timeout: Docker client timeout value
     :return: The name list of the started peer containers
     """
-    rest_port = mapped_ports['rest']
-    logger.debug("Compose start: name={},  host={}, mapped_port={}, "
-                 "consensus={}/{}, size={}".format(
-        name, host.get("name"), mapped_ports, consensus_plugin,
-        consensus_mode, cluster_size)
-                 )
+    logger.debug(
+        "Compose start: name={}, host={}, mapped_port={}, consensus={}/{},"
+        "size={}".format(
+            name, host.get("name"), mapped_ports, consensus_plugin,
+            consensus_mode, cluster_size))
     daemon_url, log_type, log_server = \
         host.get("daemon_url"), host.get("log_type"), host.get("log_server")
     # compose use this
@@ -320,7 +319,8 @@ def compose_start(name, host, mapped_ports,
     os.environ['PBFT_GENERAL_MODE'] = consensus_mode
     os.environ['PBFT_GENERAL_N'] = str(cluster_size)
     os.environ['PEER_NETWORKID'] = name
-    os.environ['REST_PORT'] = str(rest_port)
+    for k, v in mapped_ports.items():
+        os.environ[k.upper() + '_PORT'] = str(v)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK + "_{}".format(
         consensus_plugin)
     os.environ['LOGGING_LEVEL_CLUSTERS'] = host.get("log_level")
@@ -343,19 +343,18 @@ def compose_start(name, host, mapped_ports,
     return result
 
 
-def compose_clean(name, daemon_url, port, consensus_plugin):
+def compose_clean(name, daemon_url, consensus_plugin):
     """
     Try best to clean a compose project and clean related containers.
 
     :param name: name of the project
     :param daemon_url: Docker Host url
-    :param port: Which api port
     :param consensus_plugin: which consensus plugin
     :return: True or False
     """
     has_exception = False
     try:
-        compose_remove(name=name, daemon_url=daemon_url, rest_port=port,
+        compose_remove(name=name, daemon_url=daemon_url,
                        consensus_plugin=consensus_plugin)
     except Exception as e:
         logger.error("Error in stop compose project, will clean")
@@ -379,8 +378,7 @@ def compose_clean(name, daemon_url, port, consensus_plugin):
     return True
 
 
-def compose_remove(name, daemon_url, rest_port=CLUSTER_PORT_START,
-                   consensus_plugin=CONSENSUS_PLUGINS[0],
+def compose_remove(name, daemon_url, consensus_plugin=CONSENSUS_PLUGINS[0],
                    consensus_mode=CONSENSUS_MODES[0],
                    log_type=LOG_TYPES[0], log_server="",
                    cluster_size=CLUSTER_SIZES[0], timeout=5):
@@ -388,7 +386,6 @@ def compose_remove(name, daemon_url, rest_port=CLUSTER_PORT_START,
 
     :param name: The name of the cluster
     :param daemon_url: Docker host daemon
-    :param rest_port: The port of the cluster API
     :param consensus_plugin: Cluster consensus type
     :param consensus_mode: Cluster consensus mode
     :param log_type: which log plugin for host
@@ -397,8 +394,8 @@ def compose_remove(name, daemon_url, rest_port=CLUSTER_PORT_START,
     :param timeout: Docker client timeout
     :return:
     """
-    logger.debug("Compose remove {} with rest_port={}, "
-                 "consensus={}".format(name, rest_port, consensus_plugin))
+    logger.debug("Compose remove {} with daemon_url={}, "
+                 "consensus={}".format(name, daemon_url, consensus_plugin))
     # compose use this
     os.environ['DOCKER_HOST'] = daemon_url
     os.environ['COMPOSE_PROJECT_NAME'] = name
@@ -412,7 +409,8 @@ def compose_remove(name, daemon_url, rest_port=CLUSTER_PORT_START,
     os.environ['PBFT_GENERAL_MODE'] = consensus_mode
     os.environ['PBFT_GENERAL_N'] = str(cluster_size)
     os.environ['PEER_NETWORKID'] = name
-    os.environ['REST_PORT'] = str(rest_port)
+    for k, v in SERVICE_PORTS.items():
+        os.environ[k.upper() + '_PORT'] = str(v)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK + "_{}".format(
         consensus_plugin)
     os.environ['LOGGING_LEVEL_CLUSTERS'] = "INFO"
