@@ -30,12 +30,12 @@ Track information of one blockchain.
 
 A typical cluster may look like:
 
-id  | api_url         | name      | user_id  | host_id | daemon_url          | consensus_plugin | consensus_mode | create_ts      | apply_ts | release_ts | duration | size | containers | health
+id  | service_url         | name      | user_id  | host_id | daemon_url          | consensus_plugin | consensus_mode | create_ts      | apply_ts | release_ts | duration | size | containers | health
 --- | --------------- | --------- | -------- | ------- | ------------------- | ---------------- | -------------- | -------------  | -------- | ---------- | ------- | ------- | ------- | ------
-xxx | 10.0.0.1:5000   | cluster_A | ""       | host_xx |  tcp://10.0.0.1:2375 | pbft            | batch          | 20160430101010 | 20160430101010 | | | 4  | [vp0,vp1,vp2,vp3] | OK
+xxx | {}   | cluster_A | ""       | host_xx |  tcp://10.0.0.1:2375 | pbft            | batch          | 20160430101010 | 20160430101010 | | | 4  | [vp0,vp1,vp2,vp3] | OK
 
 * id (str): uuid of the host instance
-* api_url (str): API url to access the services on the chain
+* service_url (dict): urls to access the services on the chain, e.g., {'rest':10.0.0.1:7050, 'grpc':10.0.0.1:7051}
 * name (str): human-readable name
 * user_id (str): Which user occupies this chain, empty for no occupation
 * host_id (str): Where the chain exists

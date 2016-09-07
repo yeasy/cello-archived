@@ -7,7 +7,8 @@
     <dl class="dl-horizontal">
         <dt>Id<dt> <dd>{{item.id}}</dd>
         <dt>Name<dt> <dd>{{item.name}}</dd>
-        <dt>API URL<dt> <dd>{{item.api_url}}</dd>
+        <dt>Restful API<dt> <dd>{{item.service_url['rest']}}</dd>
+        <dt>Service URL<dt> <dd>{{item.service_url}}</dd>
         {% if item.consensus_plugin== consensus_plugins[0] %}
             <dt>Consensus<dt> <dd>{{item.consensus_plugin}}</dd>
         {% else %}
