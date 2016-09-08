@@ -274,17 +274,16 @@ class ClusterHandler(object):
         :param allow_multiple: Allow multiple chain for each tenant
         :return: serialized cluster or None
         """
+        response_keys = ['id', 'name', 'user_id', 'daemon_url', 'api_url',
+                         'consensus_plugin', 'consensus_mode', 'size',
+                         'health', 'service_url']
         if not allow_multiple:  # check if already having one
             filt = {"user_id": user_id, "release_ts": "", "health": "OK"}
             filt.update(condition)
             c = self.col_active.find_one(filt)
             if c:
                 logger.debug("Already assigned cluster for " + user_id)
-                return self._serialize(c, keys=['id', 'name', 'user_id',
-                                                'daemon_url', 'api_url',
-                                                'consensus_plugin',
-                                                'consensus_mode', 'size',
-                                                'health'])
+                return self._serialize(c, keys=response_keys)
         logger.debug("Try find available cluster for " + user_id)
         hosts = self.host_handler.list({"status": "active",
                                         "schedulable": "true"})
@@ -300,11 +299,7 @@ class ClusterHandler(object):
             if c and c.get("user_id") == user_id:
                 logger.info("Now have cluster {} at {} for user {}".format(
                     c.get("id"), h_id, user_id))
-                return self._serialize(c, keys=['id', 'name', 'user_id',
-                                                'daemon_url', 'api_url',
-                                                'consensus_plugin',
-                                                'consensus_mode', 'size',
-                                                'health'])
+                return self._serialize(c, keys=response_keys)
         logger.warning("Not find matched available cluster for " + user_id)
         return {}
 
