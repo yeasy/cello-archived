@@ -225,8 +225,8 @@ class HostHandler(object):
         for p in free_ports:
             t = Thread(target=create_cluster_work, args=(p,))
             t.start()
-            t.join(10)
-            time.sleep(0.5)
+            t.join(5)
+            time.sleep(0.2)
 
         return True
 

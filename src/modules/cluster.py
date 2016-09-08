@@ -3,6 +3,7 @@ import logging
 import os
 import requests
 import sys
+import time
 
 from threading import Thread
 from pymongo.collection import ReturnDocument
@@ -181,6 +182,12 @@ class ClusterHandler(object):
             {"$set": {"containers": containers, "user_id": user_id,
                       'api_url': service_urls['rest'],
                       'service_url': service_urls}})
+
+        def check_health_work(cid):
+            time.sleep(5)
+            self.refresh_health(cid)
+        t = Thread(target=check_health_work, args=(cid,))
+        t.start()
 
         logger.info("Create cluster OK, id={}".format(cid))
         return cid
