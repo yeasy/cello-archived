@@ -23,6 +23,8 @@
 DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*' --default-ulimit=nofile=1024:2048 --default-ulimit=nproc=4096:8192"
 ```
 * Docker images:
+
+    *If you want to use specific version fabric code, then use image with same tag, e.g., `:0.6-dp` tag for 0.6-dp release.*
     - `yeasy/hyperledger:latest`
 
         ```sh

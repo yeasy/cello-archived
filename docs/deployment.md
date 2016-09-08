@@ -9,6 +9,8 @@ Master node will run the management service, while Worker nodes serve as chain h
 
 **Please first read and meet the [System Requirement](system_requirement.md).**
 
+**Hyperledger fabric changes the service port number since 0.6, so if you want to use the legacy 0.5 code, please use the dp-0.5 branch.**
+
 ##  Setup
 
 For the first time running, please setup the master node with
