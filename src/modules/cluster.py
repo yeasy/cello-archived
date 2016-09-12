@@ -501,7 +501,8 @@ class ClusterHandler(object):
                                {"$set": {"health": "OK"}})
             return True
         else:
-            logger.debug("checking result of cluster id={}".format(cluster_id, peers))
+            logger.debug("checking result of cluster id={}".format(
+                cluster_id, peers))
             self.db_update_one({"id": cluster_id},
                                {"$set": {"health": "FAIL"}})
             return False

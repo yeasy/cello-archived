@@ -123,7 +123,7 @@ def watch_run(period=15):
         for h in hosts:  # operating on different host is safe
             t = Thread(target=host_check, args=(h.get("id"),))
             t.start()
-            t.join(timeout=2*period)
+            t.join(timeout=2 * period)
         time.sleep(period)
 
 
