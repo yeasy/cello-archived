@@ -330,7 +330,11 @@ class ClusterHandler(object):
         c = self.db_update_one(
             {"id": cluster_id, "release_ts": ""},
             {"$set": {"release_ts": datetime.datetime.now()}})
-        if not c or not c.get("release_ts"):  # not have one
+        if not c:
+            logger.warning("No cluster find for released with id {}".format(
+                cluster_id))
+            return True
+        if not c.get("release_ts"):  # not have one
             logger.warning("No cluster can be released for id {}".format(
                 cluster_id))
             return False
@@ -481,7 +485,7 @@ class ClusterHandler(object):
         cluster = self.get_by_id(cluster_id)
         if not cluster:
             logger.warning("Cannot found cluster id={}".format(cluster_id))
-            return False
+            return True
         try:
             r = requests.get(cluster["api_url"] + "/network/peers",
                              timeout=timeout)
@@ -497,6 +501,7 @@ class ClusterHandler(object):
                                {"$set": {"health": "OK"}})
             return True
         else:
+            logger.debug("checking result of cluster id={}".format(cluster_id, peers))
             self.db_update_one({"id": cluster_id},
                                {"$set": {"health": "FAIL"}})
             return False

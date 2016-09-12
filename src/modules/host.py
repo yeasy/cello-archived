@@ -245,6 +245,7 @@ class HostHandler(object):
         if len(host.get("clusters")) <= 0:
             return True
 
+        host = self.db_set_by_id(id, autofill="false")
         schedulable_status = host.get("schedulable")
         if schedulable_status == "true":
             host = self.db_set_by_id(id, schedulable="false")

@@ -289,7 +289,7 @@ $(document).ready(function() {
             },
             success: function(response) {
                 console.log(response);
-                alertMsg('Success!', 'The host is clean now.', 'success');
+                alertMsg('Success!', 'The host is clean now, autofill disabled.', 'success');
                 setTimeout("location.reload(true);",2000);
             },
             error: function(error) {

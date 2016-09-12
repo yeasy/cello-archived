@@ -61,10 +61,11 @@ You can also find more [scenarios](docs/scenario.md).
 * ~~Add limitation on the running containers.~~
 * ~~Security option and log option (rotate)~~.
 * ~~Refine setup scripts.~~
+* ~~Support fabric new version: multiple port mapping, new chaincode operation api.~~
 * restserver: update api definitions yml files.
 * dashboard: support auto fresh based on websocket.
 * Support advanced scheduling.
-* Support fabric new version: multiple port mapping, new chaincode operation api.
+* Support efficient fillup.
 * Enhance the robustness for chain operations.
 * Fix deleting bug on 2nd page table.
 
