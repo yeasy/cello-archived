@@ -16,6 +16,7 @@ Please first read and meet the [System Requirement](system_requirement.md).
 ## Clone Code
 
 ```sh
+$ sudo aptitude install git make -y
 $ git clone https://github.com/yeasy/cello && cd cello
 ```
 

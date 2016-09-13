@@ -4,7 +4,7 @@
 
 source scripts/header.sh
 
-USER="whoami"
+USER=`whoami`
 
 DB_DIR=/opt/${PROJECT}/mongo
 
