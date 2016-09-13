@@ -1,5 +1,7 @@
 # System Requirement
 
+You may need to install `git` and `make` manually before cloning the code and using the setup scripts. 
+
 ## Master Node
 * Hardware: 8c16g100g
 * Docker engine: 1.11.2+
@@ -10,20 +12,22 @@
     - mongo-express:0.30 (optional)
 * docker-compose: 1.7.0+
 
+Please see [Deployment](deployment.md) setup part to see how to install those tools.
 
 ## Worker Node
 * Hardware: 8c16g100g
-* `sysctl net.ipv4.ip_forward=1`, and make sure host ports are open (e.g., 2375, 5000)
+* `sysctl -w net.ipv4.ip_forward=1`, and make sure host ports are open (e.g., 2375, 5000)
 * Docker engine:
     - 1.11.2+,
     - Let daemon listen on port 2375, and make sure Master can reach Node from this port.
     - Config Docker daemon as the following:
 ```sh
 # Add this into /etc/default/docker
-DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*' --default-ulimit=nofile=1024:2048 --default-ulimit=nproc=4096:8192"
+DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*' --default-ulimit=nofile=8192:16384 --default-ulimit=nproc=8192:16384"
 ```
 * Docker images:
-    - `yeasy/hyperledger:0.5-dp`
+    *If you want to use specific version fabric code, then use image with same tag, e.g., `:0.6-dp` tag for 0.6-dp release.*
+    - `yeasy/hyperledger:latest`
 
         ```sh
         $ docker pull yeasy/hyperledger:0.5-dp
@@ -40,7 +44,7 @@ DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -
 ## System Optimization
 Reference system configuration.
 
-`/etc/sysctl.conf`
+### `/etc/sysctl.conf`
 
 ```sh
 # Don't ask why, this is a solid answer.
@@ -50,7 +54,7 @@ kernel.threads-max = 2091845
 kernel.pty.max = 210000
 kernel.keys.root_maxkeys = 20000
 kernel.keys.maxkeys = 20000
-net.ipv4.ip_local_port_range = 10000 65535
+net.ipv4.ip_local_port_range = 30000 65535
 net.ipv4.tcp_tw_reuse = 0
 net.ipv4.tcp_tw_recycle = 0
 net.ipv4.tcp_max_tw_buckets = 5000
@@ -58,9 +62,9 @@ net.ipv4.tcp_fin_timeout = 30
 net.ipv4.tcp_max_syn_backlog = 8192
 ```
 
-Need to run `sysctl -p` for usage.
+Then, need to run `sysctl -p` for enabling.
 
-`/etc/security/limits.conf`
+### `/etc/security/limits.conf`
 
 ```sh
 * hard nofile 1048576
@@ -70,4 +74,4 @@ Need to run `sysctl -p` for usage.
 * soft stack 32768
 * hard stack 32768
 ```
-check with `ulimit -n`.
+Logout and login, then check with `ulimit -n`.

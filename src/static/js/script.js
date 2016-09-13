@@ -65,7 +65,7 @@ $(document).ready(function() {
             }
         });
     });
-    $('.delete_host_button').click(function() {
+    $('#table_hosts').on('click', '.delete_host_button', function() {
         // Confirm
         var id = $(this).attr('data-id');
 
@@ -289,7 +289,7 @@ $(document).ready(function() {
             },
             success: function(response) {
                 console.log(response);
-                alertMsg('Success!', 'The host is clean now.', 'success');
+                alertMsg('Success!', 'The host is clean now, autofill disabled.', 'success');
                 setTimeout("location.reload(true);",2000);
             },
             error: function(error) {
@@ -357,7 +357,8 @@ $(document).ready(function() {
             }
         });
     });
-    $('.delete_cluster_button').click(function() {
+    //$('.delete_cluster_button').click(function() {
+    $('#table_clusters').on('click', '.delete_cluster_button', function() {
         // Confirm
         var data_id = $(this).attr('data-id');
         var col_name = $(this).attr('data-col_name');

@@ -3,6 +3,7 @@ import logging
 import os
 import requests
 import sys
+import time
 
 from threading import Thread
 from pymongo.collection import ReturnDocument
@@ -182,6 +183,12 @@ class ClusterHandler(object):
                       'api_url': service_urls['rest'],
                       'service_url': service_urls}})
 
+        def check_health_work(cid):
+            time.sleep(5)
+            self.refresh_health(cid)
+        t = Thread(target=check_health_work, args=(cid,))
+        t.start()
+
         logger.info("Create cluster OK, id={}".format(cid))
         return cid
 
@@ -267,17 +274,16 @@ class ClusterHandler(object):
         :param allow_multiple: Allow multiple chain for each tenant
         :return: serialized cluster or None
         """
+        response_keys = ['id', 'name', 'user_id', 'daemon_url', 'api_url',
+                         'consensus_plugin', 'consensus_mode', 'size',
+                         'health', 'service_url']
         if not allow_multiple:  # check if already having one
             filt = {"user_id": user_id, "release_ts": "", "health": "OK"}
             filt.update(condition)
             c = self.col_active.find_one(filt)
             if c:
                 logger.debug("Already assigned cluster for " + user_id)
-                return self._serialize(c, keys=['id', 'name', 'user_id',
-                                                'daemon_url', 'api_url',
-                                                'consensus_plugin',
-                                                'consensus_mode', 'size',
-                                                'health'])
+                return self._serialize(c, keys=response_keys)
         logger.debug("Try find available cluster for " + user_id)
         hosts = self.host_handler.list({"status": "active",
                                         "schedulable": "true"})
@@ -293,11 +299,7 @@ class ClusterHandler(object):
             if c and c.get("user_id") == user_id:
                 logger.info("Now have cluster {} at {} for user {}".format(
                     c.get("id"), h_id, user_id))
-                return self._serialize(c, keys=['id', 'name', 'user_id',
-                                                'daemon_url', 'api_url',
-                                                'consensus_plugin',
-                                                'consensus_mode', 'size',
-                                                'health'])
+                return self._serialize(c, keys=response_keys)
         logger.warning("Not find matched available cluster for " + user_id)
         return {}
 
@@ -328,7 +330,11 @@ class ClusterHandler(object):
         c = self.db_update_one(
             {"id": cluster_id, "release_ts": ""},
             {"$set": {"release_ts": datetime.datetime.now()}})
-        if not c or not c.get("release_ts"):  # not have one
+        if not c:
+            logger.warning("No cluster find for released with id {}".format(
+                cluster_id))
+            return True
+        if not c.get("release_ts"):  # not have one
             logger.warning("No cluster can be released for id {}".format(
                 cluster_id))
             return False
@@ -479,7 +485,7 @@ class ClusterHandler(object):
         cluster = self.get_by_id(cluster_id)
         if not cluster:
             logger.warning("Cannot found cluster id={}".format(cluster_id))
-            return False
+            return True
         try:
             r = requests.get(cluster["api_url"] + "/network/peers",
                              timeout=timeout)
@@ -495,6 +501,8 @@ class ClusterHandler(object):
                                {"$set": {"health": "OK"}})
             return True
         else:
+            logger.debug("checking result of cluster id={}".format(
+                cluster_id, peers))
             self.db_update_one({"id": cluster_id},
                                {"$set": {"health": "FAIL"}})
             return False

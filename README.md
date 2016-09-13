@@ -30,7 +30,7 @@ You can also find more [scenarios](docs/scenario.md).
 
 ### Operator Docs
 * [System Requirement](docs/system_requirement.md)
-* [Deployment](docs/deployment.md)
+* [Installation & Deployment](docs/deployment.md)
 * [Scenarios](docs/scenario.md)
 
 ### Development Docs
@@ -61,12 +61,13 @@ You can also find more [scenarios](docs/scenario.md).
 * ~~Add limitation on the running containers.~~
 * ~~Security option and log option (rotate)~~.
 * ~~Refine setup scripts.~~
+* ~~Support fabric new version: multiple port mapping, new chaincode operation api.~~
+* ~~Fix deleting bug on 2nd page table.~~
 * restserver: update api definitions yml files.
 * dashboard: support auto fresh based on websocket.
 * Support advanced scheduling.
-* Support fabric new version: multiple port mapping, new chaincode operation api.
+* Support efficient fillup.
 * Enhance the robustness for chain operations.
-* Fix deleting bug on 2nd page table.
 
 ## Why names Cello?
 Can u find anyone better at playing chains?
