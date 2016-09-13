@@ -23,6 +23,5 @@ echo_b () {
 pull_image() {
     [ $# -ne 1 ] && return 0
     name=$1
-    [[ "$(docker images -q ${name} 2> /dev/null)" == "" ]] && echo_r "Not found ${name}, may need some time to pull it down..." && docker pull ${name}
+    [[ "$(sudo docker images -q ${name} 2> /dev/null)" == "" ]] && echo_r "Not found ${name}, may need some time to pull it down..." && sudo docker pull ${name}
 }
-

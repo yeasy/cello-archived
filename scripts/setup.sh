@@ -24,14 +24,14 @@ echo "Checking Docker-compose..."
 command -v docker-compose >/dev/null 2>&1 || { echo_r >&2 "No docker-compose found, try installing"; sudo pip install -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com docker-compose; }
 
 echo "Checking local mounted database path..."
-[ ! -d ${DB_DIR} ] && echo_r "Local database path not existed, creating one" && mkdir -p ${DB_DIR} && sudo chown -R ${USER}:${USER} ${DB_DIR}
+[ ! -d ${DB_DIR} ] && echo_r "Local database path ${DB_DIR} not existed, creating one" && sudo mkdir -p ${DB_DIR} && sudo chown -R ${USER}:${USER} ${DB_DIR}
 
 echo "Checking local Docker image..."
-sudo pull_image "mongo:3.2"
-sudo pull_image "python:3.2"
-sudo pull_image "yeasy/nginx:latest"
+pull_image "mongo:3.2"
+pull_image "python:3.2"
+pull_image "yeasy/nginx:latest"
 
-[ `docker ps -qa|wc -l` -gt 0 ] && echo_r "Warn: existing containers may cause unpredictable failure"
+[ `sudo docker ps -qa|wc -l` -gt 0 ] && echo_r "Warn: existing containers may cause unpredictable failure"
 
 echo_g "Please logout and login again to enable the setup."
 echo_g "It's safe to run this script repeatedly. Just re-run if the setup fails."
