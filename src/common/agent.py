@@ -33,7 +33,7 @@ def clean_chaincode_images(daemon_url, name_prefix, timeout=5):
     :return: None
     """
     logger.debug("clean chaincode images with prefix={}".format(name_prefix))
-    client = Client(base_url=daemon_url, timeout=timeout)
+    client = Client(base_url=daemon_url, version="auto", timeout=timeout)
     images = client.images()
     id_removes = [e['Id'] for e in images if e['RepoTags'][0].startswith(
         name_prefix)]
@@ -56,7 +56,7 @@ def clean_project_containers(daemon_url, name_prefix, timeout=5):
     """
     logger.debug("Clean project containers, daemon_url={}, prefix={}".format(
         daemon_url, name_prefix))
-    client = Client(base_url=daemon_url, timeout=timeout)
+    client = Client(base_url=daemon_url, version="auto", timeout=timeout)
     containers = client.containers(all=True)
     id_removes = [e['Id'] for e in containers if
                   e['Names'][0].split("/")[-1].startswith(name_prefix)]
@@ -77,7 +77,7 @@ def clean_exited_containers(daemon_url):
     :return: None
     """
     logger.debug("Clean exited containers")
-    client = Client(base_url=daemon_url)
+    client = Client(base_url=daemon_url, version="auto")
     containers = client.containers(quiet=True, all=True,
                                    filters={"status": "exited"})
     id_removes = [e['Id'] for e in containers]
@@ -86,8 +86,7 @@ def clean_exited_containers(daemon_url):
         try:
             client.remove_container(_)
         except Exception as e:
-            logger.error("Exception in clean_exited_containers")
-            logger.error(e)
+            logger.error("Exception in clean_exited_containers {}".format(e))
 
 
 def check_daemon(daemon_url, timeout=5):
@@ -106,9 +105,10 @@ def check_daemon(daemon_url, timeout=5):
         logger.error("Invalid daemon url = ", daemon_url)
         return False
     try:
-        client = Client(base_url=daemon_url, timeout=timeout)
+        client = Client(base_url=daemon_url, version="auto", timeout=timeout)
         return client.ping() == 'OK'
-    except:
+    except Exception as e:
+        logger.error("Exception in check_daemon {}".format(e))
         return False
 
 
@@ -128,7 +128,7 @@ def detect_daemon_type(daemon_url, timeout=5):
         logger.error("Invalid daemon url = ", daemon_url)
         return None
     try:
-        client = Client(base_url=daemon_url, timeout=timeout)
+        client = Client(base_url=daemon_url, version="auto", timeout=timeout)
         server_version = client.info()['ServerVersion']
         if server_version.startswith('swarm'):
             return HOST_TYPES[1]
@@ -150,7 +150,7 @@ def reset_container_host(host_type, daemon_url, timeout=15):
     :return: host type info
     """
     try:
-        client = Client(base_url=daemon_url, timeout=timeout)
+        client = Client(base_url=daemon_url, version="auto", timeout=timeout)
         containers = client.containers(quiet=True, all=True)
         logger.debug(containers)
         for c in containers:
@@ -192,7 +192,7 @@ def get_swarm_node_ip(swarm_url, container_name, timeout=5):
     logger.debug("Detect container={} with swarm_url={}".format(
         container_name, swarm_url))
     try:
-        client = Client(base_url=swarm_url, timeout=timeout)
+        client = Client(base_url=swarm_url, version="auto", timeout=timeout)
         info = client.inspect_container(container_name)
         return info['NetworkSettings']['Ports']['5000/tcp'][0]['HostIp']
     except Exception as e:
@@ -217,7 +217,7 @@ def setup_container_host(host_type, daemon_url, timeout=5):
         logger.error("Invalid host_type={}".format(host_type))
         return False
     try:
-        client = Client(base_url=daemon_url, timeout=timeout)
+        client = Client(base_url=daemon_url, version="auto", timeout=timeout)
         net_names = [x["Name"] for x in client.networks()]
         for cs_type in CONSENSUS_PLUGINS:
             net_name = CLUSTER_NETWORK + "_{}".format(cs_type)
@@ -253,7 +253,7 @@ def cleanup_container_host(daemon_url, timeout=5):
         logger.error("Invalid daemon_url={}".format(daemon_url))
         return False
     try:
-        client = Client(base_url=daemon_url, timeout=timeout)
+        client = Client(base_url=daemon_url, version="auto", timeout=timeout)
         net_names = [x["Name"] for x in client.networks()]
         for cs_type in CONSENSUS_PLUGINS:
             net_name = CLUSTER_NETWORK + "_{}".format(cs_type)
