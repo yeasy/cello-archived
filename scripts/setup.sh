@@ -28,7 +28,7 @@ echo_b "Checking local mounted database path..."
 
 echo_b "Checking local Docker image..."
 pull_image "mongo:3.2"
-pull_image "python:3.2"
+pull_image "python:3.5"
 pull_image "yeasy/nginx:latest"
 
 [ `sudo docker ps -qa|wc -l` -gt 0 ] && echo_r "Warn: existing containers may cause unpredictable failure, suggest to clean them using docker rm"
