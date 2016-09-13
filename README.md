@@ -62,12 +62,12 @@ You can also find more [scenarios](docs/scenario.md).
 * ~~Security option and log option (rotate)~~.
 * ~~Refine setup scripts.~~
 * ~~Support fabric new version: multiple port mapping, new chaincode operation api.~~
+* ~~Fix deleting bug on 2nd page table.~~
 * restserver: update api definitions yml files.
 * dashboard: support auto fresh based on websocket.
 * Support advanced scheduling.
 * Support efficient fillup.
 * Enhance the robustness for chain operations.
-* Fix deleting bug on 2nd page table.
 
 ## Why names Cello?
 Can u find anyone better at playing chains?

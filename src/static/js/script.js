@@ -65,7 +65,7 @@ $(document).ready(function() {
             }
         });
     });
-    $('.delete_host_button').click(function() {
+    $('#table_hosts').on('click', '.delete_host_button', function() {
         // Confirm
         var id = $(this).attr('data-id');
 
@@ -357,7 +357,8 @@ $(document).ready(function() {
             }
         });
     });
-    $('.delete_cluster_button').click(function() {
+    //$('.delete_cluster_button').click(function() {
+    $('#table_clusters').on('click', '.delete_cluster_button', function() {
         // Confirm
         var data_id = $(this).attr('data-id');
         var col_name = $(this).attr('data-col_name');
