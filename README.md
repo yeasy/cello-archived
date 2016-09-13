@@ -30,7 +30,7 @@ You can also find more [scenarios](docs/scenario.md).
 
 ### Operator Docs
 * [System Requirement](docs/system_requirement.md)
-* [Deployment](docs/deployment.md)
+* [Installation & Deployment](docs/deployment.md)
 * [Scenarios](docs/scenario.md)
 
 ### Development Docs

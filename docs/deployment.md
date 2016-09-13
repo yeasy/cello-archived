@@ -1,15 +1,23 @@
 # Deployment
 
+**Hyperledger fabric changes the service port number since 0.6, so if you want to use the legacy 0.5 code, please use the dp-0.5 branch.**
+
 There are two kinds of nodes: 
 
-* Master Node
-* Worker Node
+* Master Node: run the management service, to operate the chains in Work Nodes;
+* Worker Node: serve as chain hosts.
 
-Master node will run the management service, while Worker nodes serve as chain hosts. Master will use remote API to operate the chains in those Worker nodes. In this doc, we describe how to setup the Master node.
+In this doc, we describe how to setup the Master node.
 
-**Please first read and meet the [System Requirement](system_requirement.md).**
+## Config System
+Please first read and meet the [System Requirement](system_requirement.md).
 
-**Hyperledger fabric changes the service port number since 0.6, so if you want to use the legacy 0.5 code, please use the dp-0.5 branch.**
+
+## Clone Code
+
+```sh
+$ git clone https://github.com/yeasy/cello && cd cello
+```
 
 ##  Setup
 

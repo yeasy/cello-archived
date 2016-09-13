@@ -1,5 +1,7 @@
 # System Requirement
 
+You may need to install `git` and `make` manually before cloning the code and using the setup scripts. 
+
 ## Master Node
 * Hardware: 8c16g100g
 * Docker engine: 1.11.2+
@@ -10,10 +12,11 @@
     - mongo-express:0.30 (optional)
 * docker-compose: 1.7.0+
 
+Please see [Deployment](deployment.md) setup part to see how to install those tools.
 
 ## Worker Node
 * Hardware: 8c16g100g
-* `sysctl net.ipv4.ip_forward=1`, and make sure host ports are open (e.g., 2375, 5000)
+* `sysctl -w net.ipv4.ip_forward=1`, and make sure host ports are open (e.g., 2375, 5000)
 * Docker engine:
     - 1.11.2+,
     - Let daemon listen on port 2375, and make sure Master can reach Node from this port.
@@ -68,4 +71,4 @@ Then, need to run `sysctl -p` for enabling.
 * soft stack 32768
 * hard stack 32768
 ```
-Check with `ulimit -n`.
+Logout and login, then check with `ulimit -n`.

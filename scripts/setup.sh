@@ -8,7 +8,7 @@ USER="whoami"
 
 DB_DIR=/opt/${PROJECT}/mongo
 
-sudo apt-get update && apt-get install -y -m curl docker-engine python-pip
+sudo apt-get update && sudo apt-get install -y -m curl docker-engine python-pip
 
 sudo pip install --upgrade pip
 
