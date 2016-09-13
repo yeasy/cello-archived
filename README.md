@@ -12,6 +12,8 @@ Using Cello, we can
 
 ![Typical Scenario](docs/imgs/scenario.png)
 
+You can also find more [scenarios](docs/scenario.md).
+
 ## Features
 
 * Manage the lifecycle of blockchains, e.g., create/delete automatically.
@@ -28,13 +30,13 @@ Using Cello, we can
 
 ### Operator Docs
 * [System Requirement](docs/system_requirement.md)
-* [Deployment](docs/deployment.md)
+* [Installation & Deployment](docs/deployment.md)
+* [Scenarios](docs/scenario.md)
 
 ### Development Docs
-* [Scenarios](docs/scenario.md)
 * [Architecture Design](docs/arch.md)
 * [Database Model](docs/db.md)
-* [API](api)
+* [API](api/restserver_v2.md)
 
 ## TODO
 * ~~Add default 404 and 500 error page.~~
@@ -59,10 +61,12 @@ Using Cello, we can
 * ~~Add limitation on the running containers.~~
 * ~~Security option and log option (rotate)~~.
 * ~~Refine setup scripts.~~
+* ~~Support fabric new version: multiple port mapping, new chaincode operation api.~~
+* ~~Fix deleting bug on 2nd page table.~~
 * restserver: update api definitions yml files.
 * dashboard: support auto fresh based on websocket.
 * Support advanced scheduling.
-* Support fabric new version: multiple port mapping, new chaincode operation api.
+* Support efficient fillup.
 * Enhance the robustness for chain operations.
 
 ## Why names Cello?

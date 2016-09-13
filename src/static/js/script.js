@@ -65,7 +65,7 @@ $(document).ready(function() {
             }
         });
     });
-    $('.delete_host_button').click(function() {
+    $('#table_hosts').on('click', '.delete_host_button', function() {
         // Confirm
         var id = $(this).attr('data-id');
 
@@ -117,42 +117,48 @@ $(document).ready(function() {
         $('.btn-ok', this).data('hostId', data.id);
     });
     $('#save_host_button').click(function(e) {
-            // Save the form data via an Ajax request
-            e.preventDefault();
-            var $form = $('#config_host_form');
+        // Save the form data via an Ajax request
+        e.preventDefault();
+        var $form = $('#config_host_form');
 
-            var id    = $form.find('[name="id"]').val();
-            var name    = $form.find('[name="name"]').val();
-            var status    = $form.find('[name="status"]').val();
-            var capacity    = $form.find('[name="capacity"]').val();
-            var type    = $form.find('[name="type"]').val();
+        var id    = $form.find('[name="id"]').val();
+        var name    = $form.find('[name="name"]').val();
+        var status    = $form.find('[name="status"]').val();
+        var capacity    = $form.find('[name="capacity"]').val();
+        var type    = $form.find('[name="type"]').val();
         if($form.find('[name="schedulable"]').is(':checked')) {
             var schedulable    = true
         } else {
             var schedulable    = false
         }
-            var log_level    = $form.find('[name="log_level"]').val();
-            var log_type    = $form.find('[name="log_type"]').val();
-            var log_server    = $form.find('[name="log_server"]').val();
+        if($form.find('[name="autofill"]').is(':checked')) {
+            var autofill    = true
+        } else {
+            var autofill    = false
+        }
+        var log_level    = $form.find('[name="log_level"]').val();
+        var log_type    = $form.find('[name="log_type"]').val();
+        var log_server    = $form.find('[name="log_server"]').val();
 
-            // The url and method might be different in your application
-            $.ajax({
-                url: '/host',
-                method: 'PUT',
-                data: {
-                    "id": id,
-                    "name": name,
-                    "status": status,
-                    "capacity": capacity,
-                    "log_level": log_level,
-                    "log_type": log_type,
-                    "log_server": log_server,
-                    "type": type,
-                    "schedulable": schedulable
-                }
-            }).success(function(response) {
-                // Get the cells
-                var $button = $('button[data-id="' + response.id + '"]'),
+        // The url and method might be different in your application
+        $.ajax({
+            url: '/host',
+            method: 'PUT',
+            data: {
+                "id": id,
+                "name": name,
+                "status": status,
+                "capacity": capacity,
+                "log_level": log_level,
+                "log_type": log_type,
+                "log_server": log_server,
+                "type": type,
+                "autofill": autofill,
+                "schedulable": schedulable
+            }
+        }).success(function(response) {
+            // Get the cells
+            var $button = $('button[data-id="' + response.id + '"]'),
                     $tr     = $button.closest('tr'),
                     $cells  = $tr.find('td');
 
@@ -199,11 +205,14 @@ $(document).ready(function() {
                 .find('[name="create_ts"]').val(response.create_ts).end()
                 .find('[name="clusters"]').val(response.clusters.length).end();
 
-            console.log(response.schedulable);
             if (response.schedulable == "true")
                 $('#config_host_form').find('[name="schedulable"]').prop('checked', true);
             else
                 $('#config_host_form').find('[name="schedulable"]').prop('checked', false);
+            if (response.autofill == "true")
+                $('#config_host_form').find('[name="autofill"]').prop('checked', true);
+            else
+                $('#config_host_form').find('[name="autofill"]').prop('checked', false);
             // Show the dialog
             bootbox
                 .dialog({
@@ -280,7 +289,7 @@ $(document).ready(function() {
             },
             success: function(response) {
                 console.log(response);
-                alertMsg('Success!', 'The host is clean now.', 'success');
+                alertMsg('Success!', 'The host is clean now, autofill disabled.', 'success');
                 setTimeout("location.reload(true);",2000);
             },
             error: function(error) {
@@ -348,10 +357,12 @@ $(document).ready(function() {
             }
         });
     });
-    $('.delete_cluster_button').click(function() {
+    //$('.delete_cluster_button').click(function() {
+    $('#table_clusters').on('click', '.delete_cluster_button', function() {
         // Confirm
         var data_id = $(this).attr('data-id');
         var col_name = $(this).attr('data-col_name');
+        console.log("Deleting"+data_id);
 
         $.ajax({
             url: "/cluster",

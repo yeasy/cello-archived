@@ -112,15 +112,36 @@ def cluster_release():
 @action_v2.route('/cluster_list', methods=['POST'])
 def cluster_list():
     """
-    Return status.
+    Return list of the clusters.
     """
     request_debug(r, logger)
     user_id = request_get(r, "user_id")
     logger.warning("user_id={}".format(user_id))
     if not user_id:
-        logger.warning("cluster_apply without user_id")
+        logger.warning("cluster_list without user_id")
         response_fail["error"] = "No user_id is given"
         response_fail["data"] = r.args
         return jsonify(response_fail), CODE_BAD_REQUEST
 
-    cluster_handler.list(filter_data={})
+    result = cluster_handler.list(filter_data={'user_id': user_id})
+    response_ok["data"] = result
+    return jsonify(response_ok), CODE_OK
+
+
+@action_v2.route('/cluster_info', methods=['POST'])
+def cluster_info():
+    """
+    Return information of the cluster.
+    """
+    request_debug(r, logger)
+    cluster_id = request_get(r, "cluster_id")
+    logger.warning("cluster_id={}".format(cluster_id))
+    if not cluster_id:
+        response_fail["error"] = "cluster_get without cluster_id"
+        logger.warning(response_fail["error"])
+        response_fail["data"] = r.args
+        return jsonify(response_fail), CODE_BAD_REQUEST
+
+    result = cluster_handler.get_by_id(cluster_id)
+    response_ok["data"] = result
+    return jsonify(response_ok), CODE_OK

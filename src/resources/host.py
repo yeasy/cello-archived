@@ -60,10 +60,10 @@ def host_api():
             r.form['name'], r.form['daemon_url'], r.form['capacity'], \
             r.form['log_type'], r.form['log_server'], r.form['log_level']
 
-        if "fillup" in r.form and r.form["fillup"] == "on":
-            fillup = True
+        if "autofill" in r.form and r.form["autofill"] == "on":
+            autofill = "true"
         else:
-            fillup = False
+            autofill = "false"
 
         if "schedulable" in r.form and r.form["schedulable"] == "on":
             schedulable = "true"
@@ -72,7 +72,7 @@ def host_api():
 
         logger.debug("name={}, daemon_url={}, capacity={}"
                      "fillup={}, schedulable={}, log={}/{}".
-                     format(name, daemon_url, capacity, fillup, schedulable,
+                     format(name, daemon_url, capacity, autofill, schedulable,
                             log_type, log_server))
         if not name or not daemon_url or not capacity or not log_type:
             logger.warn("host post without enough data")
@@ -82,7 +82,7 @@ def host_api():
         else:
             result = host_handler.create(name=name, daemon_url=daemon_url,
                                          capacity=int(capacity),
-                                         fillup=fillup,
+                                         autofill=autofill,
                                          schedulable=schedulable,
                                          log_level=log_level,
                                          log_type=log_type,
