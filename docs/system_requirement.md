@@ -16,10 +16,10 @@ Please see [Deployment](deployment.md) setup part to see how to install those to
 
 ## Worker Node
 * Hardware: 8c16g100g
-* `sysctl -w net.ipv4.ip_forward=1`, and make sure host ports are open (e.g., 2375, 5000)
+* `sysctl -w net.ipv4.ip_forward=1`, and make sure host ports are open (e.g., 2375, 7050~10000)
 * Docker engine:
-    - 1.11.2+,
-    - Let daemon listen on port 2375, and make sure Master can reach Node from this port.
+    - 1.12.0+ (1.11.2 for 0.5-dp branch).
+    - Let daemon listen on port 2375, and make sure Master can reach Worker Node through this port.
     - Config Docker daemon as the following:
 ```sh
 # Add this into /etc/default/docker
