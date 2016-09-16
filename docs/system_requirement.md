@@ -30,13 +30,13 @@ DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -
     - `yeasy/hyperledger:latest`
 
         ```sh
-        $ docker pull yeasy/hyperledger:0.5-dp
-        $ docker tag yeasy/hyperledger:0.5-dp hyperledger/fabric-baseimage:latest
+        $ docker pull yeasy/hyperledger:latest
+        $ docker tag yeasy/hyperledger:latest hyperledger/fabric-baseimage:latest
         ```
-    - `yeasy/hyperledger-peer:0.5-dp`
+    - `yeasy/hyperledger-peer:latest`
         ```sh
-        $ docker pull yeasy/hyperledger-peer:0.5-dp
-        $ docker tag yeasy/hyperledger-peer:0.5-dp yeasy/hyperledger-peer:latest
+        $ docker pull yeasy/hyperledger-peer:latest
+        $ docker tag yeasy/hyperledger-peer:latest yeasy/hyperledger-peer:latest
         ```
     - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the authentication service)
 * aufs-tools (optional): Only required on ubuntu 14.04.
