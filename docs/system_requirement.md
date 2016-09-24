@@ -27,15 +27,14 @@ DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -
 ```
 * Docker images:
 
-    *If you want to use specific version fabric code, then use image with same tag, e.g., `:0.6-dp` tag for 0.6-dp release.*
-    - `yeasy/hyperledger:latest`
-
+    *To use specific version fabric code, then mark corresponding tag when pulling, e.g., `yeasy/hyperledger-fabric:0.6-dp` tag for 0.6-dp release.*
+    - `yeasy/hyperledger-fabric:latest`
         ```sh
-        $ docker pull yeasy/hyperledger:latest
-        $ docker tag yeasy/hyperledger:latest hyperledger/fabric-baseimage:latest
+        $ docker pull yeasy/hyperledger-fabric:latest
+        $ docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-peer:latest
+        $ docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-baseimage:latest
+        $ docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-membersrvc:latest # (optional, only when need the authentication service)
         ```
-    - `yeasy/hyperledger-peer:latest`
-    - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the authentication service)
 * aufs-tools (optional): Only required on ubuntu 14.04.
 
 ## System Optimization
