@@ -68,6 +68,7 @@ You can also find more [scenarios](docs/scenario.md).
 * Support advanced scheduling.
 * Support efficient fillup.
 * Enhance the robustness for chain operations.
+* Support return code checking in web
 
 ## Why names Cello?
 Can u find anyone better at playing chains?

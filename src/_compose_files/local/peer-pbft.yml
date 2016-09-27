@@ -12,7 +12,7 @@ version: '2'
 
 services:
   vp:
-    image: yeasy/hyperledger-peer:latest
+    image: hyperledger/fabric-peer:latest
     restart: unless-stopped
     labels:
       - monitor=true
@@ -49,8 +49,8 @@ services:
     mem_limit: 512000000
     memswap_limit: 1000000000
     cpu_quota: 50000
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
     command: peer node start
-    #logging:
-    #  driver: json-file
-    #  options:
-    #    max-size: 10m

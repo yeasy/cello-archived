@@ -16,29 +16,26 @@ Please see [Deployment](deployment.md) setup part to see how to install those to
 
 ## Worker Node
 * Hardware: 8c16g100g
-* `sysctl -w net.ipv4.ip_forward=1`, and make sure host ports are open (e.g., 2375, 5000)
+* `sysctl -w net.ipv4.ip_forward=1`, and make sure host ports are open (e.g., 2375, 7050~10000)
 * Docker engine:
-    - 1.11.2+,
-    - Let daemon listen on port 2375, and make sure Master can reach Node from this port.
+    - 1.12.0+ (1.11.2 for 0.5-dp branch).
+    - Let daemon listen on port 2375, and make sure Master can reach Worker Node through this port.
     - Config Docker daemon as the following:
 ```sh
 # Add this into /etc/default/docker
 DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*' --default-ulimit=nofile=8192:16384 --default-ulimit=nproc=8192:16384"
 ```
 * Docker images:
-    *If you want to use specific version fabric code, then use image with same tag, e.g., `:0.6-dp` tag for 0.6-dp release.*
-    - `yeasy/hyperledger:latest`
 
+    *To use specific version fabric code, then mark corresponding tag when pulling, e.g., `yeasy/hyperledger-fabric:0.6-dp` tag for 0.6-dp release.*
+    - `yeasy/hyperledger-fabric:latest`
         ```sh
-        $ docker pull yeasy/hyperledger:latest
-        $ docker tag yeasy/hyperledger:latest hyperledger/fabric-baseimage:latest
+        $ docker pull yeasy/hyperledger-fabric:latest
+        $ docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-peer:latest
+        $ docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-baseimage:latest
+        $ docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-membersrvc:latest # (optional, only when need the authentication service)
         ```
-    - `yeasy/hyperledger-peer:latest`
-        ```sh
-        $ docker pull yeasy/hyperledger-peer:latest
-        $ docker tag yeasy/hyperledger-peer:latest yeasy/hyperledger-peer:latest
-        ```
-    - `yeasy/hyperledger-membersrvc:latest` (optional, only when need the authentication service)
+
 * aufs-tools (optional): Only required on ubuntu 14.04.
 
 ## System Optimization
