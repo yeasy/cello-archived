@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
-{% block title %}Clusters{% endblock %}
+{% block title %}Chains{% endblock %}
 {% block body %}
     {{ super() }}
     {% if type != "released" %}
-        <h2 class="page-header">Clusters {{ type }}: {{items_count}}
+        <h2 class="page-header">Chains {{ type }}: {{items_count}}
                 <button
                         type="button"
                         class="btn btn-primary btn-success btn-default pull-sm-right"
@@ -18,7 +18,7 @@
                 </button>
         </h2>
     {% else %}
-        <h2 class="page-header">Clusters {{type}}: {{items_count}}</h2>
+        <h2 class="page-header">Chains {{type}}: {{items_count}}</h2>
     {% endif %}
 
     {% if items_count > 0 %}
