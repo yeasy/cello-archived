@@ -25,15 +25,15 @@ Please see [Deployment](deployment.md) setup part to see how to install those to
 # Add this into /etc/default/docker
 DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*' --default-ulimit=nofile=8192:16384 --default-ulimit=nproc=8192:16384"
 ```
-* Docker images:
+* Docker images (Ignore this step if u already have the official images):
 
-    *To use specific version fabric code, then mark corresponding tag when pulling, e.g., `yeasy/hyperledger-fabric:0.6-dp` tag for 0.6-dp release.*
+    *To use specific version fabric code, then mark corresponding tag when pulling, e.g., `yeasy/hyperledger-fabric:0.6-dp` for 0.6-dp release.*
     - `yeasy/hyperledger-fabric:latest`
         ```sh
-        $ docker pull yeasy/hyperledger-fabric:latest
-        $ docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-peer:latest
-        $ docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-baseimage:latest
-        $ docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-membersrvc:latest # (optional, only when need the authentication service)
+        $ docker pull yeasy/hyperledger-fabric:latest \
+         && docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-peer:latest \
+         && docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-baseimage:latest \
+         && docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-membersrvc:latest # (optional, only when need the authentication service)
         ```
 * aufs-tools (optional): Only required on ubuntu 14.04.
 

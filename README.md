@@ -2,12 +2,12 @@
 
 [![Build Status](https://travis-ci.org/yeasy/cello.svg?branch=dev)](https://travis-ci.org/yeasy/cello)
 
-PaaS to provide Blockchain as a Service!
+Platform to provide Blockchain as a Service!
 
 Using Cello, we can 
 
-* Obtain blockchains with customized configurations instantly, e.g., a 6-node chain using PBFT consensus.
-* Maintain a pool of running blockchains healthy with no human operations. 
+* Provision customizable Blockchains instantly, e.g., a 6-node chain using PBFT consensus.
+* Maintain a pool of running blockchains healthy with no manual operations. 
 * Check the system status, scale the chain numbers, change resources... through a dashboard.
 
 ![Typical Scenario](docs/imgs/scenario.png)
@@ -16,8 +16,8 @@ You can also find more [scenarios](docs/scenario.md).
 
 ## Features
 
-* Manage the lifecycle of blockchains, e.g., create/delete automatically.
-* Response nearly instantly, even with hundreds of chains.
+* Manage the lifecycle of blockchains, e.g., create/delete/keep health automatically.
+* Response nearly instantly, even with hundreds of chains, or nodes.
 * Support customized (e.g., size, consensus) blockchains request, currently we support [hyperledger fabric](https://github.com/hyperledger/fabric).
 * Support native Docker host or swarm host as the compute nodes, more supports on the way.
 * Support heterogeneous architecture, e.g., Z, Power and X86, from bare-metal servers to virtual machines.
@@ -64,14 +64,14 @@ You can also find more [scenarios](docs/scenario.md).
 * ~~Support fabric new version: multiple port mapping, new chaincode operation api.~~
 * ~~Fix deleting bug on 2nd page table.~~
 * restserver: update api definitions yml files.
-* dashboard: support auto fresh based on websocket.
-* Support advanced scheduling.
-* Support efficient fillup.
-* Enhance the robustness for chain operations.
-* Support return code checking in web
+* dashboard: support auto state fresh based on websocket.
+* dashboard: support return code checking in response.
+* engine: support advanced scheduling.
+* engine: support more-efficient fill-up.
+* engine: enhance the robustness for chain operations.
 
-## Why names Cello?
-Can u find anyone better at playing chains?
+## Why named Cello?
+Can u find anyone better at playing chains? :)
 
 ## Author
-Designed and maintained by [Baohua Yang](yangbaohua@gmail.com).
+Designed and maintained by [Baohua Yang](https://yeasy.github.com).
