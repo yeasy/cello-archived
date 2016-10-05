@@ -23,22 +23,38 @@ host = Blueprint('host', __name__)
 def hosts_show():
     logger.info("/hosts method=" + r.method)
     request_debug(r, logger)
-    col_filter = dict((key, r.args.get(key)) for key in r.args)
-    items = list(host_handler.list(filter_data=col_filter))
-    items.sort(key=lambda x: str(x["name"]), reverse=True)
-    logger.debug(items)
+    # col_filter = dict((key, r.args.get(key)) for key in r.args)
+    # items = list(host_handler.list(filter_data=col_filter))
+    # items.sort(key=lambda x: str(x["name"]), reverse=True)
+    # logger.debug(items)
 
     return render_template("hosts.html",
-                           items_count=len(items),
-                           items=items,
                            host_types=HOST_TYPES,
                            log_types=LOG_TYPES,
                            log_levels=LOGGING_LEVEL_CLUSTERS,
                            )
 
 
+@host.route('/hosts_list', methods=['GET'])
+def hosts_list():
+    logger.info("/hosts_list method=" + r.method)
+    request_debug(r, logger)
+    col_filter = dict((key, r.args.get(key)) for key in r.args)
+    items_dict = {}
+    items = list(host_handler.list(filter_data=col_filter))
+    items.sort(key=lambda x: str(x["name"]), reverse=True)
+    logger.debug(items)
+    for i in items:
+        items_dict.update({
+            i.get("id"): i
+        })
+
+    return jsonify({"hosts": items_dict}), CODE_OK
+
+
 @host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def host_api():
+    logger.debug("hightall method={}".format(r.method))
     request_debug(r, logger)
     if r.method == 'GET':
         if "id" not in r.args and "id" not in r.form:
