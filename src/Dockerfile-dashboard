@@ -8,6 +8,9 @@ RUN pip install  -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.co
 
 COPY . /app
 
+ADD node-v6.2.0-linux-x64.tar.xz /usr/local/
+run echo "registry = https://registry.npm.taobao.org" > /root/.npmrc
+
 # use this in development
 CMD ["python", "dashboard.py"]
 
