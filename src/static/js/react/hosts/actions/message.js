@@ -4,9 +4,11 @@
 import actionTypes from '../constants/actionTypes'
 
 export function setNotification(notificationSystem) {
-    return {
-        type: actionTypes.set_notification,
-        notificationSystem: notificationSystem
+    return dispatch => {
+        return {
+            type: actionTypes.set_notification,
+            notificationSystem: notificationSystem
+        }
     }
 }
 

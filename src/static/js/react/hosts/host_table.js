@@ -12,10 +12,20 @@ import { bindActionCreators } from 'redux'
 import "react-bootstrap-table/dist/react-bootstrap-table-all.min.css"
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 var IoGearB = require('react-icons/lib/io/gear-b');
-var IoLoadC = require('react-icons/lib/io/load-c');
+var IoLoadD = require('react-icons/lib/io/load-d');
+var IoTrashA = require('react-icons/lib/io/trash-a');
 var MdTrendingUp = require('react-icons/lib/md/trending-up');
 var MdTrendingDown = require('react-icons/lib/md/trending-down');
 import "./spin.css"
+var Link = require('react-router').Link;
+import immutableRenderMixin from 'react-immutable-render-mixin';
+import Immutable from 'immutable'
+
+const styles = {
+    actionBtn: {
+        marginRight: 5
+    }
+};
 
 var CreateHostModal = React.createClass({
     getInitialState: function () {
@@ -205,31 +215,271 @@ var CreateHostModal = React.createClass({
     }
 });
 
+var EditHostModal = React.createClass({
+    getInitialState: function () {
+        return ({
+            currentHost: Immutable.Map({}),
+            capacity: 1,
+            loggerLevel: 'INFO',
+            loggerType: '',
+            Name: ''
+        })
+    },
+    close: function () {
+        this.props.close();
+    },
+    nameValidationState: function () {
+        const nameLength = this.state.Name.length;
+        if (nameLength >= 1 && nameLength <= 16) {
+            return 'success';
+        } else {
+            return 'error';
+        }
+    },
+    nameChange: function (event) {
+        this.setState({
+            Name: event.target.value
+        })
+    },
+    capacityChange: function (event) {
+        this.setState({
+            capacity: parseInt(event.target.value)
+        })
+    },
+    loggerLevelChange: function (e) {
+        this.setState({
+            loggerLevel: e.target.value
+        })
+    },
+    loggerTypeChange: function (e) {
+        this.setState({
+            loggerType: e.target.value
+        })
+    },
+    enterModal: function () {
+        const {hosts, currentHostId} = this.props;
+        if (currentHostId.length > 0) {
+            var currentHost = hosts.get("hosts").get(currentHostId);
+            this.setState({
+                currentHost: currentHost,
+                Name: currentHost.get("name", ""),
+                loggerLevel: currentHost.get("log_level", ""),
+                capacity: parseInt(currentHost.get("capacity", 1))
+            })
+        }
+    },
+    updateHost: function () {
+        const {dispatch, actions, currentHostId} = this.props;
+        var hostJson = {
+            id: currentHostId,
+            name: this.state.Name,
+            capacity: this.state.capacity,
+            log_level: this.state.loggerLevel
+        };
+        this.props.close();
+        var hostForm = new FormData();
+        for (var key in hostJson) {
+            hostForm.append(key, hostJson[key]);
+        }
+        dispatch(actions.updateHost(hostForm));
+    },
+    render: function () {
+        return (
+            <Modal onEnter={this.enterModal} show={this.props.showModal} onHide={this.close}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Edit the host config</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form horizontal>
+                        <FormGroup controlId="Id">
+                            <Col componentClass={ControlLabel} sm={2}>
+                                ID
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl type="text" value={this.state.currentHost.get("id", "")} disabled />
+                            </Col>
+                        </FormGroup>
+                        <FormGroup validationState={this.nameValidationState()} controlId="Name">
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Name
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl type="text" onChange={this.nameChange} value={this.state.Name} />
+                            </Col>
+                        </FormGroup>
+                        <FormGroup controlId="DaemonUrl">
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Daemon URL
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl type="text" value={this.state.currentHost.get("daemon_url", "")} disabled />
+                            </Col>
+                        </FormGroup>
+                        <FormGroup controlId="Capacity">
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Capacity
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl type="number" onChange={this.capacityChange} value={this.state.capacity} />
+                            </Col>
+                        </FormGroup>
+                        <FormGroup controlId="Status">
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Status
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl type="text" value={this.state.currentHost.get("status", "")} disabled />
+                            </Col>
+                        </FormGroup>
+                        <FormGroup controlId="Type">
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Type
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl type="text" value={this.state.currentHost.get("type", "")} disabled />
+                            </Col>
+                        </FormGroup>
+                        <FormGroup controlId="LoggerLevel">
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Logger Level
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl componentClass="select" onChange={this.loggerLevelChange} value={this.state.loggerLevel} placeholder="DEBUG" >
+                                    <option value="DEBUG">DEBUG</option>
+                                    <option value="INFO">INFO</option>
+                                    <option value="NOTICE">NOTICE</option>
+                                    <option value="WARNING">WARNING</option>
+                                    <option value="ERROR">ERROR</option>
+                                    <option value="CRITICAL">CRITICAL</option>
+                                </FormControl>
+                            </Col>
+                        </FormGroup>
+                        <FormGroup controlId="LoggerType">
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Logger Type
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl componentClass="select" onChange={this.loggerTypeChange} value={this.state.loggerType} placeholder="LOCAL" >
+                                    <option value="LOCAL">LOCAL</option>
+                                    <option value="SYSLOG">SYSLOG</option>
+                                </FormControl>
+                            </Col>
+                        </FormGroup>
+                        <FormGroup controlId="Created">
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Created
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl type="text" value={this.state.currentHost.get("create_ts", "")} disabled />
+                            </Col>
+                        </FormGroup>
+                        <FormGroup controlId="Chains">
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Running Chains
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl type="text" value={this.state.currentHost.get("clusters", []).length} disabled />
+                            </Col>
+                        </FormGroup>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button bsStyle="primary" onClick={this.updateHost}>Save</Button>
+                    <Button onClick={this.close}>Close</Button>
+                </Modal.Footer>
+            </Modal>
+        )
+    }
+});
+
+var ConfirmDeleteModal = React.createClass({
+    deleteHost: function () {
+        const {dispatch, actions, hostId} = this.props;
+
+        var hostForm = new FormData();
+        hostForm.append('id', hostId);
+
+        dispatch(actions.deleteHost(hostForm, hostId));
+        this.props.close();
+    },
+    close: function () {
+        this.props.close();
+    },
+    render: function () {
+        return (
+            <Modal show={this.props.showModal} onHide={this.props.close}>
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <span className="text-danger">(Danger) Confirm Delete</span>
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.footer>
+                    <Button bsStyle="danger" onClick={this.deleteHost}>Confirm</Button>
+                    <Button onClick={this.close}>Close</Button>
+                </Modal.footer>
+            </Modal>
+        )
+    }
+});
+
 var ActionFormatter = React.createClass({
-    configClick: function (e) {
-        console.log('config click ' + this.props.cell);
+    deleteHost: function () {
+        const {dispatch, actions} = this.props;
+        var hostId = this.props.cell;
+
+        var hostForm = new FormData();
+        hostForm.append('id', hostId);
+
+        dispatch(actions.deleteHost(hostForm, hostId));
+    },
+    configClick: function () {
+        var hostId = this.props.cell;
+        this.props.openEditModal(hostId);
     },
     render: function () {
         return (
             <span>
-                <Button style={{marginRight: 5}} bsSize="xsmall" bsStyle="primary" onClick={this.configClick}><MdTrendingUp /></Button>
-                <Button style={{marginRight: 5}} bsSize="xsmall" bsStyle="warning" onClick={this.configClick}><MdTrendingDown /></Button>
-                <Button bsSize="xsmall" bsStyle="info" onClick={this.configClick}><IoGearB /></Button>
+                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="primary" onClick={this.configClick}><MdTrendingUp /></Button>
+                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="warning" onClick={this.configClick}><MdTrendingDown /></Button>
+                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="info" onClick={this.configClick}><IoGearB /></Button>
+                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="danger" onClick={this.deleteHost}><IoTrashA /></Button>
             </span>
         )
     }
 });
 
+var NameFormatter = React.createClass({
+    render: function () {
+        return (
+            <Link to={`/host/${this.props.hostId}`}>{this.props.name}</Link>
+        )
+    }
+});
+
 var HostTable = React.createClass({
+    mixins: [immutableRenderMixin],
+
     getInitialState() {
-        return { showModal: false };
+        return {
+            showModal: false,
+            showEditModal: false,
+            currentHostId: ''
+        };
     },
     close() {
         this.setState({ showModal: false });
     },
-
     open() {
         this.setState({ showModal: true });
+    },
+    closeEditModal() {
+        this.setState({ showEditModal: false });
+    },
+    openEditModal: function(hostId) {
+        this.setState({
+            showEditModal: true,
+            currentHostId: hostId
+        });
     },
     componentDidMount: function () {
         const {dispatch, actions} = this.props;
@@ -248,11 +498,16 @@ var HostTable = React.createClass({
     },
     actionFormatter: function (cell, row) {
         return (
-            <ActionFormatter cell={cell} />
+            <ActionFormatter {...this.props} cell={cell} openEditModal={this.openEditModal} openDeleteModal={this.openDeleteModal} />
         )
     },
     clustersFormatter: function (cell, row) {
         return cell.length;
+    },
+    nameFormatter: function (cell, row) {
+        return (
+            <NameFormatter {...this.props} hostId={row.id} name={cell}/>
+        )
     },
     getCaret: function(direction) {
         if (direction === 'asc') {
@@ -277,21 +532,22 @@ var HostTable = React.createClass({
         };
         return (
             <div className="row">
-                <h2 className="page-header">Hosts:
+                <h2 className="page-header">Hosts: {hosts.get("fetchingHosts", false) ? <IoLoadD className="spin" size={30} /> : hosts.get("hosts").valueSeq().toJS().length}
                     <Button bsStyle="success" onClick={this.open} style={{float: "right"}}>
                         Add Host
                     </Button>
                 </h2>
                 <BootstrapTable pagination data={hosts.get("hosts").valueSeq().toJS()} striped={true} hover={true}>
-                    <TableHeaderColumn dataField="name" isKey={true} dataAlign="center" dataSort={true} filter={ { type: 'TextFilter', placeholder: 'Please enter a value' } }>Name</TableHeaderColumn>
+                    <TableHeaderColumn dataField="name" dataAlign="center" dataFormat={this.nameFormatter} dataSort={true} filter={ { type: 'TextFilter', placeholder: 'Please enter a value' } }>Name</TableHeaderColumn>
                     <TableHeaderColumn dataField="type" dataSort={true} caretRender={this.getCaret}>Type</TableHeaderColumn>
                     <TableHeaderColumn dataField="status" dataSort={true} dataFormat={this.statusFormatter} formatExtraData={ statusFilter } filter={ { type: 'SelectFilter', options: statusFilter} }>Status</TableHeaderColumn>
                     <TableHeaderColumn dataField="clusters" dataFormat={this.clustersFormatter} dataSort={true}>Chains</TableHeaderColumn>
                     <TableHeaderColumn dataField="capacity" dataSort={true}>Cap</TableHeaderColumn>
                     <TableHeaderColumn dataField="log_level" dataSort={true}>Log Config</TableHeaderColumn>
-                    <TableHeaderColumn dataField="id" dataFormat={this.actionFormatter}></TableHeaderColumn>
+                    <TableHeaderColumn dataField="id" isKey={true} dataFormat={this.actionFormatter}></TableHeaderColumn>
                 </BootstrapTable>
                 <CreateHostModal showModal={this.state.showModal} close={this.close} {...this.props} />
+                <EditHostModal currentHostId={this.state.currentHostId} showModal={this.state.showEditModal} close={this.closeEditModal} {...this.props} />
             </div>
         )
     }

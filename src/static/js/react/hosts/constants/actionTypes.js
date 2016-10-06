@@ -7,6 +7,8 @@ export default mirrorCreator([
     'promise',
     'fetching_hosts',
     'fetched_hosts',
+    'remove_host',
+    'add_host',
     'set_notification',
     'notify_success'
 ]);

@@ -15,8 +15,8 @@ var Hosts = React.createClass({
     render: function() {
         return (
             <div>
-                <NotificationSystem ref="notificationSystem" />
                 {this.props.children}
+                <NotificationSystem ref="notificationSystem" />
             </div>
         )
     }
