@@ -3,5 +3,6 @@
  */
 module.exports = {
     HostsUrl: '/hosts_list',
-    HostUrl: '/host'
+    HostUrl: '/host',
+    HostActionUrl: '/host_action'
 };

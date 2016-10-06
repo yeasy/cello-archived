@@ -54,7 +54,6 @@ def hosts_list():
 
 @host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def host_api():
-    logger.debug("hightall method={}".format(r.method))
     request_debug(r, logger)
     if r.method == 'GET':
         if "id" not in r.args and "id" not in r.form:
@@ -72,6 +71,7 @@ def host_api():
                 response_fail["data"] = r.form
                 return jsonify(response_fail), CODE_BAD_REQUEST
     elif r.method == 'POST':
+        logger.debug("log type={}".format(r.form["log_type"]))
         name, daemon_url, capacity, log_type, log_server, log_level = \
             r.form['name'], r.form['daemon_url'], r.form['capacity'], \
             r.form['log_type'], r.form['log_server'], r.form['log_level']

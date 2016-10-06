@@ -34,7 +34,7 @@ var CreateHostModal = React.createClass({
             daemonUrl: '',
             capacity: 1,
             loggerLevel: 'DEBUG',
-            loggerType: 'LOCAL',
+            loggerType: 'local',
             disableCreate: true,
             schedulable: false,
             keepFilled: false
@@ -187,8 +187,8 @@ var CreateHostModal = React.createClass({
                             </Col>
                             <Col sm={6}>
                                 <FormControl componentClass="select" onChange={this.loggerTypeChange} value={this.state.loggerType} placeholder="LOCAL" >
-                                    <option value="LOCAL">LOCAL</option>
-                                    <option value="SYSLOG">SYSLOG</option>
+                                    <option value="local">LOCAL</option>
+                                    <option value="syslog">SYSLOG</option>
                                 </FormControl>
                             </Col>
                         </FormGroup>
@@ -260,6 +260,7 @@ var EditHostModal = React.createClass({
         const {hosts, currentHostId} = this.props;
         if (currentHostId.length > 0) {
             var currentHost = hosts.get("hosts").get(currentHostId);
+            console.log(currentHost.get("clusters", []))
             this.setState({
                 currentHost: currentHost,
                 Name: currentHost.get("name", ""),
@@ -362,8 +363,8 @@ var EditHostModal = React.createClass({
                             </Col>
                             <Col sm={6}>
                                 <FormControl componentClass="select" onChange={this.loggerTypeChange} value={this.state.loggerType} placeholder="LOCAL" >
-                                    <option value="LOCAL">LOCAL</option>
-                                    <option value="SYSLOG">SYSLOG</option>
+                                    <option value="local">LOCAL</option>
+                                    <option value="syslog">SYSLOG</option>
                                 </FormControl>
                             </Col>
                         </FormGroup>
@@ -380,8 +381,7 @@ var EditHostModal = React.createClass({
                                 Running Chains
                             </Col>
                             <Col sm={6}>
-                                <FormControl type="text" value={this.state.currentHost.get("clusters", []).length} disabled />
-                                {this.state.currentHost.get("clusters", [])}
+                                <FormControl type="text" value={this.state.currentHost.get("clusters", Immutable.List([])).size} disabled />
                             </Col>
                         </FormGroup>
                     </Form>
@@ -451,11 +451,23 @@ var ActionFormatter = React.createClass({
         var hostId = this.props.cell;
         this.props.openEditModal(hostId);
     },
+    hostAction: function (hostAction) {
+        const {dispatch, actions} = this.props;
+        var hostId = this.props.cell;
+
+        var hostForm = new FormData();
+        hostForm.append('id', hostId);
+        hostForm.append('action', hostAction);
+
+        dispatch(actions.hostAction(hostForm, hostId, hostAction));
+    },
     render: function () {
+        const {hosts} = this.props;
+        var hostId = this.props.cell;
         return (
             <span>
-                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="primary" onClick={this.configClick}><MdTrendingUp /></Button>
-                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="warning" onClick={this.configClick}><MdTrendingDown /></Button>
+                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="primary" onClick={() => this.hostAction("fillup")}>{hosts.get("hosts").get(hostId).get("fillup", false) ? <IoLoadD className="spin"/> : <MdTrendingUp />}</Button>
+                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="warning" onClick={() => this.hostAction("clean")}>{hosts.get("hosts").get(hostId).get("clean", false) ? <IoLoadD className="spin"/> : <MdTrendingDown />}</Button>
                 <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="info" onClick={this.configClick}><IoGearB /></Button>
                 <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="danger" onClick={this.deleteHost}><IoTrashA /></Button>
             </span>
