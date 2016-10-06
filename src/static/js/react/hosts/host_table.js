@@ -264,6 +264,7 @@ var EditHostModal = React.createClass({
                 currentHost: currentHost,
                 Name: currentHost.get("name", ""),
                 loggerLevel: currentHost.get("log_level", ""),
+                loggerType: currentHost.get("log_type", ""),
                 capacity: parseInt(currentHost.get("capacity", 1))
             })
         }
@@ -274,6 +275,7 @@ var EditHostModal = React.createClass({
             id: currentHostId,
             name: this.state.Name,
             capacity: this.state.capacity,
+            log_type: this.state.loggerType,
             log_level: this.state.loggerLevel
         };
         this.props.close();
@@ -327,7 +329,7 @@ var EditHostModal = React.createClass({
                             <Col componentClass={ControlLabel} sm={2}>
                                 Status
                             </Col>
-                            <Col sm={6}>
+                            <Col sm={2}>
                                 <FormControl type="text" value={this.state.currentHost.get("status", "")} disabled />
                             </Col>
                         </FormGroup>
@@ -379,6 +381,7 @@ var EditHostModal = React.createClass({
                             </Col>
                             <Col sm={6}>
                                 <FormControl type="text" value={this.state.currentHost.get("clusters", []).length} disabled />
+                                {this.state.currentHost.get("clusters", [])}
                             </Col>
                         </FormGroup>
                     </Form>
@@ -393,30 +396,47 @@ var EditHostModal = React.createClass({
 });
 
 var ConfirmDeleteModal = React.createClass({
+    getInitialState: function () {
+        return ({
+            hostName: ""
+        })
+    },
     deleteHost: function () {
-        const {dispatch, actions, hostId} = this.props;
+        const {dispatch, actions, currentHostId} = this.props;
 
         var hostForm = new FormData();
-        hostForm.append('id', hostId);
+        hostForm.append('id', currentHostId);
 
-        dispatch(actions.deleteHost(hostForm, hostId));
+        dispatch(actions.deleteHost(hostForm, currentHostId));
         this.props.close();
     },
     close: function () {
         this.props.close();
     },
+    enterModal: function () {
+        const {currentHostId, hosts} = this.props;
+        if (currentHostId.length > 0) {
+            var hostName = hosts.get("hosts").get(currentHostId).get("name");
+            this.setState({
+                hostName: hostName
+            })
+        }
+    },
     render: function () {
         return (
-            <Modal show={this.props.showModal} onHide={this.props.close}>
+            <Modal onEnter={this.enterModal} show={this.props.showModal} onHide={this.props.close}>
                 <Modal.Header closeButton>
                     <Modal.Title>
                         <span className="text-danger">(Danger) Confirm Delete</span>
                     </Modal.Title>
                 </Modal.Header>
-                <Modal.footer>
+                <Modal.Body>
+                    <p>Do you Confirm delete host {this.state.hostName}?</p>
+                </Modal.Body>
+                <Modal.Footer>
                     <Button bsStyle="danger" onClick={this.deleteHost}>Confirm</Button>
                     <Button onClick={this.close}>Close</Button>
-                </Modal.footer>
+                </Modal.Footer>
             </Modal>
         )
     }
@@ -424,13 +444,8 @@ var ConfirmDeleteModal = React.createClass({
 
 var ActionFormatter = React.createClass({
     deleteHost: function () {
-        const {dispatch, actions} = this.props;
         var hostId = this.props.cell;
-
-        var hostForm = new FormData();
-        hostForm.append('id', hostId);
-
-        dispatch(actions.deleteHost(hostForm, hostId));
+        this.props.openDeleteModal(hostId);
     },
     configClick: function () {
         var hostId = this.props.cell;
@@ -463,6 +478,7 @@ var HostTable = React.createClass({
         return {
             showModal: false,
             showEditModal: false,
+            showDeleteModal: false,
             currentHostId: ''
         };
     },
@@ -478,6 +494,15 @@ var HostTable = React.createClass({
     openEditModal: function(hostId) {
         this.setState({
             showEditModal: true,
+            currentHostId: hostId
+        });
+    },
+    closeDeleteModal() {
+        this.setState({ showDeleteModal: false });
+    },
+    openDeleteModal: function(hostId) {
+        this.setState({
+            showDeleteModal: true,
             currentHostId: hostId
         });
     },
@@ -508,6 +533,9 @@ var HostTable = React.createClass({
         return (
             <NameFormatter {...this.props} hostId={row.id} name={cell}/>
         )
+    },
+    loggerFormatter: function (cell, row) {
+        return cell + "/" + row.log_type.toLowerCase();
     },
     getCaret: function(direction) {
         if (direction === 'asc') {
@@ -543,11 +571,12 @@ var HostTable = React.createClass({
                     <TableHeaderColumn dataField="status" dataSort={true} dataFormat={this.statusFormatter} formatExtraData={ statusFilter } filter={ { type: 'SelectFilter', options: statusFilter} }>Status</TableHeaderColumn>
                     <TableHeaderColumn dataField="clusters" dataFormat={this.clustersFormatter} dataSort={true}>Chains</TableHeaderColumn>
                     <TableHeaderColumn dataField="capacity" dataSort={true}>Cap</TableHeaderColumn>
-                    <TableHeaderColumn dataField="log_level" dataSort={true}>Log Config</TableHeaderColumn>
+                    <TableHeaderColumn dataField="log_level" dataSort={true} dataFormat={this.loggerFormatter}>Log Config</TableHeaderColumn>
                     <TableHeaderColumn dataField="id" isKey={true} dataFormat={this.actionFormatter}></TableHeaderColumn>
                 </BootstrapTable>
                 <CreateHostModal showModal={this.state.showModal} close={this.close} {...this.props} />
                 <EditHostModal currentHostId={this.state.currentHostId} showModal={this.state.showEditModal} close={this.closeEditModal} {...this.props} />
+                <ConfirmDeleteModal currentHostId={this.state.currentHostId} showModal={this.state.showDeleteModal} close={this.closeDeleteModal} {...this.props} />
             </div>
         )
     }

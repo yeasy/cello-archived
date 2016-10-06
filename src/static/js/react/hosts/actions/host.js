@@ -38,6 +38,14 @@ function addHost(host) {
     }
 }
 
+function updateSpecialHost(hostId, host) {
+    return {
+        type: actionTypes.update_host,
+        hostId: hostId,
+        host: host
+    }
+}
+
 export function fetchHosts() {
     return dispatch => {
         dispatch(setFetchingHosts());
@@ -97,28 +105,31 @@ export function createHost(hostForm) {
 }
 
 export function updateHost(hostForm) {
-    return {
-        type: actionTypes.promise,
-        payload: {
-            promise: new Promise(() => {
-                fetch(Urls.HostUrl, {
-                    method: "put",
-                    credentials: 'include',
-                    headers: {
-                        "X-CSRFToken": cookie.load("csrftoken")
-                    },
-                    body: hostForm
-                }).then(response => {
-                    if (response.ok) {
-                        response.json()
-                            .then(json => {
-                                console.log(json);
-                            })
-                    } else if(response.status == 400) {
-                        console.log("is bad request");
-                    }
-                });
-            })
+    return dispatch => {
+        return {
+            type: actionTypes.promise,
+            payload: {
+                promise: new Promise(() => {
+                    fetch(Urls.HostUrl, {
+                        method: "put",
+                        credentials: 'include',
+                        headers: {
+                            "X-CSRFToken": cookie.load("csrftoken")
+                        },
+                        body: hostForm
+                    }).then(response => {
+                        if (response.ok) {
+                            response.json()
+                                .then(json => {
+                                    dispatch(updateSpecialHost(json.host_id, json.data));
+                                    dispatch(notifySuccess("Update host " + json.host_id + " success"));
+                                })
+                        } else if (response.status == 400) {
+                            console.log("is bad request");
+                        }
+                    });
+                })
+            }
         }
     }
 }

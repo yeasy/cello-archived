@@ -26,6 +26,10 @@ export default function hosts(state = Immutable.Map({
             hosts = hosts.merge(Immutable.fromJS(action.host));
             state = state.set("hosts", hosts);
             return state;
+        case actionTypes.update_host:
+            hosts = hosts.set(action.hostId, Immutable.fromJS(action.host));
+            state = state.set("hosts", hosts);
+            return state;
         default:
             return state;
     }
