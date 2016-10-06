@@ -7,13 +7,12 @@ import actionTypes from '../constants/actionTypes'
 export default function message(state = Immutable.Map({
     notificationSystem: null
 }), action) {
-    var notificationSystem = state.get("notificationSystem");
     switch (action.type) {
         case actionTypes.set_notification:
             state = state.set("notificationSystem", action.notificationSystem);
-            console.log(action.notificationSystem);
             return state;
         case actionTypes.notify_success:
+            var notificationSystem = state.get("notificationSystem");
             notificationSystem.addNotification({
                 title: 'Success',
                 message: action.message,

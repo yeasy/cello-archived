@@ -3,7 +3,9 @@
  */
 import {
     fetchHosts,
-    createHost
+    createHost,
+    updateHost,
+    deleteHost
 } from './host'
 
 import {
@@ -14,6 +16,8 @@ import {
 module.exports = {
     fetchHosts,
     createHost,
+    updateHost,
+    deleteHost,
     setNotification,
     notifySuccess
 };

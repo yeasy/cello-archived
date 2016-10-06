@@ -1,10 +1,15 @@
 import fetch from 'isomorphic-fetch'
 import cookie from 'react-cookie'
-import Immutable from 'immutable'
 import actionTypes from '../constants/actionTypes'
 var Urls = require('../constants/Urls');
 var Promise = require('es6-promise').Promise;
-import notifySucces from './message'
+
+function notifySuccess(message) {
+    return {
+        type: actionTypes.notify_success,
+        message: message
+    }
+}
 
 function setFetchingHosts() {
     return {
@@ -16,6 +21,20 @@ function fetchedHosts(hosts) {
     return {
         type: actionTypes.fetched_hosts,
         hosts: hosts
+    }
+}
+
+function removeHost(hostId) {
+    return {
+        type: actionTypes.remove_host,
+        hostId: hostId
+    }
+}
+
+function addHost(host) {
+    return {
+        type: actionTypes.add_host,
+        host: host
     }
 }
 
@@ -48,12 +67,42 @@ export function fetchHosts() {
 }
 
 export function createHost(hostForm) {
+    return dispatch => {
+        return {
+            type: actionTypes.promise,
+            payload: {
+                promise: new Promise(() => {
+                    fetch(Urls.HostUrl, {
+                        method: "post",
+                        credentials: 'include',
+                        headers: {
+                            "X-CSRFToken": cookie.load("csrftoken")
+                        },
+                        body: hostForm
+                    }).then(response => {
+                        if (response.ok) {
+                            response.json()
+                                .then(json => {
+                                    dispatch(addHost(json.data));
+                                    dispatch(notifySuccess("Create Host success"));
+                                })
+                        } else if (response.status == 400) {
+                            console.log("is bad request");
+                        }
+                    });
+                })
+            }
+        }
+    }
+}
+
+export function updateHost(hostForm) {
     return {
-        type: actionTypes.create_host,
+        type: actionTypes.promise,
         payload: {
             promise: new Promise(() => {
                 fetch(Urls.HostUrl, {
-                    method: "post",
+                    method: "put",
                     credentials: 'include',
                     headers: {
                         "X-CSRFToken": cookie.load("csrftoken")
@@ -70,6 +119,36 @@ export function createHost(hostForm) {
                     }
                 });
             })
+        }
+    }
+}
+
+export function deleteHost(hostForm, hostId) {
+    return dispatch => {
+        return {
+            type: actionTypes.promise,
+            payload: {
+                promise: new Promise(() => {
+                    fetch(Urls.HostUrl, {
+                        method: "delete",
+                        credentials: 'include',
+                        headers: {
+                            "X-CSRFToken": cookie.load("csrftoken")
+                        },
+                        body: hostForm
+                    }).then(response => {
+                        if (response.ok) {
+                            response.json()
+                                .then(json => {
+                                    dispatch(removeHost(hostId));
+                                    dispatch(notifySuccess("Remove " + hostId + " success"))
+                                })
+                        } else if (response.status == 400) {
+                            console.log("is bad request");
+                        }
+                    });
+                })
+            }
         }
     }
 }

@@ -105,6 +105,7 @@ def host_api():
                                          log_server=log_server)
             if result:
                 logger.debug("host creation successfully")
+                response_ok.update({"data": {result.get("id"): result}})
                 return jsonify(response_ok), CODE_CREATED
             else:
                 logger.debug("host creation failed")
