@@ -3,7 +3,8 @@
  */
 import React from 'react'
 import {
-    Table, Modal, Button, Form, FormGroup, ControlLabel, Col, FormControl, Checkbox, Label
+    Table, Modal, Button, Form, FormGroup, ControlLabel,
+    Col, FormControl, Checkbox, Label, OverlayTrigger, Tooltip
 } from 'react-bootstrap'
 import isIP from 'validator/lib/isIP';
 import { connect } from 'react-redux'
@@ -35,6 +36,8 @@ var CreateHostModal = React.createClass({
             capacity: 1,
             loggerLevel: 'DEBUG',
             loggerType: 'local',
+            loggerServer: '',
+            showLoggerServer: false,
             disableCreate: true,
             schedulable: false,
             keepFilled: false
@@ -66,6 +69,24 @@ var CreateHostModal = React.createClass({
             }
         }
     },
+    loggerServerChange: function (e) {
+        this.setState({
+            loggerServer: e.target.value
+        })
+    },
+    loggerServerValidationState: function () {
+        const urlArray = this.state.loggerServer.split(":");
+        if (urlArray.length < 2) {
+            return 'error';
+        } else {
+            const port = parseInt(urlArray[1]);
+            if (!isIP(urlArray[0]) || !(port >= 1 && port <= 65535)) {
+                return 'error';
+            } else {
+                return 'success';
+            }
+        }
+    },
     urlChange: function (event) {
         this.setState({
             daemonUrl: event.target.value
@@ -82,6 +103,17 @@ var CreateHostModal = React.createClass({
         })
     },
     loggerTypeChange: function (e) {
+        var loggerType = e.target.value;
+        if (loggerType == "syslog") {
+            this.setState({
+                showLoggerServer: true
+            })
+        } else {
+            this.setState({
+                showLoggerServer: false,
+                loggerServer: ''
+            })
+        }
         this.setState({
             loggerType: e.target.value
         })
@@ -103,10 +135,10 @@ var CreateHostModal = React.createClass({
         var hostJson = {
             name: this.state.Name,
             daemon_url: this.state.daemonUrl,
-            log_server: "",
             capacity: this.state.capacity,
             log_type: this.state.loggerType,
             log_level: this.state.loggerLevel,
+            log_server: this.state.loggerServer,
             autofill: this.state.keepFilled ? "on" : "off",
             schedulable: this.state.schedulable ? "on": "off"
         };
@@ -125,6 +157,8 @@ var CreateHostModal = React.createClass({
             capacity: 1,
             loggerLevel: 'DEBUG',
             loggerType: 'LOCAL',
+            loggerServer: '',
+            showLoggerServer: false,
             disableCreate: true,
             schedulable: false,
             keepFilled: false
@@ -192,6 +226,16 @@ var CreateHostModal = React.createClass({
                                 </FormControl>
                             </Col>
                         </FormGroup>
+                        {this.state.showLoggerServer &&
+                        <FormGroup controlId="LoggerServer" validationState={this.loggerServerValidationState()}>
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Log Server
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl type="text" onChange={this.loggerServerChange} value={this.state.loggerServer} placeholder="192.168.0.1:5000" />
+                            </Col>
+                        </FormGroup>
+                        }
                         <FormGroup>
                             <Col sm={6}>
                                 <Checkbox onChange={this.scheduleChange} value={this.state.schedulable} inline>Schedulable for cluster request</Checkbox>
@@ -203,7 +247,7 @@ var CreateHostModal = React.createClass({
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    {(this.nameValidationState() == "error" || this.urlValidationState() == "error") ?
+                    {(this.nameValidationState() == "error" || this.urlValidationState() == "error" || (this.state.loggerType == "syslog" && this.loggerServerValidationState() == "error")) ?
                         <Button bsStyle="success" disabled>Create</Button>
                         :
                         <Button onClick={this.createHost} bsStyle="success">Create</Button>
@@ -221,7 +265,11 @@ var EditHostModal = React.createClass({
             currentHost: Immutable.Map({}),
             capacity: 1,
             loggerLevel: 'INFO',
+            loggerServer: '',
+            showLoggerServer: false,
             loggerType: '',
+            schedulable: false,
+            autoFill: false,
             Name: ''
         })
     },
@@ -251,7 +299,48 @@ var EditHostModal = React.createClass({
             loggerLevel: e.target.value
         })
     },
+    loggerServerChange: function (e) {
+        this.setState({
+            loggerServer: e.target.value
+        })
+    },
+    loggerServerValidationState: function () {
+        const urlArray = this.state.loggerServer.split(":");
+        if (urlArray.length < 2) {
+            return 'error';
+        } else {
+            const port = parseInt(urlArray[1]);
+            if (!isIP(urlArray[0]) || !(port >= 1 && port <= 65535)) {
+                return 'error';
+            } else {
+                return 'success';
+            }
+        }
+    },
+    scheduleChange: function (e) {
+        var schedulable = this.state.schedulable;
+        this.setState({
+            schedulable: !schedulable
+        })
+    },
+    autoFillChange: function (e) {
+        var autoFill = this.state.autoFill;
+        this.setState({
+            autoFill: !autoFill
+        })
+    },
     loggerTypeChange: function (e) {
+        var loggerType = e.target.value;
+        if (loggerType == "syslog") {
+            this.setState({
+                showLoggerServer: true
+            })
+        } else {
+            this.setState({
+                showLoggerServer: false,
+                loggerServer: ''
+            })
+        }
         this.setState({
             loggerType: e.target.value
         })
@@ -260,12 +349,27 @@ var EditHostModal = React.createClass({
         const {hosts, currentHostId} = this.props;
         if (currentHostId.length > 0) {
             var currentHost = hosts.get("hosts").get(currentHostId);
-            console.log(currentHost.get("clusters", []))
+            var loggerType = currentHost.get("log_type", "");
+            var autoFill = currentHost.get("autofill");
+            var schedulable = currentHost.get("schedulable");
+            if (loggerType == "syslog") {
+                this.setState({
+                    showLoggerServer: true,
+                    loggerServer: currentHost.get("log_server", "").split("//")[1]
+                })
+            } else {
+                this.setState({
+                    showLoggerServer: false,
+                    loggerServer: ''
+                })
+            }
             this.setState({
                 currentHost: currentHost,
                 Name: currentHost.get("name", ""),
                 loggerLevel: currentHost.get("log_level", ""),
                 loggerType: currentHost.get("log_type", ""),
+                autoFill: (autoFill == "true" || autoFill == "on"),
+                schedulable: (schedulable == "true" || schedulable == "on"),
                 capacity: parseInt(currentHost.get("capacity", 1))
             })
         }
@@ -277,6 +381,9 @@ var EditHostModal = React.createClass({
             name: this.state.Name,
             capacity: this.state.capacity,
             log_type: this.state.loggerType,
+            log_server: this.state.loggerServer,
+            schedulable: this.state.schedulable ? "on" : "off",
+            autofill: this.state.autoFill ? "on" : "off",
             log_level: this.state.loggerLevel
         };
         this.props.close();
@@ -333,6 +440,12 @@ var EditHostModal = React.createClass({
                             <Col sm={2}>
                                 <FormControl type="text" value={this.state.currentHost.get("status", "")} disabled />
                             </Col>
+                            <Col sm={4}>
+                                <Checkbox onChange={this.scheduleChange} checked={this.state.schedulable} inline>Schedulable</Checkbox>
+                            </Col>
+                            <Col sm={4}>
+                                <Checkbox onChange={this.autoFillChange} checked={this.state.autoFill} inline>Autofill</Checkbox>
+                            </Col>
                         </FormGroup>
                         <FormGroup controlId="Type">
                             <Col componentClass={ControlLabel} sm={2}>
@@ -368,6 +481,16 @@ var EditHostModal = React.createClass({
                                 </FormControl>
                             </Col>
                         </FormGroup>
+                        {this.state.showLoggerServer &&
+                        <FormGroup controlId="LoggerServer" validationState={this.loggerServerValidationState()}>
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Log Server
+                            </Col>
+                            <Col sm={6}>
+                                <FormControl type="text" onChange={this.loggerServerChange} value={this.state.loggerServer} placeholder="192.168.0.1:5000" />
+                            </Col>
+                        </FormGroup>
+                        }
                         <FormGroup controlId="Created">
                             <Col componentClass={ControlLabel} sm={2}>
                                 Created
@@ -451,6 +574,11 @@ var ActionFormatter = React.createClass({
         var hostId = this.props.cell;
         this.props.openEditModal(hostId);
     },
+    tooltip: function (message) {
+        return (
+            <Tooltip id="tooltip"><strong>{message}</strong></Tooltip>
+        )
+    },
     hostAction: function (hostAction) {
         const {dispatch, actions} = this.props;
         var hostId = this.props.cell;
@@ -464,10 +592,17 @@ var ActionFormatter = React.createClass({
     render: function () {
         const {hosts} = this.props;
         var hostId = this.props.cell;
+        var currentHost = hosts.get("hosts").get(hostId);
+        var chains = currentHost.get("clusters", Immutable.List([])).size;
+        var capacity = parseInt(currentHost.get("capacity"));
         return (
             <span>
-                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="primary" onClick={() => this.hostAction("fillup")}>{hosts.get("hosts").get(hostId).get("fillup", false) ? <IoLoadD className="spin"/> : <MdTrendingUp />}</Button>
-                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="warning" onClick={() => this.hostAction("clean")}>{hosts.get("hosts").get(hostId).get("clean", false) ? <IoLoadD className="spin"/> : <MdTrendingDown />}</Button>
+                <OverlayTrigger placement="top" overlay={this.tooltip("fill up host")}>
+                    <Button style={styles.actionBtn} bsSize="xsmall" disabled={chains == capacity} bsStyle="primary" onClick={() => this.hostAction("fillup")}>{hosts.get("hosts").get(hostId).get("fillup", false) ? <IoLoadD className="spin"/> : <MdTrendingUp />}</Button>
+                </OverlayTrigger>
+                <OverlayTrigger placement="top" overlay={this.tooltip("clean host")}>
+                    <Button style={styles.actionBtn} bsSize="xsmall" disabled={chains == 0} bsStyle="warning" onClick={() => this.hostAction("clean")}>{hosts.get("hosts").get(hostId).get("clean", false) ? <IoLoadD className="spin"/> : <MdTrendingDown />}</Button>
+                </OverlayTrigger>
                 <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="info" onClick={this.configClick}><IoGearB /></Button>
                 <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="danger" onClick={this.deleteHost}><IoTrashA /></Button>
             </span>
