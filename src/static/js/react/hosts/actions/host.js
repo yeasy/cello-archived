@@ -38,6 +38,15 @@ function addHost(host) {
     }
 }
 
+function setHostAction(hostId, inAction, actionType) {
+    return {
+        type: actionTypes.set_host_action,
+        hostId: hostId,
+        inAction: inAction,
+        actionType: actionType
+    }
+}
+
 function updateSpecialHost(hostId, host) {
     return {
         type: actionTypes.update_host,
@@ -153,6 +162,66 @@ export function deleteHost(hostForm, hostId) {
                                 .then(json => {
                                     dispatch(removeHost(hostId));
                                     dispatch(notifySuccess("Remove " + hostId + " success"))
+                                })
+                        } else if (response.status == 400) {
+                            console.log("is bad request");
+                        }
+                    });
+                })
+            }
+        }
+    }
+}
+
+export function hostAction(hostForm, hostId, actionType) {
+    return dispatch => {
+        dispatch(setHostAction(hostId, true, actionType));
+        return {
+            type: actionTypes.promise,
+            payload: {
+                promise: new Promise(() => {
+                    fetch(Urls.HostActionUrl, {
+                        method: "post",
+                        credentials: 'include',
+                        headers: {
+                            "X-CSRFToken": cookie.load("csrftoken")
+                        },
+                        body: hostForm
+                    }).then(response => {
+                        if (response.ok) {
+                            response.json()
+                                .then(json => {
+                                    dispatch(setHostAction(hostId, false, actionType));
+                                    dispatch(queryHost(hostId));
+                                })
+                        } else if (response.status == 400) {
+                            console.log("is bad request");
+                        }
+                    });
+                })
+            }
+        }
+    }
+}
+
+export function queryHost(hostId) {
+    var url = Urls.HostUrl + '?id=' + hostId;
+    return dispatch => {
+        return {
+            type: actionTypes.promise,
+            payload: {
+                promise: new Promise(() => {
+                    fetch(url, {
+                        method: "get",
+                        credentials: 'include',
+                        headers: {
+                            "X-CSRFToken": cookie.load("csrftoken")
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            response.json()
+                                .then(json => {
+                                    dispatch(updateSpecialHost(hostId, json));
                                 })
                         } else if (response.status == 400) {
                             console.log("is bad request");

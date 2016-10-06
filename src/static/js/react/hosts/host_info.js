@@ -10,7 +10,7 @@ var IoAndroidRefresh = require('react-icons/lib/io/android-refresh');
 var IoTrashA = require('react-icons/lib/io/trash-a');
 var IoIosUndo = require('react-icons/lib/io/ios-undo');
 import {
-    Button, Grid, Col, Row, Modal
+    Button, Grid, Col, Row, Modal, Label, ListGroup, ListGroupItem
 } from 'react-bootstrap'
 var Link = require('react-router').Link;
 
@@ -74,7 +74,13 @@ var InfoCol = React.createClass({
                 </Row>
                 <Row>
                     <Col sm={2} style={styles.rightAlign}><b>Clusters</b></Col>
-                    <Col sm={10}>{currentHost.get("clusters", [])}</Col>
+                    <Col sm={10}>
+                         <ListGroup>
+                             {currentHost.get("clusters").map((cluster, i) =>
+                                 <ListGroupItem style={{width: "40%"}}>{cluster}</ListGroupItem>
+                             )}
+                         </ListGroup>
+                    </Col>
                 </Row>
             </div>
         )
