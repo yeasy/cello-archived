@@ -126,6 +126,10 @@ def host_api():
             result = host_handler.update(id, d)
             if result:
                 logger.debug("host PUT successfully")
+                response_ok.update({
+                    "data": result,
+                    "host_id": result.get("id")
+                })
                 return jsonify(response_ok), CODE_OK
             else:
                 logger.debug("host PUT failed")

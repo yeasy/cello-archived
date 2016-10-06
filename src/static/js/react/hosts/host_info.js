@@ -10,7 +10,7 @@ var IoAndroidRefresh = require('react-icons/lib/io/android-refresh');
 var IoTrashA = require('react-icons/lib/io/trash-a');
 var IoIosUndo = require('react-icons/lib/io/ios-undo');
 import {
-    Button, Grid, Col, Row
+    Button, Grid, Col, Row, Modal
 } from 'react-bootstrap'
 var Link = require('react-router').Link;
 
@@ -81,7 +81,71 @@ var InfoCol = React.createClass({
     }
 });
 
+var ConfirmDeleteModal = React.createClass({
+    getInitialState: function () {
+        return ({
+            hostName: ""
+        })
+    },
+    linkTo: function(url) {
+        this.props.history.push(url);
+    },
+    deleteHost: function () {
+        const {dispatch, actions} = this.props;
+        const {hostId} = this.props.params;
+
+        var hostForm = new FormData();
+        hostForm.append('id', hostId);
+
+        dispatch(actions.deleteHost(hostForm, hostId));
+        this.props.close();
+        this.linkTo("/");
+    },
+    close: function () {
+        this.props.close();
+    },
+    enterModal: function () {
+        const {hosts} = this.props;
+        const {hostId} = this.props.params;
+        var hostName = hosts.get("hosts").get(hostId).get("name");
+        this.setState({
+            hostName: hostName
+        })
+    },
+    render: function () {
+        return (
+            <Modal onEnter={this.enterModal} show={this.props.showModal} onHide={this.props.close}>
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <span className="text-danger">(Danger) Confirm Delete</span>
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>Do you Confirm delete host {this.state.hostName}?</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button bsStyle="danger" onClick={this.deleteHost}>Confirm</Button>
+                    <Button onClick={this.close}>Close</Button>
+                </Modal.Footer>
+            </Modal>
+        )
+    }
+});
+
 var HostInfo = React.createClass({
+    getInitialState: function () {
+        return ({
+            showDeleteModal: false
+        })
+    },
+    closeDeleteModal() {
+        this.setState({ showDeleteModal: false });
+    },
+    openDeleteModal: function(hostId) {
+        this.setState({
+            showDeleteModal: true
+        });
+    },
     linkTo: function(url) {
         this.props.history.push(url);
     },
@@ -116,11 +180,12 @@ var HostInfo = React.createClass({
                         <IoAndroidRefresh size={16} />
                     </Button>
                     <Button bsStyle="danger">
-                        <IoTrashA onClick={this.deleteHost} size={16} />
+                        <IoTrashA onClick={this.openDeleteModal} size={16} />
                     </Button>
                     </span>
                 </h2>
                 <InfoCol currentHost={currentHost} {...this.props} />
+                <ConfirmDeleteModal showModal={this.state.showDeleteModal} close={this.closeDeleteModal} {...this.props} />
             </div>
         )
     }
