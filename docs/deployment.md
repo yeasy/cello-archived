@@ -2,7 +2,7 @@
 
 **Hyperledger fabric changes the service port number since 0.6, so if you want to use the legacy 0.5 code, please use the dp-0.5 branch.**
 
-There are two kinds of nodes: 
+There are two kinds of nodes, we suggest all nodes are Linux-based (Ubuntu 14.04+) VM/Servers: 
 
 * Master Node: run the management service, to operate the chains in Work Nodes;
 * Worker Node: serve as chain hosts.

@@ -3,9 +3,10 @@
 Here we discuss the architecture design for the mangement services on the Master node.
 
 ## Terminology
-* Cluster | Chain: A blockchain with unique access REST API address.
+* Cluster | Chain: A blockchain with unique access API address, including several peer nodes.
+* Host: A resource server, usually it can be a naive Docker host or a Swarm cluster.
 * Master Node: Running the cello platform, to manage the compute nodes.
-* Compute Node: The server to have blockchains running inside, can be a Docker host or Swarm host.
+* Compute Node: The servers to have blockchains running inside.
 
 ## Philosophy and principles
 The architecture will follow the following principles:
