@@ -8,7 +8,7 @@
             <li class="list-group-item  list-group-item-danger">
                 <a href="/hosts"><span class="label label-pill label-default
                 label-pill
-                 ">{{hosts|length}}</span> Deployed Hosts</a>
+                 ">{{hosts|length}}</span> Working Hosts</a>
                 <button class="btn btn-sm btn-success btn-default pull-sm-right"
                         style="float: right;" data-toggle="modal"
                         data-target="#newHostModal">
@@ -17,7 +17,7 @@
 
             </li>
             <li class="list-group-item  list-group-item-success">
-                <a href="/clusters?col_name=active"><span class="label label-default label-pill ">{{clusters_active}}</span> Active Clusters</a>
+                <a href="/clusters?col_name=active"><span class="label label-default label-pill ">{{clusters_active}}</span> Active Chains</a>
                 {% if hosts_free|length > 0 %}
                     <button type="button" class="btn btn-sm btn-success
                     btn-default pull-xs-right" style="float: right;" data-toggle="modal" data-target="#newClusterModal">
@@ -31,32 +31,25 @@
                 {% endif %}
             </li>
             <li class="list-group-item list-group-item-info">
-                <a href="/clusters?col_name=released"><span class="label label-default label-pill">{{clusters_released}}</span> Released Clusters</a>
+                <a href="/clusters?col_name=released"><span class="label label-default label-pill">{{clusters_released}}</span> Released Chains</a>
             </li>
         </ul>
     </div>
 
     <h3 class="page-header">Host Status</h3>
     <div class="container-fluid">
-        {% if hosts_active|length < hosts|length %}
-            <font color="#ff8c00"> {{ hosts|length - hosts_active|length }}/{{hosts|length }} inactive!
-        </font>
-        {% else %}
-            <font color="green"> All active!</font>
-        {% endif %}
-        <p></p>
-        <font color="green">Active Host:</font>
+        <font color="green">Active:</font>
         {% for h in hosts_active %}
             <a href="/host_info/{{h.id}}">{{ h.name }}</a>
         {% endfor %}
         <p></p>
-        <font color="red"> Inactive Host: </font>
+        <font color="red"> Inactive: </font>
         {% for h in hosts_inactive %}
             <a href="/host_info/{{h.id}}">{{ h.name }}</a>
         {% endfor %}
     </div>
 
-    <h3 class="page-header">Cluster Status</h3>
+    <h3 class="page-header">Chain Status</h3>
     <div class="container-fluid">
         Utilization:
         {% if clusters_free <= 0 %}

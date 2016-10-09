@@ -678,7 +678,7 @@ $(document).ready(function() {
                 }
             },
             title: {
-                text: 'Cluster Type'
+                text: 'Chain Type'
             },
             tooltip: {
                 pointFormat: '<b>{point.y}</b>'
@@ -720,7 +720,7 @@ $(document).ready(function() {
                 }
             },
             title: {
-                text: 'Cluster Status'
+                text: 'Chain Status'
             },
             tooltip: {
                 pointFormat: '<b>{point.y}</b>'
