@@ -12,7 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {% block head %}
-        <title>Cluster Dashboard</title>
+        <title>Cello Dashboard</title>
     {% endblock %}
 
     <!-- Bootstrap core CSS -->
@@ -226,7 +226,7 @@
                         <label for="cluster_name">*Name</label>
                         <input id="cluster_name" name="name" type="text"
                                class="form-control" pattern="^[-_A-z0-9]{1,}$"
-                               placeholder="Cluster Name" data-error="A name is required" max-length="16" required >
+                               placeholder="Chain Name" data-error="A name is required" max-length="16" required >
                     </div>
                 {% if hosts_available|length > 0 %}
                     <div class="form-group">
@@ -241,7 +241,7 @@
                 {% endif %}
                 {% if cluster_sizes|length > 0 %}
                     <div class="form-group" id="form_sizes">
-                        <label for="cluster_size">Cluster Size</label>
+                        <label for="cluster_size">Chain Size</label>
                         <select id="cluster_size" class="c-select" name="size"
                                  required>
                             <option selected
@@ -385,7 +385,7 @@
     </div>
 
     <div class="form-group">
-        <label class="col-sm-3 form-control-label">Running Cluster</label>
+        <label class="col-sm-3 form-control-label">Running Chains</label>
         <div class="col-sm-4">
             <input type="number" class="form-control" name="clusters"
                    disabled="disabled" />

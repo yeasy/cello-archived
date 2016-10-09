@@ -8,7 +8,7 @@
             <li class="list-group-item  list-group-item-danger">
                 <a href="/hosts"><span class="label label-pill label-default
                 label-pill
-                 ">{{hosts|length}}</span> Deployed Hosts</a>
+                 ">{{hosts|length}}</span> Working Hosts</a>
                 <button class="btn btn-sm btn-success btn-default pull-sm-right"
                         style="float: right;" data-toggle="modal"
                         data-target="#newHostModal">
@@ -38,19 +38,12 @@
 
     <h3 class="page-header">Host Status</h3>
     <div class="container-fluid">
-        {% if hosts_active|length < hosts|length %}
-            <font color="#ff8c00"> {{ hosts|length - hosts_active|length }}/{{hosts|length }} inactive!
-        </font>
-        {% else %}
-            <font color="green"> All active!</font>
-        {% endif %}
-        <p></p>
-        <font color="green">Active Host:</font>
+        <font color="green">Active:</font>
         {% for h in hosts_active %}
             <a href="/host_info/{{h.id}}">{{ h.name }}</a>
         {% endfor %}
         <p></p>
-        <font color="red"> Inactive Host: </font>
+        <font color="red"> Inactive: </font>
         {% for h in hosts_inactive %}
             <a href="/host_info/{{h.id}}">{{ h.name }}</a>
         {% endfor %}
