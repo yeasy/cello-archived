@@ -78,8 +78,8 @@ services:
     image: yeasy/nginx
     hostname: nginx
     container_name: nginx
-    restart: unless-stopped
-    mem_limit: 1024m
+    restart: always
+    mem_limit: 2048m
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.default.conf
       #- /opt/cello/nginx/log/:/var/log/nginx/
