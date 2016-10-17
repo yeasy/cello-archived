@@ -28,7 +28,10 @@ DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -
 * Docker images (Ignore this step if u already have the official images):
 
     *To use specific version fabric code, then mark corresponding tag when pulling, e.g., `yeasy/hyperledger-fabric:0.6-dp` for 0.6-dp release.*
-    - `yeasy/hyperledger-fabric:latest`
+    - `hyperledger/fabric-peer:latest`
+    - `hyperledger/fabric-baseimage:latest`
+    - `hyperledger/fabric-membersrvc:latest`
+    
         ```sh
         $ docker pull yeasy/hyperledger-fabric:latest \
          && docker tag yeasy/hyperledger-fabric:latest hyperledger/fabric-peer:latest \
