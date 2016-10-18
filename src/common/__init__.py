@@ -1,6 +1,7 @@
 from .agent import get_project, clean_project_containers, \
     clean_chaincode_images, check_daemon, detect_daemon_type, \
-    get_swarm_node_ip, compose_start, compose_clean, \
+    get_swarm_node_ip, compose_up, compose_clean, compose_start, compose_stop,\
+    compose_restart, \
     setup_container_host, cleanup_container_host, reset_container_host
 
 from .db import db, col_host
@@ -16,6 +17,6 @@ from .utils import \
     HOST_TYPES, \
     CLUSTER_PORT_START, CLUSTER_PORT_STEP, CLUSTER_SIZES, \
     CLUSTER_NETWORK, \
-    LOG_TYPES, LOGGING_LEVEL_CLUSTERS, \
+    CLUSTER_LOG_TYPES, CLUSTER_LOG_LEVEL, \
     SYS_CREATOR, SYS_DELETER, SYS_RESETTING, SYS_USER, \
     request_debug, request_get, request_json_body

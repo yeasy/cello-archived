@@ -15,7 +15,7 @@ from .utils import \
     CLUSTER_NETWORK, \
     COMPOSE_FILE_PATH, \
     CONSENSUS_PLUGINS, CONSENSUS_MODES, \
-    LOG_TYPES, \
+    CLUSTER_LOG_TYPES, CLUSTER_LOG_LEVEL, \
     CLUSTER_SIZES, \
     SERVICE_PORTS
 
@@ -282,30 +282,12 @@ def get_project(template_path):
     return project
 
 
-def compose_start(name, host, mapped_ports,
-                  consensus_plugin=CONSENSUS_PLUGINS[0],
-                  consensus_mode=CONSENSUS_MODES[0],
-                  cluster_size=CLUSTER_SIZES[0],
-                  timeout=5):
-    """ Start a cluster by compose
-
-    :param name: The name of the cluster
-    :param rest_port: The port of the cluster API
-    :param host: Docker host obj
-    :param consensus_plugin: Cluster consensus plugin
-    :param consensus_mode: Cluster consensus mode
-    :param cluster_size: the size of the cluster
-    :param timeout: Docker client timeout value
-    :return: The name list of the started peer containers
-    """
-    logger.debug(
-        "Compose start: name={}, host={}, mapped_port={}, consensus={}/{},"
-        "size={}".format(
-            name, host.get("name"), mapped_ports, consensus_plugin,
-            consensus_mode, cluster_size))
-    daemon_url, log_type, log_server = \
-        host.get("daemon_url"), host.get("log_type"), host.get("log_server")
-    # compose use this
+def _compose_set_env(name, daemon_url, mapped_ports=SERVICE_PORTS,
+                     consensus_plugin=CONSENSUS_PLUGINS[0],
+                     consensus_mode=CONSENSUS_MODES[0],
+                     cluster_size=CLUSTER_SIZES[0],
+                     log_level=CLUSTER_LOG_LEVEL[0],
+                     log_type=CLUSTER_LOG_TYPES[0], log_server=""):
     os.environ['DOCKER_HOST'] = daemon_url  # start compose at which host
     os.environ['COMPOSE_PROJECT_NAME'] = name
     os.environ['COMPOSE_FILE'] = "cluster-{}.yml".format(cluster_size)
@@ -323,11 +305,43 @@ def compose_start(name, host, mapped_ports,
         os.environ[k.upper() + '_PORT'] = str(v)
     os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK + "_{}".format(
         consensus_plugin)
-    os.environ['LOGGING_LEVEL_CLUSTERS'] = host.get("log_level")
+    os.environ['CLUSTER_LOG_LEVEL'] = log_level
     # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
-    if log_type != LOG_TYPES[0]:  # not local
+    if log_type != CLUSTER_LOG_TYPES[0]:  # not local
+        os.environ['SYSLOG_SERVER'] = log_server
+    pass
+
+
+def compose_up(name, host, mapped_ports,
+               consensus_plugin=CONSENSUS_PLUGINS[0],
+               consensus_mode=CONSENSUS_MODES[0],
+               cluster_size=CLUSTER_SIZES[0],
+               timeout=5):
+    """ Compose up a cluster
+
+    :param name: The name of the cluster
+    :param mapped_ports: The mapped ports list of the cluster
+    :param host: Docker host obj
+    :param consensus_plugin: Cluster consensus plugin
+    :param consensus_mode: Cluster consensus mode
+    :param cluster_size: the size of the cluster
+    :param timeout: Docker client timeout value
+    :return: The name list of the started peer containers
+    """
+    logger.debug(
+        "Compose start: name={}, host={}, mapped_port={}, consensus={}/{},"
+        "size={}".format(
+            name, host.get("name"), mapped_ports, consensus_plugin,
+            consensus_mode, cluster_size))
+    daemon_url, log_type, log_server, log_level = \
+        host.get("daemon_url"), host.get("log_type"), host.get("log_server"), \
+        host.get("log_level")
+    if log_type != CLUSTER_LOG_TYPES[0]:  # not local
         os.environ['SYSLOG_SERVER'] = log_server
 
+    _compose_set_env(name, daemon_url, mapped_ports, consensus_plugin,
+                     consensus_mode, cluster_size, log_level, log_type,
+                     log_server)
     try:
         project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
         containers = project.up(detached=True, timeout=timeout)
@@ -378,13 +392,103 @@ def compose_clean(name, daemon_url, consensus_plugin):
     return True
 
 
-def compose_remove(name, daemon_url, consensus_plugin=CONSENSUS_PLUGINS[0],
+def compose_start(name, daemon_url, mapped_ports,
+                  consensus_plugin,
+                  consensus_mode,
+                  log_type, log_server, log_level,
+                  cluster_size, timeout=5):
+    """ Start the cluster
+
+    :param name: The name of the cluster
+    :param mapped_ports: The mapped port list
+    :param daemon_url: Docker host daemon
+    :param consensus_plugin: Cluster consensus type
+    :param consensus_mode: Cluster consensus mode
+    :param log_type: which log plugin for host
+    :param log_server: syslog server
+    :param cluster_size: the size of the cluster
+    :param timeout: Docker client timeout
+    :return:
+    """
+    logger.debug("Compose remove {} with daemon_url={}, "
+                 "consensus={}".format(name, daemon_url, consensus_plugin))
+
+    _compose_set_env(name, daemon_url, mapped_ports, consensus_plugin,
+                     consensus_mode, cluster_size, log_level, log_type,
+                     log_server)
+    # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
+    project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
+    project.start(timeout=timeout)
+
+
+def compose_stop(name, daemon_url, mapped_ports,
+                 consensus_plugin=CONSENSUS_PLUGINS[0],
+                 consensus_mode=CONSENSUS_MODES[0],
+                 log_type=CLUSTER_LOG_TYPES[0], log_server="",
+                 log_level=CLUSTER_LOG_LEVEL[0],
+                 cluster_size=CLUSTER_SIZES[0], timeout=5):
+    """ Stop the cluster
+
+    :param name: The name of the cluster
+    :param mapped_ports: The mapped ports list
+    :param daemon_url: Docker host daemon
+    :param consensus_plugin: Cluster consensus type
+    :param consensus_mode: Cluster consensus mode
+    :param log_type: which log plugin for host
+    :param log_server: syslog server
+    :param cluster_size: the size of the cluster
+    :param timeout: Docker client timeout
+    :return:
+    """
+    logger.debug("Compose stop {} with daemon_url={}, "
+                 "consensus={}".format(name, daemon_url, consensus_plugin))
+
+    _compose_set_env(name, daemon_url, mapped_ports, consensus_plugin,
+                     consensus_mode, cluster_size, log_level, log_type,
+                     log_server)
+    project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
+    project.stop(timeout=timeout)
+
+
+def compose_restart(name, daemon_url, mapped_ports,
+                    consensus_plugin=CONSENSUS_PLUGINS[0],
+                    consensus_mode=CONSENSUS_MODES[0],
+                    log_type=CLUSTER_LOG_TYPES[0], log_server="",
+                    log_level=CLUSTER_LOG_LEVEL[0],
+                    cluster_size=CLUSTER_SIZES[0], timeout=5):
+    """ Restart the cluster
+
+    :param name: The name of the cluster
+    :param mapped_ports: The mapped ports list
+    :param daemon_url: Docker host daemon
+    :param consensus_plugin: Cluster consensus type
+    :param consensus_mode: Cluster consensus mode
+    :param log_type: which log plugin for host
+    :param log_server: syslog server
+    :param cluster_size: the size of the cluster
+    :param timeout: Docker client timeout
+    :return:
+    """
+    logger.debug("Compose restart {} with daemon_url={}, "
+                 "consensus={}".format(name, daemon_url, consensus_plugin))
+
+    _compose_set_env(name, daemon_url, mapped_ports, consensus_plugin,
+                     consensus_mode, cluster_size, log_level, log_type,
+                     log_server)
+    project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
+    project.start(timeout=timeout)
+
+
+def compose_remove(name, daemon_url, mapped_ports=SERVICE_PORTS,
+                   consensus_plugin=CONSENSUS_PLUGINS[0],
                    consensus_mode=CONSENSUS_MODES[0],
-                   log_type=LOG_TYPES[0], log_server="",
+                   log_type=CLUSTER_LOG_TYPES[0], log_server="",
+                   log_level=CLUSTER_LOG_LEVEL[0],
                    cluster_size=CLUSTER_SIZES[0], timeout=5):
     """ Stop the cluster and remove the service containers
 
     :param name: The name of the cluster
+    :param mapped_ports: The mapped ports list
     :param daemon_url: Docker host daemon
     :param consensus_plugin: Cluster consensus type
     :param consensus_mode: Cluster consensus mode
@@ -397,25 +501,9 @@ def compose_remove(name, daemon_url, consensus_plugin=CONSENSUS_PLUGINS[0],
     logger.debug("Compose remove {} with daemon_url={}, "
                  "consensus={}".format(name, daemon_url, consensus_plugin))
     # compose use this
-    os.environ['DOCKER_HOST'] = daemon_url
-    os.environ['COMPOSE_PROJECT_NAME'] = name
-    os.environ['COMPOSE_FILE'] = "cluster-{}.yml".format(cluster_size)
-
-    # hyperledger use this
-    os.environ['VM_ENDPOINT'] = daemon_url  # vp use this for chaincode
-    os.environ['VM_DOCKER_HOSTCONFIG_NETWORKMODE'] = CLUSTER_NETWORK + "_{}".\
-        format(consensus_plugin)  # "host"
-    os.environ['PEER_VALIDATOR_CONSENSUS_PLUGIN'] = consensus_plugin
-    os.environ['PBFT_GENERAL_MODE'] = consensus_mode
-    os.environ['PBFT_GENERAL_N'] = str(cluster_size)
-    os.environ['PEER_NETWORKID'] = name
-    for k, v in SERVICE_PORTS.items():
-        os.environ[k.upper() + '_PORT'] = str(v)
-    os.environ['CLUSTER_NETWORK'] = CLUSTER_NETWORK + "_{}".format(
-        consensus_plugin)
-    os.environ['LOGGING_LEVEL_CLUSTERS'] = "INFO"
-    if log_type != LOG_TYPES[0]:  # not local
-        os.environ['SYSLOG_SERVER'] = log_server
+    _compose_set_env(name, daemon_url, mapped_ports, consensus_plugin,
+                     consensus_mode, cluster_size, log_level, log_type,
+                     log_server)
 
     # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
     project = get_project(COMPOSE_FILE_PATH + "/" + log_type)

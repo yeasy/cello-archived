@@ -9,8 +9,8 @@ from threading import Thread
 from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import db, log_handler, LOG_LEVEL, \
-    get_swarm_node_ip, compose_start, compose_clean
+from common import db, log_handler, LOG_LEVEL, get_swarm_node_ip, \
+    compose_up, compose_clean, compose_start, compose_stop, compose_restart
 
 from common import CLUSTER_PORT_START, CLUSTER_PORT_STEP, CONSENSUS_PLUGINS, \
     CONSENSUS_MODES, HOST_TYPES, SYS_CREATOR, SYS_DELETER, SYS_USER, \
@@ -133,6 +133,7 @@ class ClusterHandler(object):
             'service_url': {},  # e.g., {rest: xxx:7050, grpc: xxx:7051}
             'size': size,
             'containers': [],
+            'status': 'running',
             'health': ''
         }
         uuid = self.col_active.insert_one(c).inserted_id  # object type
@@ -151,7 +152,7 @@ class ClusterHandler(object):
 
         # start compose project, failed then clean and return
         logger.debug("Start compose project with name={}".format(cid))
-        containers = compose_start(
+        containers = compose_up(
             name=cid, mapped_ports=mapped_ports, host=h,
             consensus_plugin=consensus_plugin, consensus_mode=consensus_mode,
             cluster_size=size)
@@ -341,6 +342,24 @@ class ClusterHandler(object):
 
         return self.reset(cluster_id, record)
 
+    def start(self, cluster_id):
+        """Start a cluster
+
+        :param cluster_id: id of cluster to start
+        :return: Bool
+        """
+        c = self.get_by_id(cluster_id)
+        return c
+
+    def stop(self, cluster_id):
+        """Stop a cluster
+
+        :param cluster_id: id of cluster to stop
+        :return: Bool
+        """
+        c = self.get_by_id(cluster_id)
+        return c
+
     def reset(self, cluster_id, record=False):
         """
         Force to reset a chain.
@@ -386,12 +405,12 @@ class ClusterHandler(object):
             return False
         return self.reset(cluster_id)
 
-    def _serialize(self, doc, keys=['id', 'name', 'user_id', 'host_id',
+    def _serialize(self, doc, keys=('id', 'name', 'user_id', 'host_id',
                                     'api_url', 'consensus_plugin',
                                     'consensus_mode', 'daemon_url',
                                     'create_ts', 'apply_ts', 'release_ts',
                                     'duration', 'containers', 'size',
-                                    'health', 'service_url']):
+                                    'health', 'service_url')):
         """ Serialize an obj
 
         :param doc: doc to serialize

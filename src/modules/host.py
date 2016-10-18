@@ -11,7 +11,7 @@ from pymongo.collection import ReturnDocument
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import \
     db, log_handler, cleanup_container_host, \
-    LOG_LEVEL, LOG_TYPES, LOGGING_LEVEL_CLUSTERS, \
+    LOG_LEVEL, CLUSTER_LOG_TYPES, CLUSTER_LOG_LEVEL, \
     CLUSTER_SIZES, CLUSTER_PORT_START, CLUSTER_PORT_STEP, \
     CONSENSUS_TYPES, \
     check_daemon, detect_daemon_type, \
@@ -41,8 +41,8 @@ class HostHandler(object):
         self.col = db["host"]
 
     def create(self, name, daemon_url, capacity=1,
-               log_level=LOGGING_LEVEL_CLUSTERS[0],
-               log_type=LOG_TYPES[0], log_server="", autofill="false",
+               log_level=CLUSTER_LOG_LEVEL[0],
+               log_type=CLUSTER_LOG_TYPES[0], log_server="", autofill="false",
                schedulable="false", serialization=True):
         """ Create a new docker host node
 
@@ -73,7 +73,7 @@ class HostHandler(object):
 
         if "://" not in log_server:
             log_server = "udp://" + log_server
-        if log_type == LOG_TYPES[0]:
+        if log_type == CLUSTER_LOG_TYPES[0]:
             log_server = ""
         if check_daemon(daemon_url):
             logger.warning("The daemon_url is active:" + daemon_url)
@@ -154,7 +154,7 @@ class HostHandler(object):
             return {}
         if "log_server" in d and "://" not in d["log_server"]:
             d["log_server"] = "udp://" + d["log_server"]
-        if "log_type" in d and d["log_type"] == LOG_TYPES[0]:
+        if "log_type" in d and d["log_type"] == CLUSTER_LOG_TYPES[0]:
             d["log_server"] = ""
         h_new = self.db_set_by_id(id, **d)
         return self._serialize(h_new)

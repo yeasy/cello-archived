@@ -21,6 +21,12 @@ action_v1 = Blueprint('action_v1', __name__, url_prefix='/{}'.format("v1"))
 action_v2 = Blueprint('action_v2', __name__, url_prefix='/{}'.format("v2"))
 
 
+def make_invalid_response(msg=""):
+    response_fail["error"] = msg or "Invalid request data"
+    response_fail["data"] = request_json_body(r)
+    return jsonify(response_fail), CODE_BAD_REQUEST
+
+
 # REST API to operate a cluster
 @action_v2.route('/cluster_op', methods=['GET', 'POST'])
 def cluster_op():
@@ -35,7 +41,36 @@ def cluster_op():
 
     Return a json obj.
     """
+    request_debug(r, logger)
+    action = request_get(r, "action")
+    logger.info("cluster_op with action={}".format(action))
+    if action == "apply":
+        pass
+    elif action == "release":
+        pass
+    elif action == "start":
+        pass
+    elif action == "stop":
+        pass
+    elif action == "restart":
+        pass
+    else:
+        pass
+        return make_invalid_response("Unknown action type")
+    return jsonify(response_ok), CODE_OK
 
+
+def cluster_start(r):
+    """Start a cluster which should be in stopped status currently.
+
+    :param r:
+    :return:
+    """
+    cluster_id = request_get(r, "cluster_id")
+    if not cluster_id:
+        logger.warning("No cluster_id is given")
+        return make_invalid_response("No cluster_id is given")
+    pass
 
 
 # will deprecate
@@ -47,15 +82,10 @@ def cluster_apply():
     """
     request_debug(r, logger)
 
-    def make_response_invalid(msg=""):
-        response_fail["error"] = msg or "Invalid request data"
-        response_fail["data"] = request_json_body(r)
-        return jsonify(response_fail), CODE_BAD_REQUEST
-
     user_id = request_get(r, "user_id")
     if not user_id:
         logger.warning("cluster_apply without user_id")
-        return make_response_invalid("cluster_apply without user_id")
+        return make_invalid_response("cluster_apply without user_id")
 
     allow_multiple, condition = request_get(r, "allow_multiple"), {}
 
@@ -65,21 +95,21 @@ def cluster_apply():
     if consensus_plugin:
         if consensus_plugin not in CONSENSUS_PLUGINS:
             logger.warning("Invalid consensus_plugin")
-            return make_response_invalid("Invalid consensus_plugin")
+            return make_invalid_response("Invalid consensus_plugin")
         else:
             condition["consensus_plugin"] = consensus_plugin
 
     if consensus_mode:
         if consensus_mode not in CONSENSUS_MODES:
             logger.warning("Invalid consensus_mode")
-            return make_response_invalid("Invalid consensus_mode")
+            return make_invalid_response("Invalid consensus_mode")
         else:
             condition["consensus_mode"] = consensus_mode
 
     if cluster_size >= 0:
         if cluster_size not in CLUSTER_SIZES:
             logger.warning("Invalid cluster_size")
-            return make_response_invalid("Invalid cluster_size")
+            return make_invalid_response("Invalid cluster_size")
         else:
             condition["size"] = cluster_size
 
@@ -88,7 +118,7 @@ def cluster_apply():
                                       allow_multiple=allow_multiple)
     if not c:
         logger.warning("cluster_apply failed")
-        return make_response_invalid("No available res for {}".format(user_id))
+        return make_invalid_response("No available res for {}".format(user_id))
     else:
         response_ok["data"] = c
         return jsonify(response_ok), CODE_OK
