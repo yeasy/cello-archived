@@ -431,8 +431,8 @@ def compose_start(name, daemon_url, mapped_ports=SERVICE_PORTS,
     :return:
     """
     logger.debug("Compose Start {} with daemon_url={}, mapped_ports={} "
-                 "consensus={}".format(
-        name, daemon_url, mapped_ports, consensus_plugin))
+                 "consensus={}".format(name, daemon_url, mapped_ports,
+                                       consensus_plugin))
 
     _compose_set_env(name, daemon_url, mapped_ports, consensus_plugin,
                      consensus_mode, cluster_size, log_level, log_type,
@@ -441,7 +441,7 @@ def compose_start(name, daemon_url, mapped_ports=SERVICE_PORTS,
     project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
     try:
         project.start()
-        start_containers(daemon_url, name+'-')
+        start_containers(daemon_url, name + '-')
     except Exception as e:
         logger.warning("Exception when compose start={}".format(e))
         return False
@@ -449,11 +449,11 @@ def compose_start(name, daemon_url, mapped_ports=SERVICE_PORTS,
 
 
 def compose_restart(name, daemon_url, mapped_ports=SERVICE_PORTS,
-                  consensus_plugin=CONSENSUS_PLUGINS[0],
-                  consensus_mode=CONSENSUS_MODES[0],
-                  log_type=CLUSTER_LOG_TYPES[0], log_server="",
-                  log_level=CLUSTER_LOG_LEVEL[0],
-                  cluster_size=CLUSTER_SIZES[0]):
+                    consensus_plugin=CONSENSUS_PLUGINS[0],
+                    consensus_mode=CONSENSUS_MODES[0],
+                    log_type=CLUSTER_LOG_TYPES[0], log_server="",
+                    log_level=CLUSTER_LOG_LEVEL[0],
+                    cluster_size=CLUSTER_SIZES[0]):
     """ Restart the cluster
 
     :param name: The name of the cluster
@@ -467,8 +467,8 @@ def compose_restart(name, daemon_url, mapped_ports=SERVICE_PORTS,
     :return:
     """
     logger.debug("Compose restart {} with daemon_url={}, mapped_ports={} "
-                 "consensus={}".format(
-        name, daemon_url, mapped_ports, consensus_plugin))
+                 "consensus={}".format(name, daemon_url, mapped_ports,
+                                       consensus_plugin))
 
     _compose_set_env(name, daemon_url, mapped_ports, consensus_plugin,
                      consensus_mode, cluster_size, log_level, log_type,
@@ -477,7 +477,7 @@ def compose_restart(name, daemon_url, mapped_ports=SERVICE_PORTS,
     project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
     try:
         project.restart()
-        start_containers(daemon_url, name+'-')
+        start_containers(daemon_url, name + '-')
     except Exception as e:
         logger.warning("Exception when compose restart={}".format(e))
         return False
@@ -504,8 +504,10 @@ def compose_stop(name, daemon_url, mapped_ports=SERVICE_PORTS,
     :return:
     """
     logger.debug("Compose stop {} with daemon_url={}, mapped_ports={}, "
-                 "consensus={}, log_type={}".format(
-        name, daemon_url, mapped_ports, consensus_plugin, log_type))
+                 "consensus={}, log_type={}".format(name, daemon_url,
+                                                    mapped_ports,
+                                                    consensus_plugin,
+                                                    log_type))
 
     _compose_set_env(name, daemon_url, mapped_ports, consensus_plugin,
                      consensus_mode, cluster_size, log_level, log_type,
@@ -515,40 +517,6 @@ def compose_stop(name, daemon_url, mapped_ports=SERVICE_PORTS,
         project.stop(timeout=timeout)
     except Exception as e:
         logger.warning("Exception when compose stop={}".format(e))
-        return False
-    return True
-
-
-def compose_restart(name, daemon_url, mapped_ports=SERVICE_PORTS,
-                    consensus_plugin=CONSENSUS_PLUGINS[0],
-                    consensus_mode=CONSENSUS_MODES[0],
-                    log_type=CLUSTER_LOG_TYPES[0], log_server="",
-                    log_level=CLUSTER_LOG_LEVEL[0],
-                    cluster_size=CLUSTER_SIZES[0], timeout=5):
-    """ Restart the cluster
-
-    :param name: The name of the cluster
-    :param mapped_ports: The mapped ports list
-    :param daemon_url: Docker host daemon
-    :param consensus_plugin: Cluster consensus type
-    :param consensus_mode: Cluster consensus mode
-    :param log_type: which log plugin for host
-    :param log_server: syslog server
-    :param cluster_size: the size of the cluster
-    :param timeout: Docker client timeout
-    :return:
-    """
-    logger.debug("Compose restart {} with daemon_url={}, "
-                 "consensus={}".format(name, daemon_url, consensus_plugin))
-
-    _compose_set_env(name, daemon_url, mapped_ports, consensus_plugin,
-                     consensus_mode, cluster_size, log_level, log_type,
-                     log_server)
-    project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
-    try:
-        project.restart(timeout=timeout)
-    except Exception as e:
-        logger.warning("Exception when compose restart={}".format(e))
         return False
     return True
 
@@ -581,6 +549,6 @@ def compose_down(name, daemon_url, mapped_ports=SERVICE_PORTS,
 
     # project = get_project(COMPOSE_FILE_PATH+"/"+consensus_plugin)
     project = get_project(COMPOSE_FILE_PATH + "/" + log_type)
-    #project.down(remove_orphans=True)
+    # project.down(remove_orphans=True)
     project.stop(timeout=timeout)
     project.remove_stopped(one_off=OneOffFilter.include, force=True)
