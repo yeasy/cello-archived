@@ -21,6 +21,24 @@ action_v1 = Blueprint('action_v1', __name__, url_prefix='/{}'.format("v1"))
 action_v2 = Blueprint('action_v2', __name__, url_prefix='/{}'.format("v2"))
 
 
+# REST API to operate a cluster
+@action_v2.route('/cluster_op', methods=['GET', 'POST'])
+def cluster_op():
+    """ Issue some operations on the cluster.
+    e.g., /cluster_op?action=apply&user_id=xxx will apply a cluster for user
+
+    apply:
+    release:
+    start:
+    stop:
+    restart:
+
+    Return a json obj.
+    """
+
+
+
+# will deprecate
 @action_v1.route('/cluster_apply', methods=['GET'])
 @action_v2.route('/cluster_apply', methods=['GET', 'POST'])
 def cluster_apply():
@@ -76,6 +94,8 @@ def cluster_apply():
         return jsonify(response_ok), CODE_OK
 
 
+# will deprecate
+
 @action_v1.route('/cluster_release', methods=['GET'])
 @action_v2.route('/cluster_release', methods=['GET', 'POST'])
 def cluster_release():
@@ -109,6 +129,7 @@ def cluster_release():
             return jsonify(response_ok), CODE_OK
 
 
+# will deprecate
 @action_v2.route('/cluster_list', methods=['POST'])
 def cluster_list():
     """
@@ -128,13 +149,13 @@ def cluster_list():
     return jsonify(response_ok), CODE_OK
 
 
-@action_v2.route('/cluster_info', methods=['POST'])
-def cluster_info():
+@action_v2.route('/cluster/<cluster_id>', methods=['GET'])
+def cluster_info(cluster_id):
     """
-    Return information of the cluster.
+    Return a json obj of the cluster.
     """
     request_debug(r, logger)
-    cluster_id = request_get(r, "cluster_id")
+    # cluster_id = request_get(r, "cluster_id")
     logger.warning("cluster_id={}".format(cluster_id))
     if not cluster_id:
         response_fail["error"] = "cluster_get without cluster_id"

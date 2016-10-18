@@ -56,6 +56,14 @@ def clusters_show():
 
 @cluster.route('/cluster', methods=['GET', 'POST', 'DELETE'])
 def cluster_api():
+    """ Handle cluster related operations.
+
+    GET: Get a json object of the cluster, e.g., /cluster/xxxx
+    POST: Do some action on the cluster
+    DELETE: Delete a cluster
+
+    :return:
+    """
     logger.info("/cluster action=" + r.method)
     request_debug(r, logger)
     if r.method == 'GET':

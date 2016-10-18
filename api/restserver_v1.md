@@ -1,11 +1,11 @@
 # API V1
 
-**Will be deprecated soon.**
+**Deprecated.**
 
 ## Front
 These APIs will be called by front web services.
 
-Latest version please see [api-front.yaml](api-front.yaml).
+Latest version please see [restserver.yaml](restserver.yaml).
 
 ### cluster_apply
 
