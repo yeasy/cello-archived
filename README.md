@@ -69,6 +69,7 @@ You can also find more [scenarios](docs/scenario.md).
 * engine: support advanced scheduling.
 * engine: support more-efficient fill-up.
 * engine: enhance the robustness for chain operations.
+* engine: support membersrvc option.
 
 ## Why named Cello?
 Can u find anyone better at playing chains? :)

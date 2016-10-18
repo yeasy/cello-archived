@@ -76,7 +76,8 @@ def cluster_api():
             logger.debug("id=" + r.form['id'])
             result = cluster_handler.get_by_id(r.form['id'])
             if result:
-                return jsonify(result), CODE_OK
+                response_ok['data'] = result
+                return jsonify(response_ok), CODE_OK
             else:
                 logger.warn("cluster not found with id=" + r.form['id'])
                 response_fail["data"] = r.form

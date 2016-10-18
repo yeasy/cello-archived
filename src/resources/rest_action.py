@@ -9,7 +9,8 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, response_ok, response_fail, \
-    CODE_OK, CODE_BAD_REQUEST, CONSENSUS_PLUGINS, CONSENSUS_MODES, \
+    CODE_OK, CODE_BAD_REQUEST, CODE_NOT_FOUND, \
+    CONSENSUS_PLUGINS, CONSENSUS_MODES, \
     CLUSTER_SIZES, request_debug, request_get, request_json_body
 
 from modules import cluster_handler
@@ -45,19 +46,17 @@ def cluster_op():
     action = request_get(r, "action")
     logger.info("cluster_op with action={}".format(action))
     if action == "apply":
-        pass
+        return jsonify(response_ok), CODE_OK
     elif action == "release":
-        pass
+        return jsonify(response_ok), CODE_OK
     elif action == "start":
-        pass
+        return cluster_start(r)
     elif action == "stop":
-        pass
+        return cluster_stop(r)
     elif action == "restart":
-        pass
+        return cluster_restart(r)
     else:
-        pass
         return make_invalid_response("Unknown action type")
-    return jsonify(response_ok), CODE_OK
 
 
 def cluster_start(r):
@@ -70,7 +69,42 @@ def cluster_start(r):
     if not cluster_id:
         logger.warning("No cluster_id is given")
         return make_invalid_response("No cluster_id is given")
-    pass
+    if cluster_handler.start(cluster_id):
+        return jsonify(response_ok), CODE_OK
+
+    return make_invalid_response("cluster start failed")
+
+
+def cluster_restart(r):
+    """Start a cluster which should be in stopped status currently.
+
+    :param r:
+    :return:
+    """
+    cluster_id = request_get(r, "cluster_id")
+    if not cluster_id:
+        logger.warning("No cluster_id is given")
+        return make_invalid_response("No cluster_id is given")
+    if cluster_handler.restart(cluster_id):
+        return jsonify(response_ok), CODE_OK
+
+    return make_invalid_response("cluster restart failed")
+
+
+def cluster_stop(r):
+    """Stop a cluster which should be in running status currently.
+
+    :param r:
+    :return:
+    """
+    cluster_id = request_get(r, "cluster_id")
+    if not cluster_id:
+        logger.warning("No cluster_id is given")
+        return make_invalid_response("No cluster_id is given")
+    if cluster_handler.stop(cluster_id):
+        return jsonify(response_ok), CODE_OK
+
+    return make_invalid_response("cluster start failed")
 
 
 # will deprecate
@@ -186,13 +220,14 @@ def cluster_info(cluster_id):
     """
     request_debug(r, logger)
     # cluster_id = request_get(r, "cluster_id")
-    logger.warning("cluster_id={}".format(cluster_id))
-    if not cluster_id:
-        response_fail["error"] = "cluster_get without cluster_id"
-        logger.warning(response_fail["error"])
-        response_fail["data"] = r.args
-        return jsonify(response_fail), CODE_BAD_REQUEST
 
     result = cluster_handler.get_by_id(cluster_id)
-    response_ok["data"] = result
-    return jsonify(response_ok), CODE_OK
+    logger.info(result)
+    if result:
+        response_ok['data'] = result
+        return jsonify(response_ok), CODE_OK
+    else:
+        logger.warn("cluster not found with id=" + cluster_id)
+        response_fail["data"] = r.form
+        response_fail["code"] = CODE_NOT_FOUND
+        return jsonify(response_fail), CODE_NOT_FOUND

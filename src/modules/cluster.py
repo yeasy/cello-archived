@@ -130,6 +130,7 @@ class ClusterHandler(object):
             'release_ts': '',
             'duration': '',
             'api_url': '',  # This will be generated later
+            'mapped_ports': mapped_ports,
             'service_url': {},  # e.g., {rest: xxx:7050, grpc: xxx:7051}
             'size': size,
             'containers': [],
@@ -349,7 +350,62 @@ class ClusterHandler(object):
         :return: Bool
         """
         c = self.get_by_id(cluster_id)
-        return c
+        if not c:
+            logger.warn('No cluster found with id={}'.format(cluster_id))
+            return False
+        h_id = c.get('host_id')
+        h = self.host_handler.get_active_host_by_id(h_id)
+        if not h:
+            logger.warn('No host found with id={}'.format(h_id))
+            return False
+        result = compose_start(
+            name=cluster_id, daemon_url=h.get('daemon_url'),
+            mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
+            consensus_plugin=c.get('consensus_plugin'),
+            consensus_mode=c.get('consensus_mode'),
+            log_type=h.get('log_type'),
+            log_level=h.get('log_level'),
+            log_server='',
+            cluster_size=c.get('size'),
+        )
+        if result:
+            self.db_update_one({"id": cluster_id},
+                               {"$set": {'status': 'running'}})
+            return True
+        else:
+            return False
+
+    def restart(self, cluster_id):
+        """Restart a cluster
+
+        :param cluster_id: id of cluster to start
+        :return: Bool
+        """
+        c = self.get_by_id(cluster_id)
+        if not c:
+            logger.warn('No cluster found with id={}'.format(cluster_id))
+            return False
+        h_id = c.get('host_id')
+        h = self.host_handler.get_active_host_by_id(h_id)
+        if not h:
+            logger.warn('No host found with id={}'.format(h_id))
+            return False
+        result = compose_restart(
+            name=cluster_id, daemon_url=h.get('daemon_url'),
+            mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
+            consensus_plugin=c.get('consensus_plugin'),
+            consensus_mode=c.get('consensus_mode'),
+            log_type=h.get('log_type'),
+            log_level=h.get('log_level'),
+            log_server='',
+            cluster_size=c.get('size'),
+        )
+        if result:
+            self.db_update_one({"id": cluster_id},
+                               {"$set": {'status': 'running'}})
+            return True
+        else:
+            return False
 
     def stop(self, cluster_id):
         """Stop a cluster
@@ -358,7 +414,30 @@ class ClusterHandler(object):
         :return: Bool
         """
         c = self.get_by_id(cluster_id)
-        return c
+        if not c:
+            logger.warn('No cluster found with id={}'.format(cluster_id))
+            return False
+        h_id = c.get('host_id')
+        h = self.host_handler.get_active_host_by_id(h_id)
+        if not h:
+            logger.warn('No host found with id={}'.format(h_id))
+            return False
+        result = compose_stop(
+            name=cluster_id, daemon_url=h.get('daemon_url'),
+            mapped_ports=c.get('mapped_ports', PEER_SERVICE_PORTS),
+            consensus_plugin=c.get('consensus_plugin'),
+            consensus_mode=c.get('consensus_mode'),
+            log_type=h.get('log_type'),
+            log_level=h.get('log_level'),
+            log_server="",
+            cluster_size=c.get('size'),
+        )
+        if result:
+            self.db_update_one({"id": cluster_id},
+                               {"$set": {'status': 'stopped'}})
+            return True
+        else:
+            return False
 
     def reset(self, cluster_id, record=False):
         """
@@ -410,7 +489,7 @@ class ClusterHandler(object):
                                     'consensus_mode', 'daemon_url',
                                     'create_ts', 'apply_ts', 'release_ts',
                                     'duration', 'containers', 'size',
-                                    'health', 'service_url')):
+                                    'health', 'mapped_ports', 'service_url')):
         """ Serialize an obj
 
         :param doc: doc to serialize
