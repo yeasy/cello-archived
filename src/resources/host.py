@@ -17,10 +17,10 @@ logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 
-host = Blueprint('host', __name__)
+bp_host = Blueprint('bp_host', __name__)
 
 
-@host.route('/hosts', methods=['GET'])
+@bp_host.route('/hosts', methods=['GET'])
 def hosts_show():
     logger.info("/hosts method=" + r.method)
     request_debug(r, logger)
@@ -38,7 +38,7 @@ def hosts_show():
                            )
 
 
-@host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@bp_host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def host_api():
     request_debug(r, logger)
     if r.method == 'GET':
@@ -136,14 +136,14 @@ def host_api():
         return jsonify(response_fail), CODE_BAD_REQUEST
 
 
-@host.route('/host_info/<host_id>', methods=['GET'])
+@bp_host.route('/host_info/<host_id>', methods=['GET'])
 def host_info(host_id):
     logger.debug("/ host_info/{0} method={1}".format(host_id, r.method))
     return render_template("host_info.html", item=host_handler.get_by_id(
         host_id)), CODE_OK
 
 
-@host.route('/host_action', methods=['POST'])
+@bp_host.route('/host_action', methods=['POST'])
 def host_action():
     logger.info("/host_action, method=" + r.method)
     request_debug(r, logger)

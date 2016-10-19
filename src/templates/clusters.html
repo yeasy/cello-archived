@@ -3,22 +3,22 @@
 {% block body %}
     {{ super() }}
     {% if type != "released" %}
-        <h2 class="page-header">Chains {{ type }}: {{items_count}}
-                <button
-                        type="button"
-                        class="btn btn-primary btn-success btn-default pull-sm-right"
-                        data-toggle="modal"
-                        style="float:right"
-                        data-target="#newClusterModal"
-                        {% if hosts_available|length <= 0 %}
-                            disabled
-                        {% endif %}
-                >
-                    Add Chain
-                </button>
+        <h2 class="page-header">Chains {{ type }}: {{ items_count }}
+            <button
+                    type="button"
+                    class="btn btn-primary btn-success btn-default pull-sm-right"
+                    data-toggle="modal"
+                    style="float:right"
+                    data-target="#newClusterModal"
+                    {% if hosts_available|length <= 0 %}
+                    disabled
+                    {% endif %}
+            >
+                Add Chain
+            </button>
         </h2>
     {% else %}
-        <h2 class="page-header">Chains {{type}}: {{items_count}}</h2>
+        <h2 class="page-header">Chains {{ type }}: {{ items_count }}</h2>
     {% endif %}
 
     {% if items_count > 0 %}
@@ -34,9 +34,9 @@
                     <tr>
                         <th>Name</th>
                         <th>Type</th>
+                        <th>Status</th>
                         <th>Health</th>
                         <th>Size</th>
-                        <th>API</th>
                         <th>Host</th>
                         <th></th>
                     </tr>
@@ -45,37 +45,116 @@
                     {% for item in items %}
                         {% if item.user_id %}
                             <tr style="background-color:lightgray">
-                        {% else %}
+                                {% else %}
                             <tr>
                         {% endif %}
-                        <td><a href="/cluster_info/{{item.id}}?released=0">{{item.name}}</a></td>
-                        {% if item.consensus_plugin== consensus_plugins[0] %}
-                            <td>{{item.consensus_plugin}}</td>
+                    <td>
+                        <a href="/cluster_info/{{ item.id }}?released=0">{{ item.name }}</a>
+                    </td>
+                    {% if item.consensus_plugin== consensus_plugins[0] %}
+                        <td>{{ item.consensus_plugin }}</td>
+                    {% else %}
+                        <td>{{ item.consensus_plugin }}/{{ item.consensus_mode }}</td>
+                    {% endif %}
+                    <td>
+                        {% if item.status == "running" %}
+                            <font color="green">{{ item.status }}</font>
                         {% else %}
-                            <td>{{item.consensus_plugin}}/{{ item.consensus_mode }}</td>
+                            <font color="red">{{ item.status }}</font>
                         {% endif %}
-                        <td>
-                            {% if item.health == "OK" %}
-                                <font color="green">{{item.health}}</font>
-                            {% else %}
-                                <font color="red">{{item.health}}</font>
-                            {% endif %}
-                        </td>
-                        <td>{{item.size|string}}</td>
-                        <td>{{item.api_url}}</td>
-                        <td><a href="/host_info/{{item.host_id}}">{{item.host_id}}</a></td>
-                        <td>
-                            <button
-                                    type="button"
-                                    class="btn btn-xs btn-sm btn-danger delete_cluster_button"
-                                    aria-label="Left Align"
-                                    data-id="{{item.id}}"
-                                    data-col_name="{{col_name}}"
-                            >
-                                <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+                    </td>
+                    <td>
+                        {% if item.health == "OK" %}
+                            <font color="green">{{ item.health }}</font>
+                        {% else %}
+                            <font color="red">{{ item.health }}</font>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.size|string }}</td>
+                    <td>
+                        <a href="/host_info/{{ item.host_id }}">{{ item.host_id }}</a>
+                    </td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-primary btn-info btn-default dropdown-toggle"
+                                    type="button" id="chain_actions"
+                                    data-toggle="dropdown">
+                                Actions
+                                <span class="caret"></span>
                             </button>
-                        </td>
-                        </tr>
+                            <ul class="dropdown-menu" role="menu">
+                                <li>
+                                    <a href="#"
+                                       class="chain_action_start"
+                                       data-id="{{ item.id }}"
+                                       title="Start a chain"
+                                    >
+                                  <span class="glyphicon glyphicon-chevron-play"
+                                        aria-hidden="true"></span>
+                                        Start
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                       class="chain_action_stop"
+                                       data-id="{{ item.id }}"
+                                       title="Stop a chain"
+                                    >
+                                  <span class="glyphicon glyphicon-chevron-stop"
+                                        aria-hidden="true"></span>
+                                        Stop
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                       class="chain_action_restart"
+                                       data-id="{{ item.id }}"
+                                       title="Restart a chain"
+                                    >
+                                  <span class="glyphicon glyphicon-chevron-repeat"
+                                        aria-hidden="true"></span>
+                                        Restart
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                       class="chain_action_delete"
+                                       data-id="{{ item.id }}"
+                                       data-col_name="{{ col_name }}"
+                                       title="Delete a chain"
+                                    >
+                                  <span class="glyphicon glyphicon-chevron-trash"
+                                        aria-hidden="true"></span>
+                                        Delete
+                                    </a>
+                                </li>
+                                <li class="disabled">
+                                    <a href="#"
+                                       class="chain_action_release"
+                                       data-id="{{ item.id }}"
+                                       title="Release a chain"
+                                    >
+                                  <span class="glyphicon glyphicon-chevron-refresh"
+                                        aria-hidden="true"></span>
+                                        Release
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <!--
+                        <button
+                                type="button"
+                                class="btn btn-xs btn-sm btn-danger delete_cluster_button"
+                                aria-label="Left Align"
+                                data-id="{{ item.id }}"
+                                data-col_name="{{ col_name }}"
+                        >
+                            <span class="glyphicon glyphicon-trash"
+                                  aria-hidden="true"></span>
+                        </button>
+                        -->
+                    </td>
+                    </tr>
                     {% endfor %}
                     </tbody>
                 {% elif type == "inused" %}
@@ -94,33 +173,94 @@
                     <tbody>
                     {% for item in items %}
                         <tr>
-                            <td><a href="/cluster_info/{{item.id}}?released=0">{{item.name}}</a></td>
-                            <td>{{item.user_id}}</td>
+                            <td>
+                                <a href="/cluster_info/{{ item.id }}?released=0">{{ item.name }}</a>
+                            </td>
+                            <td>{{ item.user_id }}</td>
                             {% if item.consensus_plugin== consensus_plugins[0] %}
-                                <td>{{item.consensus_plugin}}</td>
+                                <td>{{ item.consensus_plugin }}</td>
                             {% else %}
-                                <td>{{item.consensus_plugin}}/{{ item.consensus_mode }}</td>
+                                <td>{{ item.consensus_plugin }}/{{ item.consensus_mode }}</td>
                             {% endif %}
                             <td>
                                 {% if item.health == "OK" %}
-                                    <font color="green">{{item.health}}</font>
+                                    <font color="green">{{ item.health }}</font>
                                 {% else %}
-                                    <font color="red">{{item.health}}</font>
+                                    <font color="red">{{ item.health }}</font>
                                 {% endif %}
                             </td>
-                            <td>{{item.size|string}}</td>
-                            <td><a href="/host_info/{{item.host_id}}">{{item.host_id}}</a></td>
-                            <td>{{item.apply_ts}}</td>
+                            <td>{{ item.size|string }}</td>
                             <td>
-                                <button
-                                        type="button"
-                                        class="btn btn-xs btn-sm btn-danger delete_cluster_button"
-                                        aria-label="Left Align"
-                                        data-id="{{item.id}}"
-                                        data-col_name="{{col_name}}"
-                                >
-                                    <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
-                                </button>
+                                <a href="/host_info/{{ item.host_id }}">{{ item.host_id }}</a>
+                            </td>
+                            <td>{{ item.apply_ts }}</td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-primary btn-info btn-default dropdown-toggle"
+                                            type="button" id="chain_actions"
+                                            data-toggle="dropdown">
+                                        Actions
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li>
+                                            <a href="#"
+                                               class="chain_action_start"
+                                               data-id="{{ item.id }}"
+                                               title="Start a chain"
+                                            >
+                                  <span class="glyphicon glyphicon-chevron-play"
+                                        aria-hidden="true"></span>
+                                                Start
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#"
+                                               class="chain_action_stop"
+                                               data-id="{{ item.id }}"
+                                               title="Stop a chain"
+                                            >
+                                  <span class="glyphicon glyphicon-chevron-stop"
+                                        aria-hidden="true"></span>
+                                                Stop
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#"
+                                               class="chain_action_restart"
+                                               data-id="{{ item.id }}"
+                                               title="Restart a chain"
+                                            >
+                                  <span class="glyphicon glyphicon-chevron-repeat"
+                                        aria-hidden="true"></span>
+                                                Restart
+                                            </a>
+                                        </li>
+                                        <li class="disabled">
+                                            <a href="#"
+                                               class="chain_action_delete"
+                                               data-id="{{ item.id }}"
+                                               data-col_name="{{ col_name }}"
+                                               title="Delete a chain"
+                                            >
+                                  <span class="glyphicon glyphicon-chevron-trash"
+                                        aria-hidden="true"></span>
+                                                Delete
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#"
+                                               class="chain_action_release"
+                                               data-id="{{ item.id }}"
+                                               title="Release a chain"
+                                            >
+                                  <span class="glyphicon glyphicon-chevron-refresh"
+                                        aria-hidden="true"></span>
+                                                Release
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
@@ -143,26 +283,31 @@
                     <tbody>
                     {% for item in items %}
                         <tr>
-                            <td><a href="/cluster_info/{{item.id}}?released=1">{{item.name}}</a></td>
+                            <td>
+                                <a href="/cluster_info/{{ item.id }}?released=1">{{ item.name }}</a>
+                            </td>
                             {% if item.consensus_plugin== consensus_plugins[0] %}
-                                <td>{{item.consensus_plugin}}</td>
+                                <td>{{ item.consensus_plugin }}</td>
                             {% else %}
-                                <td>{{item.consensus_plugin}}/{{ item.consensus_mode }}</td>
+                                <td>{{ item.consensus_plugin }}/{{ item.consensus_mode }}</td>
                             {% endif %}
-                            <td>{{item.size|string}}</td>
-                            <td><a href="/host_info/{{item.host_id}}">{{item.host_id}}</a></td>
-                            <td>{{item.user_id}}</td>
-                            <td>{{item.release_ts}}</td>
-                            <td>{{item.duration}}</td>
+                            <td>{{ item.size|string }}</td>
+                            <td>
+                                <a href="/host_info/{{ item.host_id }}">{{ item.host_id }}</a>
+                            </td>
+                            <td>{{ item.user_id }}</td>
+                            <td>{{ item.release_ts }}</td>
+                            <td>{{ item.duration }}</td>
                             <td>
                                 <button
                                         type="button"
                                         class="btn btn-xs btn-sm btn-danger  delete_cluster_button"
                                         aria-label="Left Align"
-                                        data-id="{{item.id}}"
-                                        data-col_name="{{col_name}}"
+                                        data-id="{{ item.id }}"
+                                        data-col_name="{{ col_name }}"
                                 >
-                                    <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+                                    <span class="glyphicon glyphicon-trash"
+                                          aria-hidden="true"></span>
                                 </button>
                             </td>
                         </tr>

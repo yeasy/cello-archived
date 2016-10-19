@@ -62,7 +62,7 @@ services:
     volumes:  # This should be removed in product env
       - ./src:/app
 
-  # mongo database, may use cluster in future
+  # mongo database, may use others in future
   mongo:
     image: mongo:3.2
     hostname: mongo

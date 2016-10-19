@@ -89,10 +89,10 @@
             <ul class="nav nav-sidebar nav-list">
                 {{ nav_link("index.show", "Overview") }}
                 {{ nav_link("stat.show", "System Status") }}
-                {{ nav_link("host.hosts_show", "Hosts") }}
-                {{ nav_link("cluster.clusters_show", "Active Chains", type="active") }}
-                {{ nav_link("cluster.clusters_show", "Inused Chains", type="inused" ) }}
-                {{ nav_link("cluster.clusters_show", "Release History", type="released") }}
+                {{ nav_link("bp_host.hosts_show", "Hosts") }}
+                {{ nav_link("bp_cluster_show.clusters_show", "Active Chains", type="active") }}
+                {{ nav_link("bp_cluster_show.clusters_show", "Inused Chains", type="inused" ) }}
+                {{ nav_link("bp_cluster_show.clusters_show", "Release History", type="released") }}
                 {{ nav_link("index.about", "About") }}
             </ul>
         </div>
@@ -170,29 +170,7 @@
                         >
                     </div>
               {% endif %}
-              <!--
-              {% if host_types|length > 0 %}
-                    <div class="form-group form-inline">
-                        <label for="host_type" style="width: 20%">Daemon Type</label>
-                        <select id="host_type" class="c-select" name="type"
-                                required>
-                            <option selected
-                                    value="{{host_types[0]}}">{{host_types[0]|upper }}</option>
-                            {% for c in host_types[1:] %}
-                                    <option value="{{c}}">{{c|upper}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-              {% endif %}
-              <div class="form-group">
-                  <label for="host_status" style="width: 20%">Initial Status</label>
-                  <select id="host_status" class="c-select" name="status"
-                          required>
-                      <option selected value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                  </select>
-              </div>
-              -->
+
               <div class="form-group checkbox">
                   <label>
                       <input type="checkbox" name="schedulable"> Schedulable for cluster request

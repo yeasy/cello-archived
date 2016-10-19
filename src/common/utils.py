@@ -77,6 +77,7 @@ def request_debug(request, logger):
         logger.debug("Form: {0}:{1}".format(k, request.form[k]))
     logger.debug("request raw body data:")
     logger.debug(request.data)
+    logger.debug(request.get_json(force=True, silent=True))
 
 
 def request_get(request, key, default_value=None):
@@ -100,3 +101,4 @@ def request_json_body(request, default_value={}):
         return json_body
     except Exception:
         return default_value
+

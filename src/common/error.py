@@ -23,6 +23,7 @@ response_fail = {
 }
 
 
+
 # not used, may deprecate later
 errors = {
     'UserAlreadyExistsError': {

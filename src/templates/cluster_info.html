@@ -7,8 +7,7 @@
     <dl class="dl-horizontal">
         <dt>Id<dt> <dd>{{item.id}}</dd>
         <dt>Name<dt> <dd>{{item.name}}</dd>
-        <dt>Restful API<dt> <dd>{{item.service_url['rest']}}</dd>
-        <dt>Service URL<dt> <dd>{{item.service_url}}</dd>
+
         {% if item.consensus_plugin== consensus_plugins[0] %}
             <dt>Consensus<dt> <dd>{{item.consensus_plugin}}</dd>
         {% else %}
@@ -22,9 +21,16 @@
         <dt>Release Time<dt> <dd>{{item.release_ts}}</dd>
         <dt>Duration<dt> <dd>{{item.duration}}</dd>
         <dt>Size<dt> <dd>{{item.size|string}}</dd>
+        <dt>Status<dt> <dd>{{item.status}}</dd>
         <dt>Health<dt> <dd>{{item.health}}</dd>
+    <dt>Service URL<dt> <dd>
+        {% for k in item.service_url%}
+            {{ k }}: {{item.service_url[k]}}<br>
+        {% endfor %}
+    </dd>
         {% if item.containers %}
-            <dt>Containers<dt> <dd>
+            <dt>Containers<dt>
+            <dd>
             {% if item.containers|length >0 %}
                 {% for c in item.containers.keys()%}
                     <a href="">{{ c }}</a><br>

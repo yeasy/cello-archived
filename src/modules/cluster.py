@@ -129,7 +129,7 @@ class ClusterHandler(object):
             'apply_ts': '',
             'release_ts': '',
             'duration': '',
-            'api_url': '',  # This will be generated later
+            #'api_url': '',  # This will be deprecated later
             'mapped_ports': mapped_ports,
             'service_url': {},  # e.g., {rest: xxx:7050, grpc: xxx:7051}
             'size': size,
@@ -173,10 +173,10 @@ class ClusterHandler(object):
 
         service_urls = {}
         for k, v in peer_mapped_ports.items():
-            service_urls[k] = "http://{}:{}".format(peer_host_ip, v)
+            service_urls[k] = "{}:{}".format(peer_host_ip, v)
 
         for k, v in ca_mapped_ports.items():
-            service_urls[k] = "http://{}:{}".format(ca_host_ip, v)
+            service_urls[k] = "{}:{}".format(ca_host_ip, v)
 
         # update api_url, container, and user_id field
         self.db_update_one(
@@ -278,14 +278,14 @@ class ClusterHandler(object):
         """
         response_keys = ['id', 'name', 'user_id', 'daemon_url', 'api_url',
                          'consensus_plugin', 'consensus_mode', 'size',
-                         'health', 'service_url']
+                         'health', 'status', 'service_url']
         if not allow_multiple:  # check if already having one
             filt = {"user_id": user_id, "release_ts": "", "health": "OK"}
             filt.update(condition)
             c = self.col_active.find_one(filt)
             if c:
                 logger.debug("Already assigned cluster for " + user_id)
-                return self._serialize(c, keys=response_keys)
+                return self._serialize(c)
         logger.debug("Try find available cluster for " + user_id)
         hosts = self.host_handler.list({"status": "active",
                                         "schedulable": "true"})
@@ -301,7 +301,7 @@ class ClusterHandler(object):
             if c and c.get("user_id") == user_id:
                 logger.info("Now have cluster {} at {} for user {}".format(
                     c.get("id"), h_id, user_id))
-                return self._serialize(c, keys=response_keys)
+                return self._serialize(c)
         logger.warning("Not find matched available cluster for " + user_id)
         return {}
 
@@ -320,7 +320,7 @@ class ClusterHandler(object):
             result = result and self.release_cluster(cid)
         return result
 
-    def release_cluster(self, cluster_id, record=False):
+    def release_cluster(self, cluster_id, record=True):
         """ Release a specific cluster.
 
         Release means delete and try best to recreate it with same config.
@@ -434,7 +434,7 @@ class ClusterHandler(object):
         )
         if result:
             self.db_update_one({"id": cluster_id},
-                               {"$set": {'status': 'stopped'}})
+                               {"$set": {'status': 'stopped', 'health': ''}})
             return True
         else:
             return False
@@ -451,17 +451,16 @@ class ClusterHandler(object):
 
         c = self.get_by_id(cluster_id)
         logger.debug("Run recreate_work in background thread")
-        cluster_name, host_id, api_url, consensus_plugin, \
+        cluster_name, host_id, mapped_ports, consensus_plugin, \
             consensus_mode, size \
             = c.get("name"), c.get("host_id"), \
-            c.get("api_url"), c.get("consensus_plugin"), \
+            c.get("mapped_ports"), c.get("consensus_plugin"), \
             c.get("consensus_mode"), c.get("size")
-        api_port = int(api_url.split(":")[-1])
         if not self.delete(cluster_id, record=record, forced=True):
             logger.warning("Delete cluster failed with id=" + cluster_id)
             return False
         if not self.create(name=cluster_name, host_id=host_id,
-                           start_port=api_port,
+                           start_port=mapped_ports['rest'],
                            consensus_plugin=consensus_plugin,
                            consensus_mode=consensus_mode, size=size):
             logger.warning("Fail to recreate cluster {}".format(cluster_name))
@@ -485,10 +484,10 @@ class ClusterHandler(object):
         return self.reset(cluster_id)
 
     def _serialize(self, doc, keys=('id', 'name', 'user_id', 'host_id',
-                                    'api_url', 'consensus_plugin',
+                                    'consensus_plugin',
                                     'consensus_mode', 'daemon_url',
                                     'create_ts', 'apply_ts', 'release_ts',
-                                    'duration', 'containers', 'size',
+                                    'duration', 'containers', 'size', 'status',
                                     'health', 'mapped_ports', 'service_url')):
         """ Serialize an obj
 
@@ -584,9 +583,11 @@ class ClusterHandler(object):
         if not cluster:
             logger.warning("Cannot found cluster id={}".format(cluster_id))
             return True
+        rest_api = cluster["service_url"]['rest'] + "/network/peers"
+        if not rest_api.startswith('http'):
+            rest_api = 'http://' + rest_api
         try:
-            r = requests.get(cluster["api_url"] + "/network/peers",
-                             timeout=timeout)
+            r = requests.get(rest_api, timeout=timeout)
         except Exception as e:
             logger.error("Error to refresh health of cluster {}: {}".format(
                 cluster_id, e))
