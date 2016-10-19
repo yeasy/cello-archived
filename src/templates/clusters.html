@@ -2,6 +2,7 @@
 {% block title %}Chains{% endblock %}
 {% block body %}
     {{ super() }}
+    <!-- Glyphicon in a H1 tag -->
     {% if type != "released" %}
         <h2 class="page-header">Chains {{ type }}: {{ items_count }}
             <button
@@ -23,11 +24,8 @@
 
     {% if items_count > 0 %}
         <div class="row">
-            <table
-                    id="table_clusters"
-                    class="table table-striped table-bordered table_sorted"
-                    cellspacing="0"
-                    width="100%"
+            <table id="table_clusters"
+                   class="table table-striped table-bordered table_sorted"
             >
                 {% if type=="active" %}
                     <thead align="center">
@@ -83,24 +81,33 @@
                                 <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu" role="menu">
-                                <li>
+
+                                <li
+                                        {% if item.status == "running" %}
+                                            class="disabled"
+                                        {% endif %}
+                                >
                                     <a href="#"
                                        class="chain_action_start"
                                        data-id="{{ item.id }}"
                                        title="Start a chain"
                                     >
-                                  <span class="glyphicon glyphicon-chevron-play"
+                                  <span class="glyphicon glyphicon-play"
                                         aria-hidden="true"></span>
                                         Start
                                     </a>
                                 </li>
-                                <li>
+                                <li
+                                        {% if item.status != "running" %}
+                                            class="disabled"
+                                        {% endif %}
+                                >
                                     <a href="#"
                                        class="chain_action_stop"
                                        data-id="{{ item.id }}"
                                        title="Stop a chain"
                                     >
-                                  <span class="glyphicon glyphicon-chevron-stop"
+                                  <span class="glyphicon glyphicon-stop"
                                         aria-hidden="true"></span>
                                         Stop
                                     </a>
@@ -111,7 +118,7 @@
                                        data-id="{{ item.id }}"
                                        title="Restart a chain"
                                     >
-                                  <span class="glyphicon glyphicon-chevron-repeat"
+                                  <span class="glyphicon glyphicon-repeat"
                                         aria-hidden="true"></span>
                                         Restart
                                     </a>
@@ -123,7 +130,7 @@
                                        data-col_name="{{ col_name }}"
                                        title="Delete a chain"
                                     >
-                                  <span class="glyphicon glyphicon-chevron-trash"
+                                  <span class="glyphicon glyphicon-trash"
                                         aria-hidden="true"></span>
                                         Delete
                                     </a>
@@ -134,7 +141,7 @@
                                        data-id="{{ item.id }}"
                                        title="Release a chain"
                                     >
-                                  <span class="glyphicon glyphicon-chevron-refresh"
+                                  <span class="glyphicon glyphicon-refresh"
                                         aria-hidden="true"></span>
                                         Release
                                     </a>
@@ -203,24 +210,32 @@
                                         <span class="caret"></span>
                                     </button>
                                     <ul class="dropdown-menu" role="menu">
-                                        <li>
+                                        <li
+                                                {% if item.status == "running" %}
+                                                    class="disabled"
+                                                {% endif %}
+                                        >
                                             <a href="#"
                                                class="chain_action_start"
                                                data-id="{{ item.id }}"
                                                title="Start a chain"
                                             >
-                                  <span class="glyphicon glyphicon-chevron-play"
+                                  <span class="glyphicon glyphicon-play"
                                         aria-hidden="true"></span>
                                                 Start
                                             </a>
                                         </li>
-                                        <li>
+                                        <li
+                                                {% if item.status != "running" %}
+                                                    class="disabled"
+                                                {% endif %}
+                                        >
                                             <a href="#"
                                                class="chain_action_stop"
                                                data-id="{{ item.id }}"
                                                title="Stop a chain"
                                             >
-                                  <span class="glyphicon glyphicon-chevron-stop"
+                                  <span class="glyphicon glyphicon-stop"
                                         aria-hidden="true"></span>
                                                 Stop
                                             </a>
@@ -231,7 +246,7 @@
                                                data-id="{{ item.id }}"
                                                title="Restart a chain"
                                             >
-                                  <span class="glyphicon glyphicon-chevron-repeat"
+                                  <span class="glyphicon glyphicon-repeat"
                                         aria-hidden="true"></span>
                                                 Restart
                                             </a>
@@ -243,7 +258,7 @@
                                                data-col_name="{{ col_name }}"
                                                title="Delete a chain"
                                             >
-                                  <span class="glyphicon glyphicon-chevron-trash"
+                                  <span class="glyphicon glyphicon-trash"
                                         aria-hidden="true"></span>
                                                 Delete
                                             </a>
@@ -254,7 +269,7 @@
                                                data-id="{{ item.id }}"
                                                title="Release a chain"
                                             >
-                                  <span class="glyphicon glyphicon-chevron-refresh"
+                                  <span class="glyphicon glyphicon-refresh"
                                         aria-hidden="true"></span>
                                                 Release
                                             </a>

@@ -140,6 +140,7 @@ def cluster_query(cluster_id):
         response_fail["code"] = CODE_NOT_FOUND
         return jsonify(response_fail), CODE_NOT_FOUND
 
+
 @bp_cluster_api.route('/cluster', methods=['POST'])
 def cluster_create():
     """ Handle cluster related operations.
@@ -222,7 +223,7 @@ def cluster_delete():
             return jsonify(response_fail), CODE_BAD_REQUEST
 
 
-@bp_cluster_api.route('/clusters', methods=['GET','POST'])
+@bp_cluster_api.route('/clusters', methods=['GET', 'POST'])
 def cluster_list():
     """
     Return list of the clusters.

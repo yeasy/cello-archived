@@ -22,8 +22,6 @@ response_fail = {
     "data": {}
 }
 
-
-
 # not used, may deprecate later
 errors = {
     'UserAlreadyExistsError': {

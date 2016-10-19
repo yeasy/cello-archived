@@ -101,4 +101,3 @@ def request_json_body(request, default_value={}):
         return json_body
     except Exception:
         return default_value
-

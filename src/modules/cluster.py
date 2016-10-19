@@ -129,7 +129,6 @@ class ClusterHandler(object):
             'apply_ts': '',
             'release_ts': '',
             'duration': '',
-            #'api_url': '',  # This will be deprecated later
             'mapped_ports': mapped_ports,
             'service_url': {},  # e.g., {rest: xxx:7050, grpc: xxx:7051}
             'size': size,
@@ -276,9 +275,6 @@ class ClusterHandler(object):
         :param allow_multiple: Allow multiple chain for each tenant
         :return: serialized cluster or None
         """
-        response_keys = ['id', 'name', 'user_id', 'daemon_url', 'api_url',
-                         'consensus_plugin', 'consensus_mode', 'size',
-                         'health', 'status', 'service_url']
         if not allow_multiple:  # check if already having one
             filt = {"user_id": user_id, "release_ts": "", "health": "OK"}
             filt.update(condition)
@@ -582,6 +578,9 @@ class ClusterHandler(object):
         cluster = self.get_by_id(cluster_id)
         if not cluster:
             logger.warning("Cannot found cluster id={}".format(cluster_id))
+            return True
+        if cluster.get('status') != 'running':
+            logger.warning("cluster is not running id={}".format(cluster_id))
             return True
         rest_api = cluster["service_url"]['rest'] + "/network/peers"
         if not rest_api.startswith('http'):
