@@ -135,7 +135,7 @@ def cluster_query(cluster_id):
         response_ok['data'] = result
         return jsonify(response_ok), CODE_OK
     else:
-        logger.warn("cluster not found with id=" + cluster_id)
+        logger.warning("cluster not found with id=" + cluster_id)
         response_fail["data"] = r.form
         response_fail["code"] = CODE_NOT_FOUND
         return jsonify(response_fail), CODE_NOT_FOUND
@@ -155,7 +155,7 @@ def cluster_create():
     request_debug(r, logger)
     if not r.form["name"] or not r.form["host_id"] or not \
             r.form["consensus_plugin"] or not r.form["size"]:
-        logger.warn("cluster post without enough data")
+        logger.warning("cluster post without enough data")
         response_fail["error"] = "cluster POST without enough data"
         response_fail["data"] = r.form
         return jsonify(response_fail), CODE_BAD_REQUEST
@@ -203,7 +203,7 @@ def cluster_delete():
     logger.info("/cluster action=" + r.method)
     request_debug(r, logger)
     if not r.form["id"] or not r.form["col_name"]:
-        logger.warn("cluster operation post without enough data")
+        logger.warning("cluster operation post without enough data")
         response_fail["error"] = "cluster delete without enough data"
         response_fail["data"] = r.form
         return jsonify(response_fail), CODE_BAD_REQUEST

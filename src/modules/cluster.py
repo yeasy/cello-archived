@@ -347,12 +347,12 @@ class ClusterHandler(object):
         """
         c = self.get_by_id(cluster_id)
         if not c:
-            logger.warn('No cluster found with id={}'.format(cluster_id))
+            logger.warning('No cluster found with id={}'.format(cluster_id))
             return False
         h_id = c.get('host_id')
         h = self.host_handler.get_active_host_by_id(h_id)
         if not h:
-            logger.warn('No host found with id={}'.format(h_id))
+            logger.warning('No host found with id={}'.format(h_id))
             return False
         result = compose_start(
             name=cluster_id, daemon_url=h.get('daemon_url'),
@@ -379,12 +379,12 @@ class ClusterHandler(object):
         """
         c = self.get_by_id(cluster_id)
         if not c:
-            logger.warn('No cluster found with id={}'.format(cluster_id))
+            logger.warning('No cluster found with id={}'.format(cluster_id))
             return False
         h_id = c.get('host_id')
         h = self.host_handler.get_active_host_by_id(h_id)
         if not h:
-            logger.warn('No host found with id={}'.format(h_id))
+            logger.warning('No host found with id={}'.format(h_id))
             return False
         result = compose_restart(
             name=cluster_id, daemon_url=h.get('daemon_url'),
@@ -411,12 +411,12 @@ class ClusterHandler(object):
         """
         c = self.get_by_id(cluster_id)
         if not c:
-            logger.warn('No cluster found with id={}'.format(cluster_id))
+            logger.warning('No cluster found with id={}'.format(cluster_id))
             return False
         h_id = c.get('host_id')
         h = self.host_handler.get_active_host_by_id(h_id)
         if not h:
-            logger.warn('No host found with id={}'.format(h_id))
+            logger.warning('No host found with id={}'.format(h_id))
             return False
         result = compose_stop(
             name=cluster_id, daemon_url=h.get('daemon_url'),

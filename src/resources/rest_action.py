@@ -168,7 +168,7 @@ def cluster_info(cluster_id):
         response_ok['data'] = result
         return jsonify(response_ok), CODE_OK
     else:
-        logger.warn("cluster not found with id=" + cluster_id)
+        logger.warning("cluster not found with id=" + cluster_id)
         response_fail["data"] = r.form
         response_fail["code"] = CODE_NOT_FOUND
         return jsonify(response_fail), CODE_NOT_FOUND

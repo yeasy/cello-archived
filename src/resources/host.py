@@ -43,7 +43,7 @@ def host_api():
     request_debug(r, logger)
     if r.method == 'GET':
         if "id" not in r.args and "id" not in r.form:
-            logger.warn("host get without enough data")
+            logger.warning("host get without enough data")
             response_fail["error"] = "host GET without enough data"
             response_fail["data"] = r.form
             return jsonify(response_fail), CODE_BAD_REQUEST
@@ -53,7 +53,7 @@ def host_api():
             if result:
                 return jsonify(result), CODE_OK
             else:
-                logger.warn("host not found with id=" + host_id)
+                logger.warning("host not found with id=" + host_id)
                 response_fail["data"] = r.form
                 return jsonify(response_fail), CODE_BAD_REQUEST
     elif r.method == 'POST':
@@ -76,7 +76,7 @@ def host_api():
                      format(name, daemon_url, capacity, autofill, schedulable,
                             log_type, log_server))
         if not name or not daemon_url or not capacity or not log_type:
-            logger.warn("host post without enough data")
+            logger.warning("host post without enough data")
             response_fail["error"] = "host POST without enough data"
             response_fail["data"] = r.form
             return jsonify(response_fail), CODE_BAD_REQUEST
@@ -98,7 +98,7 @@ def host_api():
                 return jsonify(response_fail), CODE_BAD_REQUEST
     elif r.method == 'PUT':
         if "id" not in r.form:
-            logger.warn("host put without enough data")
+            logger.warning("host put without enough data")
             response_fail["error"] = "host PUT without enough data"
             response_fail["data"] = r.form
             return jsonify(response_fail), CODE_BAD_REQUEST
@@ -118,7 +118,7 @@ def host_api():
                 return jsonify(response_fail), CODE_BAD_REQUEST
     elif r.method == 'DELETE':
         if "id" not in r.form or not r.form["id"]:
-            logger.warn("host operation post without enough data")
+            logger.warning("host operation post without enough data")
             response_fail["error"] = "host delete without enough data"
             response_fail["data"] = r.form
             return jsonify(response_fail), CODE_BAD_REQUEST
@@ -150,7 +150,7 @@ def host_action():
 
     host_id, action = r.form['id'], r.form['action']
     if not host_id or not action:
-        logger.warn("host post without enough data")
+        logger.warning("host post without enough data")
         response_fail["error"] = "host POST without enough data"
         response_fail["data"] = r.form
         return jsonify(response_fail), CODE_BAD_REQUEST
@@ -180,7 +180,7 @@ def host_action():
                 response_fail["error"] = "Failed to reset the host."
                 return jsonify(response_fail), CODE_BAD_REQUEST
 
-    logger.warn("unknown host action={}".format(action))
+    logger.warning("unknown host action={}".format(action))
     response_fail["error"] = "unknown operation method"
     response_fail["data"] = r.form
     return jsonify(response_fail), CODE_BAD_REQUEST
