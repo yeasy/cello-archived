@@ -68,7 +68,8 @@ def host_check_chains(host_id):
     """
     logger.debug("Host {}/{}: checking cluster health".format(
         host_handler.get_by_id(host_id).get('name'), host_id))
-    clusters = cluster_handler.list(filter_data={"host_id": host_id})
+    clusters = cluster_handler.list(filter_data={"host_id": host_id,
+                                                 "status": "running"})
     for c in clusters:  # concurrent health check is safe for multi-chains
         t = Thread(target=chain_check_health, args=(c.get("id"),))
         t.start()
