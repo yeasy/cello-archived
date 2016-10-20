@@ -243,7 +243,7 @@ def setup_container_host(host_type, daemon_url, timeout=5):
         for cs_type in CONSENSUS_PLUGINS:
             net_name = CLUSTER_NETWORK + "_{}".format(cs_type)
             if net_name in net_names:
-                logger.warning("Network {} already exists, try using it!".format(
+                logger.warning("Network {} already exists, use it!".format(
                     net_name))
             else:
                 if host_type == HOST_TYPES[0]:  # single
