@@ -7,15 +7,9 @@ These APIs will be called by front web services.
 
 Latest version please see [restserver.yaml](restserver.yaml).
 
-### Operate a cluster
+### Cluster
 
 Basic request may looks like:
-
-```
-GET /cluster_op?action=xxx&key=value
-```
-
-or
 
 ```
 POST /cluster_op
@@ -25,28 +19,34 @@ key:value
 }
 ```
 
-The supported actions can be `apply`, `release`, `start`, `stop`, `restart`, etc.
+Or
+
+```
+GET /cluster_op?action=xxx&key=value
+```
+
+The supported actions can be 
+* `apply`: apply a chain
+* `release`: release a chain, possibly only one peer
+* `start`: start a chain, possibly only one peer
+* `stop`: stop a chain, possibly only one peer
+* `restart`: restart a chain, possibly only one peer
 
 We may show only one of the GET or POST request in the following sections.
 
-#### Apply a cluster
+#### Cluster apply
 
-Find an available cluster in the pool for a user.
-```
-GET /cluster_op?action=apply?user_id=xxxx
-```
-
-or
+Apply an available cluster for a user, support multiple filters like consensus_plugin, size.
 
 ```
 POST /cluster_op
 {
 action:apply,
 user_id:xxx,
+allow_multiple:False,
 consensus_plugin:pbft,
 consensus_mode:batch,
-size:4,
-allow_multiple:False
+size:4
 }
 ```
 
@@ -55,6 +55,7 @@ if `allow_multiple:True`, then ignore matched clusters that user already occupie
 When `apply` request arrives, the server will try checking  available cluster in the pool.
 
 Accordingly, the server will return a json response (succeed or fail).
+
 ```json
 {
   "code": 200,
@@ -73,15 +74,9 @@ Accordingly, the server will return a json response (succeed or fail).
 }
 ```
 
-### release a cluster
+#### Cluster release
 
 Release a specific cluster.
-
-```
-GET /cluster_op?action=release?cluster_id=xxxx
-```
-
-or
 
 ```
 POST /cluster_op
@@ -91,7 +86,8 @@ cluster_id:xxxxxxxx
 }
 ```
 
-Return json object like
+Return json object may look like
+
 ```json
 {
   "code": 200,
@@ -114,29 +110,24 @@ user_id:xxxxxxxx
 The server will drop the corresponding cluster, recreate it and put into available pool for future requests.
 
 
-### Start, Stop or Restart a cluster
+#### Cluster Start, Stop or Restart
 
-Take `start` for example.
-
-```
-GET /cluster_op?action=start&cluster_id=xxx
-```
-
-Or
+Take `start` for example, you can specify the node_id if to operate one node.
 
 ```
 POST /cluster_op
 {
 action:start,
-cluster_id:xxx
+cluster_id:xxx,
+node_id:vp0
 }
 ```
 
-### List filted clusters
+### Clusters List
 
 Return the json object whose data may contain list of cluster ids.
 
-Check all available cluster of given type.
+List all available cluster of given type.
 
 ```
 POST /clusters
@@ -144,11 +135,11 @@ POST /clusters
 consensus_plugin:pbft,
 consensus_mode:classic,
 size:4,
-user:""
+user_id:""
 }
 ```
 
-Check all cluster of given type
+Query all cluster of given type
 
 ```
 POST /clusters
@@ -161,11 +152,6 @@ size:4,
 
 Query the clusters for a user.
 
-```
-GET /clusters?user_id=xxx
-```
-
-or
 
 ```
 POST /clusters
@@ -176,9 +162,8 @@ user_id:xxx
 
 ### Get object of a cluster
 
-Return the json object whose data may contain detailed information of cluster.
-
-
 ```
 GET /cluster/xxxxxxx
 ```
+
+Will return the json object whose data may contain detailed information of cluster.
