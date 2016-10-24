@@ -22,12 +22,12 @@ logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
-action_v1 = Blueprint('action_v1', __name__, url_prefix='/{}'.format("v1"))
-action_v2 = Blueprint('action_v2', __name__, url_prefix='/{}'.format("v2"))
+front_rest_v1 = Blueprint('front_rest_v1', __name__, url_prefix='/{}'.format("v1"))
+front_rest_v2 = Blueprint('front_rest_v2', __name__, url_prefix='/{}'.format("v2"))
 
 
 # REST API to operate a cluster
-@action_v2.route('/cluster_op', methods=['GET', 'POST'])
+@front_rest_v2.route('/cluster_op', methods=['GET', 'POST'])
 def cluster_op():
     """ Issue some operations on the cluster.
     e.g., /cluster_op?action=apply&user_id=xxx will apply a cluster for user
@@ -58,8 +58,8 @@ def cluster_op():
 
 
 # will deprecate
-@action_v1.route('/cluster_apply', methods=['GET'])
-@action_v2.route('/cluster_apply', methods=['GET', 'POST'])
+@front_rest_v1.route('/cluster_apply', methods=['GET'])
+@front_rest_v2.route('/cluster_apply', methods=['GET', 'POST'])
 def cluster_apply():
     """
     Return a Cluster json body.
@@ -109,8 +109,8 @@ def cluster_apply():
 
 
 # will deprecate
-@action_v1.route('/cluster_release', methods=['GET'])
-@action_v2.route('/cluster_release', methods=['GET', 'POST'])
+@front_rest_v1.route('/cluster_release', methods=['GET'])
+@front_rest_v2.route('/cluster_release', methods=['GET', 'POST'])
 def cluster_release():
     """
     Return status.
@@ -142,7 +142,7 @@ def cluster_release():
             return jsonify(response_ok), CODE_OK
 
 
-@action_v2.route('/clusters', methods=['POST'])
+@front_rest_v2.route('/clusters', methods=['POST'])
 def cluster_list():
     """
     Return list of the clusters.
@@ -154,8 +154,8 @@ def cluster_list():
     return jsonify(response_ok), CODE_OK
 
 
-@action_v2.route('/cluster/<cluster_id>', methods=['GET'])
-def cluster_info(cluster_id):
+@front_rest_v2.route('/cluster/<cluster_id>', methods=['GET'])
+def cluster_query(cluster_id):
     """
     Return a json obj of the cluster.
     """
