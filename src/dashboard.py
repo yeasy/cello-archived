@@ -1,7 +1,7 @@
 import os
 from common import log_handler, LOG_LEVEL
 from flask import Flask, render_template
-from resources import index,  stat, \
+from resources import index, stat, \
     bp_cluster_api, bp_cluster_view, bp_host_view, bp_host_api
 
 app = Flask(__name__, static_folder='static', template_folder='templates')

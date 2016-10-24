@@ -22,8 +22,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
-front_rest_v1 = Blueprint('front_rest_v1', __name__, url_prefix='/{}'.format("v1"))
-front_rest_v2 = Blueprint('front_rest_v2', __name__, url_prefix='/{}'.format("v2"))
+front_rest_v1 = Blueprint('front_rest_v1', __name__,
+                          url_prefix='/{}'.format("v1"))
+front_rest_v2 = Blueprint('front_rest_v2', __name__,
+                          url_prefix='/{}'.format("v2"))
 
 
 # REST API to operate a cluster
