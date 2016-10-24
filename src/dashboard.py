@@ -1,7 +1,8 @@
 import os
 from common import log_handler, LOG_LEVEL
 from flask import Flask, render_template
-from resources import index, bp_cluster_api, bp_cluster_show, bp_host, stat
+from resources import index,  stat, \
+    bp_cluster_api, bp_cluster_view, bp_host_view, bp_host_api
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -12,8 +13,9 @@ app.logger.setLevel(LOG_LEVEL)
 app.logger.addHandler(log_handler)
 
 app.register_blueprint(index)
-app.register_blueprint(bp_host)
-app.register_blueprint(bp_cluster_show)
+app.register_blueprint(bp_host_view)
+app.register_blueprint(bp_host_api)
+app.register_blueprint(bp_cluster_view)
 app.register_blueprint(bp_cluster_api)
 app.register_blueprint(stat)
 

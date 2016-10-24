@@ -59,7 +59,7 @@ $(document).ready(function () {
     var id = $(this).data('id');
     console.log('fillup clicked with id=' + id);
     $.ajax({
-      url: "/host_action",
+      url: "/host_op",
       type: 'POST',
       dataType: 'json',
       data: {
@@ -85,7 +85,7 @@ $(document).ready(function () {
   $('.host_action_clean').click(function (e) {
     var id = $(this).data('id');
     $.ajax({
-      url: "/host_action",
+      url: "/host_op",
       type: 'POST',
       dataType: 'json',
       data: {
@@ -248,7 +248,7 @@ $(document).ready(function () {
     var id = $(this).attr('data-id');
 
     $.ajax({
-      url: "/host_action",
+      url: "/host_op",
       type: 'POST',
       dataType: 'json',
       data: {
@@ -275,7 +275,7 @@ $(document).ready(function () {
     var id = $(this).attr('data-id');
 
     $.ajax({
-      url: "/host_action",
+      url: "/host_op",
       type: 'POST',
       dataType: 'json',
       data: {
@@ -302,7 +302,7 @@ $(document).ready(function () {
     // $.ajax({url: '/api/record/' + id, type: 'DELETE'})
     // $.post('/api/record/' + id).then()
     $.ajax({
-      url: "/host_action",
+      url: "/host_op",
       type: 'POST',
       dataType: 'json',
       data: {

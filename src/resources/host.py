@@ -17,28 +17,11 @@ logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 
-bp_host = Blueprint('bp_host', __name__)
+bp_host_api = Blueprint('bp_host_api', __name__,
+                           url_prefix='/{}'.format("api"))
 
 
-@bp_host.route('/hosts', methods=['GET'])
-def hosts_show():
-    logger.info("/hosts method=" + r.method)
-    request_debug(r, logger)
-    col_filter = dict((key, r.args.get(key)) for key in r.args)
-    items = list(host_handler.list(filter_data=col_filter))
-    items.sort(key=lambda x: str(x["name"]), reverse=True)
-    logger.debug(items)
-
-    return render_template("hosts.html",
-                           items_count=len(items),
-                           items=items,
-                           host_types=HOST_TYPES,
-                           log_types=CLUSTER_LOG_TYPES,
-                           log_levels=CLUSTER_LOG_LEVEL,
-                           )
-
-
-@bp_host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
+@bp_host_api.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def host_api():
     request_debug(r, logger)
     if r.method == 'GET':
@@ -136,16 +119,9 @@ def host_api():
         return jsonify(response_fail), CODE_BAD_REQUEST
 
 
-@bp_host.route('/host_info/<host_id>', methods=['GET'])
-def host_info(host_id):
-    logger.debug("/ host_info/{0} method={1}".format(host_id, r.method))
-    return render_template("host_info.html", item=host_handler.get_by_id(
-        host_id)), CODE_OK
-
-
-@bp_host.route('/host_action', methods=['POST'])
-def host_action():
-    logger.info("/host_action, method=" + r.method)
+@bp_host_api.route('/host_op', methods=['POST'])
+def host_actions():
+    logger.info("/host_op, method=" + r.method)
     request_debug(r, logger)
 
     host_id, action = r.form['id'], r.form['action']
@@ -184,3 +160,34 @@ def host_action():
     response_fail["error"] = "unknown operation method"
     response_fail["data"] = r.form
     return jsonify(response_fail), CODE_BAD_REQUEST
+
+
+bp_host_view = Blueprint('bp_host_view', __name__,
+                         url_prefix='/{}'.format("view"))
+
+
+@bp_host_view.route('/hosts', methods=['GET'])
+def hosts_show():
+    logger.info("/hosts method=" + r.method)
+    request_debug(r, logger)
+    col_filter = dict((key, r.args.get(key)) for key in r.args)
+    items = list(host_handler.list(filter_data=col_filter))
+    items.sort(key=lambda x: str(x["name"]), reverse=True)
+    logger.debug(items)
+
+    return render_template("hosts.html",
+                           items_count=len(items),
+                           items=items,
+                           host_types=HOST_TYPES,
+                           log_types=CLUSTER_LOG_TYPES,
+                           log_levels=CLUSTER_LOG_LEVEL,
+                           )
+
+
+@bp_host_view.route('/host/<host_id>', methods=['GET'])
+def host_info(host_id):
+    logger.debug("/ host_info/{0} method={1}".format(host_id, r.method))
+    return render_template("host_info.html", item=host_handler.get_by_id(
+        host_id)), CODE_OK
+
+
