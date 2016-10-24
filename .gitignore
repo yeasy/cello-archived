@@ -194,4 +194,5 @@ ENV/
 # Rope project settings
 .ropeproject
 
+.idea/
 # Created by .ignore support plugin (hsz.mobi)
