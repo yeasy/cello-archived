@@ -16,15 +16,13 @@
     {% endblock %}
 
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="../static/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../static/css/dashboard.css">
-    <link rel="stylesheet" href="../static/css/paginate.css">
-    <link rel="stylesheet" href="../static/css/dataTables.bootstrap.min.css">
-    <link rel="stylesheet" href="../static/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/paginate.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery.dataTables.min.css') }}">
 
 <!--
-    <link rel="stylesheet" href="../static/css/bootstrap-table.min.css">
-    <link rel="stylesheet" href="../static/css/bootstrap-theme.css">
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../static/css/bootstrap.min.css">
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
@@ -89,10 +87,10 @@
             <ul class="nav nav-sidebar nav-list">
                 {{ nav_link("index.show", "Overview") }}
                 {{ nav_link("stat.show", "System Status") }}
-                {{ nav_link("host.hosts_show", "Hosts") }}
-                {{ nav_link("cluster.clusters_show", "Active Chains", type="active") }}
-                {{ nav_link("cluster.clusters_show", "Inused Chains", type="inused" ) }}
-                {{ nav_link("cluster.clusters_show", "Release History", type="released") }}
+                {{ nav_link("bp_host_view.hosts_show", "Hosts") }}
+                {{ nav_link("bp_cluster_view.clusters_view", "Active Chains", type="active") }}
+                {{ nav_link("bp_cluster_view.clusters_view", "Inused Chains", type="inused" ) }}
+                {{ nav_link("bp_cluster_view.clusters_view", "Release History", type="released") }}
                 {{ nav_link("index.about", "About") }}
             </ul>
         </div>
@@ -170,29 +168,7 @@
                         >
                     </div>
               {% endif %}
-              <!--
-              {% if host_types|length > 0 %}
-                    <div class="form-group form-inline">
-                        <label for="host_type" style="width: 20%">Daemon Type</label>
-                        <select id="host_type" class="c-select" name="type"
-                                required>
-                            <option selected
-                                    value="{{host_types[0]}}">{{host_types[0]|upper }}</option>
-                            {% for c in host_types[1:] %}
-                                    <option value="{{c}}">{{c|upper}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-              {% endif %}
-              <div class="form-group">
-                  <label for="host_status" style="width: 20%">Initial Status</label>
-                  <select id="host_status" class="c-select" name="status"
-                          required>
-                      <option selected value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                  </select>
-              </div>
-              -->
+
               <div class="form-group checkbox">
                   <label>
                       <input type="checkbox" name="schedulable"> Schedulable for cluster request
@@ -411,24 +387,20 @@
 <!-- Bootstrap core JavaScript
 ================================================== -->
 <!-- Placed at the end of the document so the pages load faster -->
-<script src="../static/js/jquery-2.2.3.min.js"> </script>
-<script src="../static/js/script.js"> </script>
-<script src="../static/js/bootbox.min.js"></script>
-<script src="../static/js/bootstrap-notify.min.js"></script>
-<script src="../static/js/bootstrap.min.js"></script>
-<script src="../static/js/validator.js"></script>
-<script src="../static/js/tether.min.js"> </script>
+<script src="{{ url_for('static', filename='js/jquery-2.2.3.min.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/script.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/bootbox.min.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/bootstrap-notify.min.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/validator.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/tether.min.js') }}"> </script>
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-<script src="../static/js/ie10-viewport-bug-workaround.js"></script>
-<script src="../static/js/highcharts.js"></script>
-<script src="../static/js/solid-gauge.js"></script>
-<script src="../static/js/highcharts-more.js"></script>
-<script src="../static/js/jquery.dataTables.min.js"></script>
-<script src="../static/js/dataTables.bootstrap.min.js"></script>
-
-<!--
-<script src="../static/js/bootstrap-table.min.js"> </script>
--->
+<script src="{{ url_for('static', filename='js/ie10-viewport-bug-workaround.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/highcharts.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/highcharts-more.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/solid-gauge.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js') }}"> </script>
 
 </body>
 </html>

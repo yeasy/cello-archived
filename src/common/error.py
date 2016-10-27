@@ -12,16 +12,15 @@ response_ok = {
     "status": "OK",
     "code": CODE_OK,
     "error": "",
-    "data": "",
+    "data": {}
 }
 
 response_fail = {
     "status": "FAIL",
     "code": CODE_BAD_REQUEST,
     "error": "",
-    "data": "",
+    "data": {}
 }
-
 
 # not used, may deprecate later
 errors = {

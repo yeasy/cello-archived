@@ -6,7 +6,7 @@
     <div class="container-fluid">
         <ul class="list-group col-sm-6 col-md-4">
             <li class="list-group-item  list-group-item-danger">
-                <a href="/hosts"><span class="label label-pill label-default
+                <a href="/view/hosts"><span class="label label-pill label-default
                 label-pill
                  ">{{hosts|length}}</span> Working Hosts</a>
                 <button class="btn btn-sm btn-success btn-default pull-sm-right"
@@ -17,7 +17,7 @@
 
             </li>
             <li class="list-group-item  list-group-item-success">
-                <a href="/clusters?col_name=active"><span class="label label-default label-pill ">{{clusters_active}}</span> Active Chains</a>
+                <a href="/view/clusters?type=active"><span class="label label-default label-pill ">{{clusters_active}}</span> Active Chains</a>
                 {% if hosts_free|length > 0 %}
                     <button type="button" class="btn btn-sm btn-success
                     btn-default pull-xs-right" style="float: right;" data-toggle="modal" data-target="#newClusterModal">
@@ -31,7 +31,7 @@
                 {% endif %}
             </li>
             <li class="list-group-item list-group-item-info">
-                <a href="/clusters?col_name=released"><span class="label label-default label-pill">{{clusters_released}}</span> Released Chains</a>
+                <a href="/view/clusters?type=released"><span class="label label-default label-pill">{{clusters_released}}</span> Released Chains</a>
             </li>
         </ul>
     </div>
@@ -40,12 +40,12 @@
     <div class="container-fluid">
         <font color="green">Active:</font>
         {% for h in hosts_active %}
-            <a href="/host_info/{{h.id}}">{{ h.name }}</a>
+            <a href="/view/host/{{h.id}}">{{ h.name }}</a>
         {% endfor %}
         <p></p>
         <font color="red"> Inactive: </font>
         {% for h in hosts_inactive %}
-            <a href="/host_info/{{h.id}}">{{ h.name }}</a>
+            <a href="/view/host/{{h.id}}">{{ h.name }}</a>
         {% endfor %}
     </div>
 

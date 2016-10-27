@@ -3,7 +3,7 @@
 swagger: '2.0'
 info:
   title: Cello API
-  description: Cello API for the front web end
+  description: Cello API for the rest server calling
   contact:
     name: Baohua Yang
     url: https://github.com/yeasy/cello
@@ -18,7 +18,7 @@ host: 9.186.100.88:80
 schemes:
   - http
 # will be prefixed to all paths
-basePath: /v1
+basePath: /v2
 produces:
   - application/json
 paths:
