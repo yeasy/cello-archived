@@ -9,8 +9,8 @@ from compose.config.environment import Environment
 from compose.project import OneOffFilter
 from docker import Client
 
-from .log import log_handler, LOG_LEVEL
-from .utils import \
+from common import log_handler, LOG_LEVEL
+from common import \
     HOST_TYPES, \
     CLUSTER_NETWORK, \
     COMPOSE_FILE_PATH, \
@@ -24,7 +24,7 @@ logger.setLevel(LOG_LEVEL)
 logger.addHandler(log_handler)
 
 
-def clean_chaincode_images(daemon_url, name_prefix, timeout=5):
+def _clean_chaincode_images(daemon_url, name_prefix, timeout=5):
     """ Clean chaincode images, whose name should have cluster id as prefix
 
     :param daemon_url: Docker daemon url
@@ -43,7 +43,7 @@ def clean_chaincode_images(daemon_url, name_prefix, timeout=5):
         client.remove_image(_, force=True)
 
 
-def clean_project_containers(daemon_url, name_prefix, timeout=5):
+def _clean_project_containers(daemon_url, name_prefix, timeout=5):
     """
     Clean cluster node containers and chaincode containers
 
@@ -88,7 +88,7 @@ def start_containers(daemon_url, name_prefix, timeout=5):
 
 #  Deprecated
 #  Normal chaincode container may also become exited temporarily
-def clean_exited_containers(daemon_url):
+def _clean_exited_containers(daemon_url):
     """ Clean those containers with exited status
 
     This is dangerous, as it may delete temporary containers.
@@ -260,7 +260,7 @@ def setup_container_host(host_type, daemon_url, timeout=5):
     return True
 
 
-def cleanup_container_host(daemon_url, timeout=5):
+def cleanup_host(daemon_url, timeout=5):
     """
     Cleanup a container host when use removes the host
 
@@ -395,13 +395,13 @@ def compose_clean(name, daemon_url, consensus_plugin):
         logger.debug(e)
         has_exception = True
     try:
-        clean_project_containers(daemon_url=daemon_url, name_prefix=name)
+        _clean_project_containers(daemon_url=daemon_url, name_prefix=name)
     except Exception as e:
         logger.error("Error in clean compose project containers")
         logger.error(e)
         has_exception = True
     try:
-        clean_chaincode_images(daemon_url=daemon_url, name_prefix=name)
+        _clean_chaincode_images(daemon_url=daemon_url, name_prefix=name)
     except Exception as e:
         logger.error("Error clean chaincode images")
         logger.error(e)

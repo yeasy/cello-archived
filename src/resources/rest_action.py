@@ -1,9 +1,8 @@
+# This module will be deprecated soon.
 from flask import Blueprint, jsonify, make_response
-
 from flask import request as r
 
 import logging
-
 import os
 import sys
 

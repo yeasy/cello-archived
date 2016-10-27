@@ -10,11 +10,12 @@ from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import \
-    db, log_handler, cleanup_container_host, \
+    db, log_handler, \
     LOG_LEVEL, CLUSTER_LOG_TYPES, CLUSTER_LOG_LEVEL, \
     CLUSTER_SIZES, CLUSTER_PORT_START, CLUSTER_PORT_STEP, \
-    CONSENSUS_TYPES, \
-    check_daemon, detect_daemon_type, \
+    CONSENSUS_TYPES
+
+from agent import cleanup_host, check_daemon, detect_daemon_type, \
     reset_container_host, setup_container_host
 
 from modules import cluster
@@ -183,7 +184,7 @@ class HostHandler(object):
         if h.get("clusters", ""):
             logger.warning("There are clusters on that host, cannot delete.")
             return False
-        cleanup_container_host(h.get("daemon_url"))
+        cleanup_host(h.get("daemon_url"))
         self.col.delete_one({"id": id})
         return True
 

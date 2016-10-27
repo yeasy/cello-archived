@@ -9,7 +9,9 @@ from threading import Thread
 from pymongo.collection import ReturnDocument
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import db, log_handler, LOG_LEVEL, get_swarm_node_ip, \
+from common import db, log_handler, LOG_LEVEL
+
+from agent import get_swarm_node_ip, \
     compose_up, compose_clean, compose_start, compose_stop, compose_restart
 
 from common import CLUSTER_PORT_START, CLUSTER_PORT_STEP, CONSENSUS_PLUGINS, \
