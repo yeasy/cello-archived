@@ -8,8 +8,9 @@ from flask import request as r
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, \
     request_json_body, request_get, response_ok, response_fail, \
+    request_debug, \
     CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, CODE_NOT_FOUND, \
-    CONSENSUS_PLUGINS, CONSENSUS_MODES, CLUSTER_SIZES, request_debug
+    CONSENSUS_PLUGINS, CONSENSUS_MODES, CLUSTER_SIZES
 from modules import cluster_handler, host_handler
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ bp_cluster_api = Blueprint('bp_cluster_api', __name__,
 
 front_rest_v2 = Blueprint('front_rest_v2', __name__,
                           url_prefix='/{}'.format("v2"))
+
 
 def make_fail_response(msg=""):
     response_fail["error"] = msg or "Invalid request data"
@@ -348,7 +350,7 @@ def clusters_view():
 
 # will deprecate
 @front_rest_v2.route('/cluster_apply', methods=['GET', 'POST'])
-def cluster_apply():
+def cluster_apply_dep():
     """
     Return a Cluster json body.
     """
@@ -398,7 +400,7 @@ def cluster_apply():
 
 # will deprecate
 @front_rest_v2.route('/cluster_release', methods=['GET', 'POST'])
-def cluster_release():
+def cluster_release_dep():
     """
     Return status.
     """
@@ -409,7 +411,7 @@ def cluster_release():
         logger.warning("cluster_release without id")
         response_fail["error"] = "No id in release"
         response_fail["data"] = r.args
-        return make_response(jsonify(response_fail), CODE_BAD_REQUEST)
+        return jsonify(response_fail), CODE_BAD_REQUEST
     else:
         result = None
         if cluster_id:
@@ -427,5 +429,3 @@ def cluster_release():
             return jsonify(response_fail), CODE_BAD_REQUEST
         else:
             return jsonify(response_ok), CODE_OK
-
-
