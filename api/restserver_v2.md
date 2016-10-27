@@ -1,30 +1,61 @@
 # API V2
 
-## Front
+Each url should have the `/v2` prefix, e.g., `/cluster_op` should be `/v2/cluster_op`.
+
+## Rest Server
 These APIs will be called by front web services.
 
-Latest version please see [api-front.yaml](api-front.yaml).
+Latest version please see [restserver.yaml](restserver.yaml).
 
-### cluster_apply
+### Cluster
 
-Find an available cluster in the pool for a user.
+Basic request may looks like:
 
 ```
-POST /v2/cluster_apply
+POST /cluster_op
 {
+action:xxx,
+key:value
+}
+```
+
+Or
+
+```
+GET /cluster_op?action=xxx&key=value
+```
+
+The supported actions can be 
+* `apply`: apply a chain
+* `release`: release a chain, possibly only one peer
+* `start`: start a chain, possibly only one peer
+* `stop`: stop a chain, possibly only one peer
+* `restart`: restart a chain, possibly only one peer
+
+We may show only one of the GET or POST request in the following sections.
+
+#### Cluster apply
+
+Apply an available cluster for a user, support multiple filters like consensus_plugin, size.
+
+```
+POST /cluster_op
+{
+action:apply,
 user_id:xxx,
+allow_multiple:False,
 consensus_plugin:pbft,
 consensus_mode:batch,
-size:4,
-allow_multiple:False
+size:4
 }
 ```
 
 if `allow_multiple:True`, then ignore matched clusters that user already occupied.
 
-When `cluster_apply` request arrives, the server will try checking  available cluster in the pool.
+When `apply` request arrives, the server will try checking  available cluster in the pool.
 
 Accordingly, the server will return a json response (succeed or fail).
+
 ```json
 {
   "code": 200,
@@ -43,18 +74,20 @@ Accordingly, the server will return a json response (succeed or fail).
 }
 ```
 
-### cluster_release
+#### Cluster release
 
 Release a specific cluster.
 
 ```
-POST /v2/cluster_release
+POST /cluster_op
 {
+action:release,
 cluster_id:xxxxxxxx
 }
 ```
 
-Return json object like
+Return json object may look like
+
 ```json
 {
   "code": 200,
@@ -67,34 +100,49 @@ Return json object like
 Release all clusters under a user account.
 
 ```
-POST /v2/cluster_release
+POST /cluster_op
 {
+action:release,
 user_id:xxxxxxxx
 }
 ```
 
 The server will drop the corresponding cluster, recreate it and put into available pool for future requests.
 
-### cluster_list
+
+#### Cluster Start, Stop or Restart
+
+Take `start` for example, you can specify the node_id if to operate one node.
+
+```
+POST /cluster_op
+{
+action:start,
+cluster_id:xxx,
+node_id:vp0
+}
+```
+
+### Clusters List
 
 Return the json object whose data may contain list of cluster ids.
 
-Check all available cluster of given type.
+List all available cluster of given type.
 
 ```
-POST /v2/cluster_list
+POST /clusters
 {
 consensus_plugin:pbft,
 consensus_mode:classic,
 size:4,
-user:""
+user_id:""
 }
 ```
 
-Check all cluster of given type
+Query all cluster of given type
 
 ```
-POST /v2/cluster_list
+POST /clusters
 {
 consensus_plugin:pbft,
 consensus_mode:classic,
@@ -104,22 +152,18 @@ size:4,
 
 Query the clusters for a user.
 
+
 ```
-POST /v2/cluster_list
+POST /clusters
 {
 user_id:xxx
 }
 ```
 
-### cluster_info
-
-Return the json object whose data may contain detailed information of cluster.
-
+### Get object of a cluster
 
 ```
-POST /v2/cluster_info
-{
-cluster_id:xxxxxx
-}
+GET /cluster/xxxxxxx
 ```
 
+Will return the json object whose data may contain detailed information of cluster.

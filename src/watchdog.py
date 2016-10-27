@@ -25,7 +25,7 @@ def chain_check_health(chain_id, retries=3, period=5):
     #    cluster_handler.release_cluster(c['id'], record=False)
     chain = cluster_handler.get_by_id(chain_id)
     if not chain:
-        logger.warn("Not find chain with id = {}".format(chain_id))
+        logger.warning("Not find chain with id = {}".format(chain_id))
         return
     chain_user_id = chain.get("user_id")
     chain_name = chain.get("name")
@@ -50,7 +50,7 @@ def chain_check_health(chain_id, retries=3, period=5):
             return
         else:
             time.sleep(period)
-    logger.warn("Chain {}/{} is unhealthy!".format(chain_name, chain_id))
+    logger.warning("Chain {}/{} is unhealthy!".format(chain_name, chain_id))
     # only reset free chains
     if cluster_handler.get_by_id(chain_id).get("user_id") == "":
         logger.info("Deleting free unhealthy chain {}/{}".format(
@@ -68,7 +68,8 @@ def host_check_chains(host_id):
     """
     logger.debug("Host {}/{}: checking cluster health".format(
         host_handler.get_by_id(host_id).get('name'), host_id))
-    clusters = cluster_handler.list(filter_data={"host_id": host_id})
+    clusters = cluster_handler.list(filter_data={"host_id": host_id,
+                                                 "status": "running"})
     for c in clusters:  # concurrent health check is safe for multi-chains
         t = Thread(target=chain_check_health, args=(c.get("id"),))
         t.start()

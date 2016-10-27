@@ -59,7 +59,7 @@ services:
       - LOG_LEVEL=INFO  # what level log will be output
       - LOGGING_LEVEL_CLUSTER=INFO  # the level log for the cluster in pool
 
-  # mongo database, may use cluster in future
+  # mongo database, may use others in future
   mongo:
     image: mongo:3.2
     hostname: mongo

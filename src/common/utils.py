@@ -44,12 +44,13 @@ CONSENSUS_TYPES = [
     # ('pbft', 'sieve'),
 ]
 
-LOG_TYPES = ['local', 'syslog']
 
 HOST_TYPES = ['single', 'swarm']
 
-LOGGING_LEVEL_CLUSTERS = ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR',
-                          'CRITICAL']
+CLUSTER_LOG_TYPES = ['local', 'syslog']
+
+CLUSTER_LOG_LEVEL = ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR',
+                     'CRITICAL']
 
 SYS_USER = "__SYSTEM__"
 SYS_CREATOR = SYS_USER + "CREATING"
@@ -76,6 +77,7 @@ def request_debug(request, logger):
         logger.debug("Form: {0}:{1}".format(k, request.form[k]))
     logger.debug("request raw body data:")
     logger.debug(request.data)
+    logger.debug(request.get_json(force=True, silent=True))
 
 
 def request_get(request, key, default_value=None):

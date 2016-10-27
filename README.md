@@ -39,36 +39,14 @@ You can also find more [scenarios](docs/scenario.md).
 * [API](api/restserver_v2.md)
 
 ## TODO
-* ~~Add default 404 and 500 error page.~~
-* ~~Add doc for all methods and classes~~.
-* ~~engine: Add authentication for user login~~.
-* ~~engine: Add host module to add cluster in batch (optional).~~
-* ~~Use async operation for container management (optional).~~
-* ~~Support multiple version in API.~~
-* ~~Support pagination~~.
-* ~~Support updating the host config~~.
-* ~~Support user defined cluster configuration.~~
-* ~~Add form validation~~.
-* ~~Support metadata field from user apply cluster.~~
-* ~~Support monitor.~~
-* ~~Support host fillup and clean buttons.~~
-* ~~Support host reset buttons.~~
-* ~~Support only show occupied clusters.~~
-* ~~Support table sort.~~
-* ~~Support local log version.~~
-* ~~Support select cluster type and size version.~~
-* ~~Support detect host info when adding as swarm type.~~
-* ~~Add limitation on the running containers.~~
-* ~~Security option and log option (rotate)~~.
-* ~~Refine setup scripts.~~
-* ~~Support fabric new version: multiple port mapping, new chaincode operation api.~~
-* ~~Fix deleting bug on 2nd page table.~~
 * restserver: update api definitions yml files.
 * dashboard: support auto state fresh based on websocket.
 * dashboard: support return code checking in response.
+* dashboard: support user page.
 * engine: support advanced scheduling.
 * engine: support more-efficient fill-up.
 * engine: enhance the robustness for chain operations.
+* engine: support membersrvc option.
 
 ## Why named Cello?
 Can u find anyone better at playing chains? :)
