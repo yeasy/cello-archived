@@ -36,6 +36,21 @@ def hosts_show():
                            )
 
 
+@bp_host.route('/hosts_list', methods=['GET'])
+def hosts_list():
+    logger.info("/hosts_list method=" + r.method)
+    request_debug(r, logger)
+    col_filter = dict((key, r.args.get(key)) for key in r.args)
+    items = list(host_handler.list(filter_data=col_filter))
+    hosts = {}
+    for i in items:
+        hosts.update({
+            i.get("id"): i
+        })
+
+    return jsonify({'hosts': hosts}), CODE_OK
+
+
 @bp_host.route('/host', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def host_api():
     request_debug(r, logger)
