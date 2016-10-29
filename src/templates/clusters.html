@@ -47,7 +47,7 @@
                             <tr>
                         {% endif %}
                     <td>
-                        <a href="/cluster_info/{{ item.id }}?released=0">{{ item.name }}</a>
+                        <a href="/view/cluster/{{ item.id }}?released=0">{{ item.name }}</a>
                     </td>
                     {% if item.consensus_plugin== consensus_plugins[0] %}
                         <td>{{ item.consensus_plugin }}</td>
@@ -70,7 +70,7 @@
                     </td>
                     <td>{{ item.size|string }}</td>
                     <td>
-                        <a href="/host_info/{{ item.host_id }}">{{ item.host_id }}</a>
+                        <a href="/view/host/{{ item.host_id }}">{{ item.host_id }}</a>
                     </td>
                     <td>
                         <div class="dropdown">
@@ -181,7 +181,7 @@
                     {% for item in items %}
                         <tr>
                             <td>
-                                <a href="/cluster_info/{{ item.id }}?released=0">{{ item.name }}</a>
+                                <a href="/view/cluster/{{ item.id }}?released=0">{{ item.name }}</a>
                             </td>
                             <td>{{ item.user_id }}</td>
                             {% if item.consensus_plugin== consensus_plugins[0] %}
@@ -198,7 +198,7 @@
                             </td>
                             <td>{{ item.size|string }}</td>
                             <td>
-                                <a href="/host_info/{{ item.host_id }}">{{ item.host_id }}</a>
+                                <a href="/view/host/{{ item.host_id }}">{{ item.host_id }}</a>
                             </td>
                             <td>{{ item.apply_ts }}</td>
                             <td>
@@ -299,7 +299,7 @@
                     {% for item in items %}
                         <tr>
                             <td>
-                                <a href="/cluster_info/{{ item.id }}?released=1">{{ item.name }}</a>
+                                <a href="/view/cluster/{{ item.id }}?released=1">{{ item.name }}</a>
                             </td>
                             {% if item.consensus_plugin== consensus_plugins[0] %}
                                 <td>{{ item.consensus_plugin }}</td>
@@ -308,7 +308,7 @@
                             {% endif %}
                             <td>{{ item.size|string }}</td>
                             <td>
-                                <a href="/host_info/{{ item.host_id }}">{{ item.host_id }}</a>
+                                <a href="/view/host/{{ item.host_id }}">{{ item.host_id }}</a>
                             </td>
                             <td>{{ item.user_id }}</td>
                             <td>{{ item.release_ts }}</td>

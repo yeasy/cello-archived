@@ -205,7 +205,7 @@ export function hostAction(hostForm, hostId, actionType) {
 }
 
 export function queryHost(hostId) {
-    var url = Urls.HostUrl + '?id=' + hostId;
+    var url = Urls.HostUrl + '/' + hostId;
     return dispatch => {
         return {
             type: actionTypes.promise,

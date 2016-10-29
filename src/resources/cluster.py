@@ -75,6 +75,55 @@ def cluster_stop(r):
     return make_fail_response("cluster stop failed")
 
 
+def cluster_apply(r):
+    """Apply a cluster.
+
+    Return a Cluster json body.
+    """
+    request_debug(r, logger)
+
+    user_id = request_get(r, "user_id")
+    if not user_id:
+        logger.warning("cluster_apply without user_id")
+        return make_fail_response("cluster_apply without user_id")
+
+    allow_multiple, condition = request_get(r, "allow_multiple"), {}
+
+    consensus_plugin = request_get(r, "consensus_plugin")
+    consensus_mode = request_get(r, "consensus_mode")
+    cluster_size = int(request_get(r, "size") or -1)
+    if consensus_plugin:
+        if consensus_plugin not in CONSENSUS_PLUGINS:
+            logger.warning("Invalid consensus_plugin")
+            return make_fail_response("Invalid consensus_plugin")
+        else:
+            condition["consensus_plugin"] = consensus_plugin
+
+    if consensus_mode:
+        if consensus_mode not in CONSENSUS_MODES:
+            logger.warning("Invalid consensus_mode")
+            return make_fail_response("Invalid consensus_mode")
+        else:
+            condition["consensus_mode"] = consensus_mode
+
+    if cluster_size >= 0:
+        if cluster_size not in CLUSTER_SIZES:
+            logger.warning("Invalid cluster_size")
+            return make_fail_response("Invalid cluster_size")
+        else:
+            condition["size"] = cluster_size
+
+    logger.debug("condition={}".format(condition))
+    c = cluster_handler.apply_cluster(user_id=user_id, condition=condition,
+                                      allow_multiple=allow_multiple)
+    if not c:
+        logger.warning("cluster_apply failed")
+        return make_fail_response("No available res for {}".format(user_id))
+    else:
+        response_ok["data"] = c
+        return jsonify(response_ok), CODE_OK
+
+
 def cluster_release(r):
     """Release a cluster which should be in used status currently.
 
@@ -92,7 +141,7 @@ def cluster_release(r):
 
 
 @bp_cluster_api.route('/cluster_op', methods=['GET', 'POST'])
-def cluster_op():
+def cluster_actions():
     """ Issue some operations on the cluster.
     e.g., /cluster_op?action=apply&user_id=xxx will apply a cluster for user
 
@@ -108,7 +157,7 @@ def cluster_op():
     action = request_get(r, "action")
     logger.info("cluster_op with action={}".format(action))
     if action == "apply":
-        return jsonify(response_ok), CODE_OK
+        return cluster_apply(r)
     elif action == "release":
         return cluster_release(r)
     elif action == "start":
@@ -235,12 +284,14 @@ def cluster_list():
     return jsonify(response_ok), CODE_OK
 
 
-bp_cluster_show = Blueprint('bp_cluster_show', __name__)
+bp_cluster_view = Blueprint('bp_cluster_view', __name__,
+                            url_prefix='/{}'.format("view"))
 
 
-@bp_cluster_show.route('/cluster_info/<cluster_id>', methods=['GET'])
+# Return a web page with cluster info
+@bp_cluster_view.route('/cluster/<cluster_id>', methods=['GET'])
 def cluster_info_show(cluster_id):
-    logger.debug("/ cluster_info/{0}?released={1} action={2}".format(
+    logger.debug("/ cluster_info/{}?released={} action={}".format(
         cluster_id, r.args.get('released', '0'), r.method))
     released = (r.args.get('released', '0') != '0')
     if not released:
@@ -254,8 +305,9 @@ def cluster_info_show(cluster_id):
                                consensus_plugins=CONSENSUS_PLUGINS), CODE_OK
 
 
-@bp_cluster_show.route('/clusters', methods=['GET'])
-def clusters_show():
+# Return a web page with clusters
+@bp_cluster_view.route('/clusters', methods=['GET'])
+def clusters_view():
     request_debug(r, logger)
     show_type = r.args.get("type", "active")
     col_filter = dict((key, r.args.get(key)) for key in r.args if
