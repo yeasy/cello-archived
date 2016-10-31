@@ -174,7 +174,7 @@ var HostInfo = React.createClass({
             <div className="row">
                 <h2 className="page-header">Host Information
                     <span style={{float: "right"}}>
-                    <Link to="/">
+                    <Link to="/hosts">
                     <Button style={styles.icon}>
                         <IoIosUndo size={16} />
                     </Button>

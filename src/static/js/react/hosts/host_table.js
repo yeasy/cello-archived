@@ -613,7 +613,7 @@ var ActionFormatter = React.createClass({
 var NameFormatter = React.createClass({
     render: function () {
         return (
-            <Link to={`/host/${this.props.hostId}`}>{this.props.name}</Link>
+            <Link to={`/hosts/${this.props.hostId}`}>{this.props.name}</Link>
         )
     }
 });

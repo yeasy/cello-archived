@@ -5,8 +5,8 @@ var webpack = require('webpack');
 var BundleTracker = require('webpack-bundle-tracker');
 var Config = require('./webpack.base.config');
 
-var hostsConfig = new Config('./static/js/react/hosts/index', new BundleTracker({filename: './webpack-stats.json'}), "hosts.js");
+var dashboardConfig = new Config('./static/js/react/index', new BundleTracker({filename: './webpack-stats.json'}), "cello.js");
 
 module.exports = [
-    hostsConfig.config
+    dashboardConfig.config
 ];
