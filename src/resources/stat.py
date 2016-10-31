@@ -14,10 +14,10 @@ logger.addHandler(log_handler)
 
 from modules import host_handler, stat_handler
 
-stat = Blueprint('stat', __name__)
+bp_stat = Blueprint('stat', __name__, url_prefix='/{}'.format("api"))
 
 
-@stat.route('/stat', methods=['GET'])
+@bp_stat.route('/stat', methods=['GET'])
 def show():
     logger.info("path={}, method={}".format(r.path, r.method))
     hosts = list(host_handler.list())
@@ -25,7 +25,7 @@ def show():
     return render_template("stat.html", hosts=hosts)
 
 
-@stat.route('/_health', methods=['GET'])
+@bp_stat.route('/_health', methods=['GET'])
 def health():
     request_debug(r, logger)
     result = {
@@ -36,7 +36,7 @@ def health():
     return jsonify(result), CODE_OK
 
 
-@stat.route('/_stat', methods=['GET'])
+@bp_stat.route('/_stat', methods=['GET'])
 def get():
     request_debug(r, logger)
     res = r.args.get('res')
