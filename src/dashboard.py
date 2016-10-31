@@ -1,7 +1,7 @@
 import os
 from common import log_handler, LOG_LEVEL
 from flask import Flask, render_template
-from resources import index, stat, \
+from resources import index, bp_stat, \
     bp_cluster_api, bp_cluster_view, bp_host_view, bp_host_api
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -17,7 +17,7 @@ app.register_blueprint(bp_host_view)
 app.register_blueprint(bp_host_api)
 app.register_blueprint(bp_cluster_view)
 app.register_blueprint(bp_cluster_api)
-app.register_blueprint(stat)
+app.register_blueprint(bp_stat)
 
 
 @app.errorhandler(404)
@@ -35,5 +35,4 @@ if __name__ == '__main__':
         host='0.0.0.0',
         port=8080,
         debug=os.environ.get('DEBUG', app.config.get("DEBUG", True)),
-        threaded=True
-    )
+        threaded=True)

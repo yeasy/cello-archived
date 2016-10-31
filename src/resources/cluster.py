@@ -8,8 +8,9 @@ from flask import request as r
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, \
     request_json_body, request_get, response_ok, response_fail, \
+    request_debug, \
     CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, CODE_NOT_FOUND, \
-    CONSENSUS_PLUGINS, CONSENSUS_MODES, CLUSTER_SIZES, request_debug
+    CONSENSUS_PLUGINS, CONSENSUS_MODES, CLUSTER_SIZES
 from modules import cluster_handler, host_handler
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,9 @@ logger.addHandler(log_handler)
 
 bp_cluster_api = Blueprint('bp_cluster_api', __name__,
                            url_prefix='/{}'.format("api"))
+
+front_rest_v2 = Blueprint('front_rest_v2', __name__,
+                          url_prefix='/{}'.format("v2"))
 
 
 def make_fail_response(msg=""):
@@ -140,6 +144,7 @@ def cluster_release(r):
     return make_fail_response("cluster release failed")
 
 
+@front_rest_v2.route('/cluster_op', methods=['GET', 'POST'])
 @bp_cluster_api.route('/cluster_op', methods=['GET', 'POST'])
 def cluster_actions():
     """ Issue some operations on the cluster.
@@ -171,6 +176,7 @@ def cluster_actions():
 
 
 @bp_cluster_api.route('/cluster/<cluster_id>', methods=['GET'])
+@front_rest_v2.route('/cluster/<cluster_id>', methods=['GET'])
 def cluster_query(cluster_id):
     """
     Return a json obj of the cluster.
@@ -273,6 +279,7 @@ def cluster_delete():
 
 
 @bp_cluster_api.route('/clusters', methods=['GET', 'POST'])
+@front_rest_v2.route('/clusters', methods=['GET', 'POST'])
 def cluster_list():
     """
     Return list of the clusters.
@@ -339,3 +346,86 @@ def clusters_view():
                            consensus_plugins=CONSENSUS_PLUGINS,
                            consensus_modes=CONSENSUS_MODES,
                            cluster_sizes=CLUSTER_SIZES)
+
+
+# will deprecate
+@front_rest_v2.route('/cluster_apply', methods=['GET', 'POST'])
+def cluster_apply_dep():
+    """
+    Return a Cluster json body.
+    """
+    request_debug(r, logger)
+
+    user_id = request_get(r, "user_id")
+    if not user_id:
+        logger.warning("cluster_apply without user_id")
+        return make_fail_response("cluster_apply without user_id")
+
+    allow_multiple, condition = request_get(r, "allow_multiple"), {}
+
+    consensus_plugin = request_get(r, "consensus_plugin")
+    consensus_mode = request_get(r, "consensus_mode")
+    cluster_size = int(request_get(r, "size") or -1)
+    if consensus_plugin:
+        if consensus_plugin not in CONSENSUS_PLUGINS:
+            logger.warning("Invalid consensus_plugin")
+            return make_fail_response("Invalid consensus_plugin")
+        else:
+            condition["consensus_plugin"] = consensus_plugin
+
+    if consensus_mode:
+        if consensus_mode not in CONSENSUS_MODES:
+            logger.warning("Invalid consensus_mode")
+            return make_fail_response("Invalid consensus_mode")
+        else:
+            condition["consensus_mode"] = consensus_mode
+
+    if cluster_size >= 0:
+        if cluster_size not in CLUSTER_SIZES:
+            logger.warning("Invalid cluster_size")
+            return make_fail_response("Invalid cluster_size")
+        else:
+            condition["size"] = cluster_size
+
+    logger.debug("condition={}".format(condition))
+    c = cluster_handler.apply_cluster(user_id=user_id, condition=condition,
+                                      allow_multiple=allow_multiple)
+    if not c:
+        logger.warning("cluster_apply failed")
+        return make_fail_response("No available res for {}".format(user_id))
+    else:
+        response_ok["data"] = c
+        return jsonify(response_ok), CODE_OK
+
+
+# will deprecate
+@front_rest_v2.route('/cluster_release', methods=['GET', 'POST'])
+def cluster_release_dep():
+    """
+    Return status.
+    """
+    request_debug(r, logger)
+    user_id = request_get(r, "user_id")
+    cluster_id = request_get(r, "cluster_id")
+    if not user_id and not cluster_id:
+        logger.warning("cluster_release without id")
+        response_fail["error"] = "No id in release"
+        response_fail["data"] = r.args
+        return jsonify(response_fail), CODE_BAD_REQUEST
+    else:
+        result = None
+        if cluster_id:
+            result = cluster_handler.release_cluster(cluster_id=cluster_id)
+        elif user_id:
+            result = cluster_handler.release_cluster_for_user(user_id=user_id)
+        if not result:
+            logger.warning("cluster_release failed user_id={} cluster_id={}".
+                           format(user_id, cluster_id))
+            response_fail["error"] = "release fail"
+            response_fail["data"] = {
+                "user_id": user_id,
+                "cluster_id": cluster_id,
+            }
+            return jsonify(response_fail), CODE_BAD_REQUEST
+        else:
+            return jsonify(response_ok), CODE_OK

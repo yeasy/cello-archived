@@ -22,7 +22,7 @@ $(document).ready(function () {
     var form_data = $('#add_new_host_form').serialize();
 
     $.ajax({
-      url: "/host",
+      url: "/api/host",
       type: 'POST',
       dataType: 'json',
       data: form_data,
@@ -59,7 +59,7 @@ $(document).ready(function () {
     var id = $(this).data('id');
     console.log('fillup clicked with id=' + id);
     $.ajax({
-      url: "/host_op",
+      url: "/api/host_op",
       type: 'POST',
       dataType: 'json',
       data: {
@@ -85,7 +85,7 @@ $(document).ready(function () {
   $('.host_action_clean').click(function (e) {
     var id = $(this).data('id');
     $.ajax({
-      url: "/host_op",
+      url: "/api/host_op",
       type: 'POST',
       dataType: 'json',
       data: {
@@ -108,12 +108,9 @@ $(document).ready(function () {
   $('.host_action_config').click(function (e) {
     var id = $(this).data('id');
     $.ajax({
-      url: '/host',
+      url: '/api/host/'+id,
       method: 'GET',
       dataType: 'json',
-      data: {
-        "id": id
-      }
     }).success(function (response) {
       // Populate the form fields with the data returned from server
       $('#config_host_form')
@@ -179,7 +176,7 @@ $(document).ready(function () {
     // Get the record's ID via attribute
     var id = $(this).attr('data-id');
     $.ajax({
-      url: '/host',
+      url: '/api/host',
       method: 'GET',
       dataType: 'json',
       data: {
@@ -302,7 +299,7 @@ $(document).ready(function () {
     // $.ajax({url: '/api/record/' + id, type: 'DELETE'})
     // $.post('/api/record/' + id).then()
     $.ajax({
-      url: "/host_op",
+      url: "/api/host_op",
       type: 'POST',
       dataType: 'json',
       data: {
@@ -332,7 +329,7 @@ $(document).ready(function () {
     var $modalDiv = $(e.delegateTarget);
     var id = $(this).data('hostId');
     $.ajax({
-      url: "/host",
+      url: "/api/host",
       type: 'DELETE',
       dataType: 'json',
       data: {
@@ -382,7 +379,7 @@ $(document).ready(function () {
 
     // The url and method might be different in your application
     $.ajax({
-      url: '/host',
+      url: '/api/host',
       method: 'PUT',
       data: {
         "id": id,
@@ -467,7 +464,7 @@ $(document).ready(function () {
     console.log("Deleting" + data_id);
 
     $.ajax({
-      url: "/cluster",
+      url: "/api/cluster",
       type: 'DELETE',
       dataType: 'json',
       data: {
@@ -634,7 +631,7 @@ $('.chain_action_restart').on('click', function (e) {
     var id_data = $(this).attr('id_data');
 
     $.ajax({
-      url: "/cluster",
+      url: "/api/cluster",
       type: 'POST',
       dataType: 'json',
       data: {
@@ -796,7 +793,7 @@ $('.chain_action_restart').on('click', function (e) {
 
   function request_hosts() {
     $.ajax({
-      url: '/_stat?res=hosts',
+      url: '/api/_stat?res=hosts',
       type: 'GET',
       dataType: 'json',
       success: function (response) {
@@ -898,7 +895,7 @@ $('.chain_action_restart').on('click', function (e) {
 
   function request_clusters() {
     $.ajax({
-      url: '/_stat?res=clusters',
+      url: '/api/_stat?res=clusters',
       type: 'GET',
       dataType: 'json',
       success: function (response) {

@@ -43,6 +43,7 @@ You can also find more [scenarios](docs/scenario.md).
 * restserver: update api definitions yml files.
 * dashboard: support auto state fresh based on websocket.
 * dashboard: support return code checking in response.
+* dashboard: support user page.
 * engine: support advanced scheduling.
 * engine: support more-efficient fill-up.
 * engine: enhance the robustness for chain operations.
