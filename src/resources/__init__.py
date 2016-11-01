@@ -2,4 +2,4 @@
 from .index import index
 from .host import bp_host_api, bp_host_view
 from .cluster import bp_cluster_api, bp_cluster_view, front_rest_v2
-from .stat import stat
+from .stat import bp_stat
