@@ -314,7 +314,7 @@ def cluster_info_show(cluster_id):
 
 # Return a web page with clusters
 @bp_cluster_view.route('/clusters', methods=['GET'])
-def clusters_view():
+def clusters_show():
     request_debug(r, logger)
     show_type = r.args.get("type", "active")
     col_filter = dict((key, r.args.get(key)) for key in r.args if
