@@ -15,6 +15,10 @@ import {
     notifySuccess
 } from '../hosts/actions/message'
 
+import {
+    fetchOverview
+} from '../overview/actions/overview'
+
 module.exports = {
     fetchHosts,
     createHost,
@@ -23,5 +27,6 @@ module.exports = {
     queryHost,
     hostAction,
     setNotification,
+    fetchOverview,
     notifySuccess
 };

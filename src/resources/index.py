@@ -1,13 +1,13 @@
 import logging
 import os
 import sys
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, jsonify
 from flask import request as r
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from common import log_handler, LOG_LEVEL, CONSENSUS_PLUGINS, \
     CONSENSUS_MODES, HOST_TYPES, CLUSTER_SIZES, request_debug, \
-    CLUSTER_LOG_TYPES, CLUSTER_LOG_LEVEL
+    CLUSTER_LOG_TYPES, CLUSTER_LOG_LEVEL, CODE_OK
 from version import version, homepage, author
 
 logger = logging.getLogger(__name__)
@@ -17,13 +17,12 @@ logger.addHandler(log_handler)
 from modules import cluster_handler, host_handler
 
 index = Blueprint('index', __name__)
+bp_index_api = Blueprint('bp_index_api', __name__,
+                         url_prefix='/{}'.format("api"))
 
 
-@index.route('/', methods=['GET'])
-@index.route('/admin', methods=['GET'])
-@index.route('/index', methods=['GET'])
-def show():
-    request_debug(r, logger)
+@bp_index_api.route('/overview', methods=['GET'])
+def overview():
     hosts = list(host_handler.list(filter_data={}))
     hosts.sort(key=lambda x: x["name"], reverse=False)
     hosts_active = list(filter(lambda e: e["status"] == "active", hosts))
@@ -36,19 +35,29 @@ def show():
     clusters_free = len(list(cluster_handler.list(filter_data={"user_id": ""},
                                                   col_name="active")))
     clusters_inuse = clusters_active - clusters_free
+    return jsonify({
+        'hosts': hosts,
+        'hosts_active': hosts_active,
+        'hosts_inactive': hosts_inactive,
+        'hosts_free': hosts_free,
+        'hosts_available': hosts_available,
+        'clusters_active': clusters_active,
+        'clusters_released': clusters_released,
+        'clusters_free': clusters_free,
+        'clusters_inuse': clusters_inuse
+    }), CODE_OK
+
+
+@index.route('/', methods=['GET'])
+@index.route('/admin', methods=['GET'])
+@index.route('/index', methods=['GET'])
+def show():
+    request_debug(r, logger)
 
     clusters_temp = len(list(cluster_handler.list(filter_data={
         "user_id": "/^__/"}, col_name="active")))
 
-    return render_template("index.html", hosts=hosts,
-                           hosts_free=hosts_free,
-                           hosts_active=hosts_active,
-                           hosts_inactive=hosts_inactive,
-                           hosts_available=hosts_available,
-                           clusters_active=clusters_active,
-                           clusters_released=clusters_released,
-                           clusters_free=clusters_free,
-                           clusters_inuse=clusters_inuse,
+    return render_template("index.html",
                            clusters_temp=clusters_temp,
                            cluster_sizes=CLUSTER_SIZES,
                            consensus_plugins=CONSENSUS_PLUGINS,

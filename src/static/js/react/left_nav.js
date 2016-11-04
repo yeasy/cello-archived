@@ -95,9 +95,6 @@ var LeftNav = React.createClass({
                                 <NavLink className="single-menu" to="/overview">
                                     <i className="fa fa-eye" /> Overview
                                 </NavLink>
-                                <NavLink className="single-menu" to="/system_status">
-                                    <i className="fa fa-info" />System Status
-                                </NavLink>
                                 <NavLink className="single-menu" to="/hosts">
                                     <i className="fa fa-desktop" /> Hosts
                                 </NavLink>

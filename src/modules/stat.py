@@ -28,14 +28,14 @@ class StatHandler(object):
         actives = list(host_handler.list(filter_data={'status': 'active'}))
         inactive = list(host_handler.list(filter_data={'status': 'inactive'}))
         result['status'] = [
-            {'name': 'active', 'y': len(actives)},
-            {'name': 'inactive', 'y': len(inactive)}
+            {'name': 'active', 'value': len(actives)},
+            {'name': 'inactive', 'value': len(inactive)}
         ]
         for host_type in HOST_TYPES:
             hosts = list(host_handler.list(filter_data={'type': host_type}))
             result['type'].append({
                 'name': host_type,
-                'y': len(hosts)
+                'value': len(hosts)
             })
 
         return result
@@ -53,8 +53,8 @@ class StatHandler(object):
         total_number = len(total_clusters)
         free_clusters_number = len(free_clusters)
         result['status'] = [
-            {'name': 'free', 'y': free_clusters_number},
-            {'name': 'used', 'y': total_number - free_clusters_number}
+            {'name': 'free', 'value': free_clusters_number},
+            {'name': 'used', 'value': total_number - free_clusters_number}
         ]
         for consensus_plugin in CONSENSUS_PLUGINS:
             if consensus_plugin == CONSENSUS_PLUGINS[0]:
@@ -63,7 +63,7 @@ class StatHandler(object):
                     'consensus_plugin': consensus_plugin}))
                 result['type'].append({
                     'name': consensus_type,
-                    'y': len(clusters)
+                    'value': len(clusters)
                 })
             else:
                 for consensus_mode in CONSENSUS_MODES:
@@ -74,7 +74,7 @@ class StatHandler(object):
                     }))
                     result['type'].append({
                         'name': consensus_type,
-                        'y': len(clusters)
+                        'value': len(clusters)
                     })
         return result
 
