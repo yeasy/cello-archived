@@ -3,15 +3,13 @@
  */
 import React from 'react'
 import {
-    Table, Modal, Button, Form, FormGroup, ControlLabel,
+    Modal, Button, Form, FormGroup, ControlLabel,
     Col, FormControl, Checkbox, Label, OverlayTrigger, Tooltip
 } from 'react-bootstrap'
 import isIP from 'validator/lib/isIP';
 import { connect } from 'react-redux'
-import * as AllActions from './actions'
+import * as AllActions from '../actions'
 import { bindActionCreators } from 'redux'
-import "react-bootstrap-table/dist/react-bootstrap-table-all.min.css"
-import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 var IoGearB = require('react-icons/lib/io/gear-b');
 var IoLoadD = require('react-icons/lib/io/load-d');
 var IoTrashA = require('react-icons/lib/io/trash-a');
@@ -21,6 +19,7 @@ import "./spin.css"
 var Link = require('react-router').Link;
 import immutableRenderMixin from 'react-immutable-render-mixin';
 import Immutable from 'immutable'
+import { Table, highlight } from 'reactabular';
 
 const styles = {
     actionBtn: {
@@ -618,6 +617,48 @@ var NameFormatter = React.createClass({
     }
 });
 
+var Actions = React.createClass({
+    hostAction: function (hostAction, hostId) {
+        const {dispatch, actions} = this.props;
+
+        var hostForm = new FormData();
+        hostForm.append('id', hostId);
+        hostForm.append('action', hostAction);
+
+        dispatch(actions.hostAction(hostForm, hostId, hostAction));
+    },
+    render: function () {
+        const {rowData, hosts} = this.props;
+        return (
+            <div className="btn-group">
+                <button className="btn btn-primary btn-xs">Action</button>
+                <button className="btn btn-primary dropdown-toggle btn-xs" data-toggle="dropdown">
+                    <span className="caret"></span>
+                    <span className="sr-only">Toggle Dropdown</span>
+                </button>
+                <ul className="dropdown-menu" role="menu">
+                    <li><a onClick={() => this.hostAction("fillup", rowData.id)}><MdTrendingUp /> Fill Up</a></li>
+                    <li><a onClick={() => this.hostAction("clean", rowData.id)}><MdTrendingDown /> Clean</a></li>
+                    <li><a onClick={() => this.props.openEditModal(rowData.id)}><i className="fa fa-gear" /> Edit</a></li>
+                    <li className="divider"></li>
+                    <li><a onClick={() => this.props.openDeleteModal(rowData.id)}><i className="fa fa-trash" /> Delete</a></li>
+                </ul>
+            </div>
+        )
+    }
+});
+
+class Clusters extends React.Component {
+    render() {
+        const {hosts, clusters, rowData} = this.props;
+        var fillup = hosts.get("hosts").get(rowData.id).get("fillup", false);
+        var clean = hosts.get("hosts").get(rowData.id).get("clean", false);
+        return (
+            <span>{(fillup || clean) ? <IoLoadD className="spin"/> : clusters.length}</span>
+        )
+    }
+}
+
 var HostTable = React.createClass({
     mixins: [immutableRenderMixin],
 
@@ -658,69 +699,102 @@ var HostTable = React.createClass({
 
         dispatch(actions.fetchHosts());
     },
-    configClick: function (e) {
-        console.log('config click');
-    },
-    statusFormatter: function(cell, row){
-        var label = "success";
-        if (cell == "error") {
-            label = "danger";
-        }
-        return '<span class="label label-' + label + '">' + cell + '</span>';
-    },
-    actionFormatter: function (cell, row) {
-        return (
-            <ActionFormatter {...this.props} cell={cell} openEditModal={this.openEditModal} openDeleteModal={this.openDeleteModal} />
-        )
-    },
-    clustersFormatter: function (cell, row) {
-        return cell.length;
-    },
-    nameFormatter: function (cell, row) {
-        return (
-            <NameFormatter {...this.props} hostId={row.id} name={cell}/>
-        )
-    },
-    loggerFormatter: function (cell, row) {
-        return cell + "/" + row.log_type.toLowerCase();
-    },
-    getCaret: function(direction) {
-        if (direction === 'asc') {
-            return (
-                <span> up</span>
-            );
-        }
-        if (direction === 'desc') {
-            return (
-                <span> down</span>
-            );
-        }
-        return (
-            <span> up/down</span>
-        );
-    },
     render: function() {
         const {hosts} = this.props;
-        const statusFilter = {
-            'active': 'active',
-            'error': 'error'
-        };
+        const columns = [
+            {
+                property: 'name',
+                header: {
+                    label: 'Name'
+                }
+            },
+            {
+                property: 'type',
+                header: {
+                    label: 'Type'
+                }
+            },
+            {
+                property: 'status',
+                header: {
+                    label: 'Status'
+                },
+                cell: {
+                    format: (status, extra) => (
+                        <span className="label label-success">{status}</span>
+                    )
+                }
+            },
+            {
+                property: 'capacity',
+                header: {
+                    label: 'Capacity'
+                }
+            },
+            {
+                property: 'clusters',
+                cell: {
+                    format: (clusters, {rowData}) => (
+                        <Clusters {...this.props} rowData={rowData} clusters={clusters} />
+                    )
+                },
+                header: {
+                    label: 'Clusters'
+                }
+            },
+            {
+                property: 'log_level',
+                cell: {
+                    format: (logLevel, extra) => (
+                        <span>{logLevel.toLowerCase()}</span>
+                    )
+                },
+                header: {
+                    label: 'Log Level'
+                }
+            },
+            {
+                cell: {
+                    format: (value, { rowData }) => (
+                        <Actions {...this.props} openDeleteModal={this.openDeleteModal} openEditModal={this.openEditModal} rowData={rowData} />
+                    )
+                },
+                visible: true
+            }
+        ];
         return (
-            <div className="row">
-                <h2 className="page-header">Hosts: {hosts.get("fetchingHosts", false) ? <IoLoadD className="spin" size={30} /> : hosts.get("hosts").valueSeq().toJS().length}
-                    <Button bsStyle="success" onClick={this.open} style={{float: "right"}}>
-                        Add Host
-                    </Button>
-                </h2>
-                <BootstrapTable pagination data={hosts.get("hosts").valueSeq().toJS()} striped={true} hover={true}>
-                    <TableHeaderColumn dataField="name" dataAlign="center" dataFormat={this.nameFormatter} dataSort={true} filter={ { type: 'TextFilter', placeholder: 'Please enter a value' } }>Name</TableHeaderColumn>
-                    <TableHeaderColumn dataField="type" dataSort={true} caretRender={this.getCaret}>Type</TableHeaderColumn>
-                    <TableHeaderColumn dataField="status" dataSort={true} dataFormat={this.statusFormatter} formatExtraData={ statusFilter } filter={ { type: 'SelectFilter', options: statusFilter} }>Status</TableHeaderColumn>
-                    <TableHeaderColumn dataField="clusters" dataFormat={this.clustersFormatter} dataSort={true}>Chains</TableHeaderColumn>
-                    <TableHeaderColumn dataField="capacity" dataSort={true}>Cap</TableHeaderColumn>
-                    <TableHeaderColumn dataField="log_level" dataSort={true} dataFormat={this.loggerFormatter}>Log Config</TableHeaderColumn>
-                    <TableHeaderColumn dataField="id" isKey={true} dataFormat={this.actionFormatter}></TableHeaderColumn>
-                </BootstrapTable>
+            <div className="">
+                <div className="page-title">
+                    <div className="title_left">
+                        <h3>Hosts <small>{hosts.get("fetchingHosts", false) ? <IoLoadD className="spin" size={30} /> : hosts.get("hosts").valueSeq().toJS().length}</small></h3>
+                    </div>
+                    <div className="title_right">
+                        <Button bsStyle="success" onClick={this.open} style={{float: "right"}}>
+                            Add Host
+                        </Button>
+                    </div>
+                </div>
+                <div className="clearfix"></div>
+                <div className="row">
+                    <div className="col-md-12">
+                        <div className="x_panel">
+                            <div className="x_title">
+                                <h2>Hosts List</h2>
+                                <div className="clearfix"></div>
+                            </div>
+                            <div className="x_content">
+                                <Table.Provider
+                                    className="table table-striped projects"
+                                    columns={columns}
+                                >
+                                    <Table.Header />
+
+                                    <Table.Body rows={hosts.get("hosts").valueSeq().toJS()} rowKey="id" />
+                                </Table.Provider>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <CreateHostModal showModal={this.state.showModal} close={this.close} {...this.props} />
                 <EditHostModal currentHostId={this.state.currentHostId} showModal={this.state.showEditModal} close={this.closeEditModal} {...this.props} />
                 <ConfirmDeleteModal currentHostId={this.state.currentHostId} showModal={this.state.showDeleteModal} close={this.closeDeleteModal} {...this.props} />
@@ -730,8 +804,7 @@ var HostTable = React.createClass({
 });
 
 export default connect(state => ({
-    hosts: state.hosts,
-    message: state.message
+    hosts: state.hosts
 }), dispatch => ({
     actions: bindActionCreators(AllActions, dispatch),
     dispatch: dispatch

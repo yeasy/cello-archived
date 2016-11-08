@@ -2,7 +2,6 @@
  * Created by yuehaitao on 2016/9/28.
  */
 import React from 'react'
-var NotificationSystem = require('react-notification-system');
 import { connect } from 'react-redux'
 import * as AllActions from './actions'
 import { bindActionCreators } from 'redux'
@@ -17,10 +16,6 @@ var Dashboard = React.createClass({
             menuFolding: false,
             title: 'Cello Dashboard'
         })
-    },
-    componentDidMount: function () {
-        const {dispatch, actions} = this.props;
-        dispatch(actions.setNotification(this.refs.notificationSystem));
     },
     foldMenu: function () {
         var menuFolding = this.state.menuFolding;
@@ -42,7 +37,6 @@ var Dashboard = React.createClass({
                         <TopNav foldMenu={this.foldMenu} />
                         <div className="right_col" role="main">
                             {this.props.children}
-                            <NotificationSystem ref="notificationSystem" />
                         </div>
                     </div>
                 </div>
@@ -51,9 +45,4 @@ var Dashboard = React.createClass({
     }
 });
 
-export default connect(state => ({
-    message: state.message
-}), dispatch => ({
-    actions: bindActionCreators(AllActions, dispatch),
-    dispatch: dispatch
-}))(Dashboard)
+export default Dashboard;

@@ -108,7 +108,10 @@ def host_update():
         result = host_handler.update(id, d)
         if result:
             logger.debug("host PUT successfully")
-            return jsonify(response_ok), CODE_OK
+            return jsonify({
+                "host_id": id,
+                "data": result
+            }), CODE_OK
         else:
             logger.debug("host PUT failed")
             response_fail["error"] = "Failed to update host {}".format(

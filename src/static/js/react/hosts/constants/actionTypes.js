@@ -10,8 +10,6 @@ export default mirrorCreator([
     'remove_host',
     'add_host',
     'update_host',
-    'set_host_action',
-    'set_notification',
-    'notify_success'
+    'set_host_action'
 ]);
 

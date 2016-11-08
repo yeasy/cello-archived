@@ -3,13 +3,7 @@ import cookie from 'react-cookie'
 import actionTypes from '../constants/actionTypes'
 var Urls = require('../constants/Urls');
 var Promise = require('es6-promise').Promise;
-
-function notifySuccess(message) {
-    return {
-        type: actionTypes.notify_success,
-        message: message
-    }
-}
+import {notifySuccess} from '../../actions/notification'
 
 function setFetchingHosts() {
     return {

@@ -3,7 +3,7 @@
  */
 import React from 'react'
 import { connect } from 'react-redux'
-import * as AllActions from './actions'
+import * as AllActions from '../actions'
 import { bindActionCreators } from 'redux'
 var IoGearB = require('react-icons/lib/io/gear-b');
 var IoAndroidRefresh = require('react-icons/lib/io/android-refresh');
@@ -198,8 +198,7 @@ var HostInfo = React.createClass({
 });
 
 export default connect(state => ({
-    hosts: state.hosts,
-    message: state.message
+    hosts: state.hosts
 }), dispatch => ({
     actions: bindActionCreators(AllActions, dispatch),
     dispatch: dispatch

@@ -11,9 +11,8 @@ import {
 } from '../hosts/actions/host'
 
 import {
-    setNotification,
     notifySuccess
-} from '../hosts/actions/message'
+} from './notification'
 
 import {
     fetchOverview
@@ -26,7 +25,6 @@ module.exports = {
     deleteHost,
     queryHost,
     hostAction,
-    setNotification,
     fetchOverview,
     notifySuccess
 };

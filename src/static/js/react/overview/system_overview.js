@@ -17,17 +17,59 @@ var SystemOverview = React.createClass({
         const {overview} = this.props;
         return(
             <div className="">
-                <div className="row top_tiles">
-                    <div className="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                        <div className="tile-stats">
-                            <div className="icon"><i className="fa fa-caret-square-o-right" /></div>
-                            <div className="count">
-                                {overview.get("fetchingOverview", false)
-                                    ? <IoLoadD className="spin"/>
-                                    : overview.get("overview", Immutable.fromJS({})).get("hosts_active", Immutable.fromJS([])).size
-                                }
-                            </div>
-                            <h3>Active Hosts</h3>
+                <div className="row tile_count">
+                    <div className="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                        <span className="count_top green">Active Hosts</span>
+                        <div className="count green">
+                            {overview.get("fetchingOverview", false)
+                                ? <IoLoadD className="spin"/>
+                                : overview.get("overview", Immutable.fromJS({})).get("hosts_active", Immutable.fromJS([])).size
+                            }
+                        </div>
+                    </div>
+                    <div className="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                        <span className="count_top">Avaliable Hosts</span>
+                        <div className="count">
+                            {overview.get("fetchingOverview", false)
+                                ? <IoLoadD className="spin"/>
+                                : overview.get("overview", Immutable.fromJS({})).get("hosts_available", Immutable.fromJS([])).size
+                            }
+                        </div>
+                    </div>
+                    <div className="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                        <span className="count_top red">InActive Hosts</span>
+                        <div className="count red">
+                            {overview.get("fetchingOverview", false)
+                                ? <IoLoadD className="spin"/>
+                                : overview.get("overview", Immutable.fromJS({})).get("hosts_inactive", Immutable.fromJS([])).size
+                            }
+                        </div>
+                    </div>
+                    <div className="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                        <span className="count_top green">Active Clusters</span>
+                        <div className="count green">
+                            {overview.get("fetchingOverview", false)
+                                ? <IoLoadD className="spin"/>
+                                : overview.get("overview", Immutable.fromJS({})).get("clusters_active", Immutable.fromJS([]))
+                            }
+                        </div>
+                    </div>
+                    <div className="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                        <span className="count_top">Free Clusters</span>
+                        <div className="count">
+                            {overview.get("fetchingOverview", false)
+                                ? <IoLoadD className="spin"/>
+                                : overview.get("overview", Immutable.fromJS({})).get("clusters_free", Immutable.fromJS([]))
+                            }
+                        </div>
+                    </div>
+                    <div className="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
+                        <span className="count_top red">InUse Clusters</span>
+                        <div className="count red">
+                            {overview.get("fetchingOverview", false)
+                                ? <IoLoadD className="spin"/>
+                                : overview.get("overview", Immutable.fromJS({})).get("clusters_inuse", Immutable.fromJS([]))
+                            }
                         </div>
                     </div>
                 </div>
