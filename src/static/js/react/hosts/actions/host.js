@@ -3,7 +3,7 @@ import cookie from 'react-cookie'
 import actionTypes from '../constants/actionTypes'
 var Urls = require('../constants/Urls');
 var Promise = require('es6-promise').Promise;
-import {notifySuccess} from '../../actions/notification'
+import {notifySuccess, notifyError} from '../../actions/notification'
 
 function setFetchingHosts() {
     return {
@@ -98,7 +98,7 @@ export function createHost(hostForm) {
                                     dispatch(notifySuccess("Create Host success"));
                                 })
                         } else if (response.status == 400) {
-                            console.log("is bad request");
+                            dispatch(notifyError("Create Host Fail"));
                         }
                     });
                 })
@@ -128,7 +128,7 @@ export function updateHost(hostForm) {
                                     dispatch(notifySuccess("Update host " + json.host_id + " success"));
                                 })
                         } else if (response.status == 400) {
-                            console.log("is bad request");
+                            dispatch(notifyError("Update Host Fail"));
                         }
                     });
                 })

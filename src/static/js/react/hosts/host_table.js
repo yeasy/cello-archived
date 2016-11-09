@@ -4,28 +4,22 @@
 import React from 'react'
 import {
     Modal, Button, Form, FormGroup, ControlLabel,
-    Col, FormControl, Checkbox, Label, OverlayTrigger, Tooltip
+    Col, FormControl, Checkbox, Label
 } from 'react-bootstrap'
 import isIP from 'validator/lib/isIP';
 import { connect } from 'react-redux'
 import * as AllActions from '../actions'
 import { bindActionCreators } from 'redux'
-var IoGearB = require('react-icons/lib/io/gear-b');
 var IoLoadD = require('react-icons/lib/io/load-d');
-var IoTrashA = require('react-icons/lib/io/trash-a');
 var MdTrendingUp = require('react-icons/lib/md/trending-up');
 var MdTrendingDown = require('react-icons/lib/md/trending-down');
 import "./spin.css"
 var Link = require('react-router').Link;
 import immutableRenderMixin from 'react-immutable-render-mixin';
 import Immutable from 'immutable'
-import { Table, highlight } from 'reactabular';
-
-const styles = {
-    actionBtn: {
-        marginRight: 5
-    }
-};
+import { Table, search, Search} from 'reactabular';
+import { compose } from 'redux';
+import {Paginator, paginate} from '../helpers'
 
 var CreateHostModal = React.createClass({
     getInitialState: function () {
@@ -564,59 +558,6 @@ var ConfirmDeleteModal = React.createClass({
     }
 });
 
-var ActionFormatter = React.createClass({
-    deleteHost: function () {
-        var hostId = this.props.cell;
-        this.props.openDeleteModal(hostId);
-    },
-    configClick: function () {
-        var hostId = this.props.cell;
-        this.props.openEditModal(hostId);
-    },
-    tooltip: function (message) {
-        return (
-            <Tooltip id="tooltip"><strong>{message}</strong></Tooltip>
-        )
-    },
-    hostAction: function (hostAction) {
-        const {dispatch, actions} = this.props;
-        var hostId = this.props.cell;
-
-        var hostForm = new FormData();
-        hostForm.append('id', hostId);
-        hostForm.append('action', hostAction);
-
-        dispatch(actions.hostAction(hostForm, hostId, hostAction));
-    },
-    render: function () {
-        const {hosts} = this.props;
-        var hostId = this.props.cell;
-        var currentHost = hosts.get("hosts").get(hostId);
-        var chains = currentHost.get("clusters", Immutable.List([])).size;
-        var capacity = parseInt(currentHost.get("capacity"));
-        return (
-            <span>
-                <OverlayTrigger placement="top" overlay={this.tooltip("fill up host")}>
-                    <Button style={styles.actionBtn} bsSize="xsmall" disabled={chains == capacity} bsStyle="primary" onClick={() => this.hostAction("fillup")}>{hosts.get("hosts").get(hostId).get("fillup", false) ? <IoLoadD className="spin"/> : <MdTrendingUp />}</Button>
-                </OverlayTrigger>
-                <OverlayTrigger placement="top" overlay={this.tooltip("clean host")}>
-                    <Button style={styles.actionBtn} bsSize="xsmall" disabled={chains == 0} bsStyle="warning" onClick={() => this.hostAction("clean")}>{hosts.get("hosts").get(hostId).get("clean", false) ? <IoLoadD className="spin"/> : <MdTrendingDown />}</Button>
-                </OverlayTrigger>
-                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="info" onClick={this.configClick}><IoGearB /></Button>
-                <Button style={styles.actionBtn} bsSize="xsmall" bsStyle="danger" onClick={this.deleteHost}><IoTrashA /></Button>
-            </span>
-        )
-    }
-});
-
-var NameFormatter = React.createClass({
-    render: function () {
-        return (
-            <Link to={`/hosts/${this.props.hostId}`}>{this.props.name}</Link>
-        )
-    }
-});
-
 var Actions = React.createClass({
     hostAction: function (hostAction, hostId) {
         const {dispatch, actions} = this.props;
@@ -667,7 +608,15 @@ var HostTable = React.createClass({
             showModal: false,
             showEditModal: false,
             showDeleteModal: false,
-            currentHostId: ''
+            currentHostId: '',
+            searchColumn: "all",
+            query: {},
+            perPage: 2,
+            pageOffset: 0,
+            pagination: {
+                page: 1,
+                perPage: 10
+            }
         };
     },
     close() {
@@ -699,6 +648,42 @@ var HostTable = React.createClass({
 
         dispatch(actions.fetchHosts());
     },
+    searchColumnChange: function (searchColumn) {
+        this.setState({
+            searchColumn: searchColumn
+        })
+    },
+    searchChange: function (query) {
+        this.setState({
+            query: query
+        })
+    },
+    onSelect: function(data) {
+        const {hosts} = this.props;
+        var pagination = this.state.pagination;
+        var page = data.selected + 1;
+        var hostsLength = hosts.get("hosts").valueSeq().toJS().length;
+        var perPage = this.state.pagination.perPage;
+        const pages = Math.ceil(
+            hostsLength / perPage
+        );
+
+        this.setState({
+            pagination: {
+                page: Math.min(Math.max(page, 1), pages),
+                perPage: pagination.perPage
+            }
+        });
+    },
+    perPageChange: function (e) {
+        var pagination = this.state.pagination;
+        this.setState({
+            pagination: {
+                page: pagination.page,
+                perPage: parseInt(e.target.value)
+            }
+        })
+    },
     render: function() {
         const {hosts} = this.props;
         const columns = [
@@ -706,6 +691,11 @@ var HostTable = React.createClass({
                 property: 'name',
                 header: {
                     label: 'Name'
+                },
+                cell: {
+                    format: (name, {rowData}) => (
+                        <Link to={`/hosts/${rowData.id}`}>{name}</Link>
+                    )
                 }
             },
             {
@@ -762,6 +752,13 @@ var HostTable = React.createClass({
                 visible: true
             }
         ];
+        const {query} = this.state;
+        const {pagination} = this.state;
+        const paginated = compose(
+            paginate(pagination),
+            search.multipleColumns({ columns, query})
+        )(hosts.get("hosts").valueSeq().toJS());
+        const pageSizeArray = [10, 20, 30, 40, 50];
         return (
             <div className="">
                 <div className="page-title">
@@ -769,9 +766,11 @@ var HostTable = React.createClass({
                         <h3>Hosts <small>{hosts.get("fetchingHosts", false) ? <IoLoadD className="spin" size={30} /> : hosts.get("hosts").valueSeq().toJS().length}</small></h3>
                     </div>
                     <div className="title_right">
-                        <Button bsStyle="success" onClick={this.open} style={{float: "right"}}>
-                            Add Host
-                        </Button>
+                        <div className="col-md-2 col-sm-2 col-xs-12 pull-right">
+                            <Button bsStyle="success" onClick={this.open}>
+                                Add Host
+                            </Button>
+                        </div>
                     </div>
                 </div>
                 <div className="clearfix"></div>
@@ -783,14 +782,58 @@ var HostTable = React.createClass({
                                 <div className="clearfix"></div>
                             </div>
                             <div className="x_content">
-                                <Table.Provider
-                                    className="table table-striped projects"
-                                    columns={columns}
-                                >
-                                    <Table.Header />
+                                <div className="row">
+                                    <div className="col-sm-6">
+                                        <div className="dataTables_length">
+                                            <label>
+                                                <select onChange={this.perPageChange} className="form-control input-sm">
+                                                    {pageSizeArray.map((pageSize, i) =>
+                                                        <option key={i} value={pageSize}>{pageSize}</option>
+                                                    )}
+                                                </select>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-6">
+                                        <div className="dataTables_filter">
+                                            <label>
+                                                <Search
+                                                    className="input-group"
+                                                    column={this.state.searchColumn}
+                                                    query={this.state.query}
+                                                    columns={columns}
+                                                    onColumnChange={this.searchColumnChange}
+                                                    onChange={this.searchChange}
+                                                    rows={hosts.get("hosts").valueSeq().toJS()}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="row">
+                                    <div className="col-sm-12">
+                                        <Table.Provider
+                                            className="table table-striped projects"
+                                            columns={columns}
+                                        >
+                                            <Table.Header />
 
-                                    <Table.Body rows={hosts.get("hosts").valueSeq().toJS()} rowKey="id" />
-                                </Table.Provider>
+                                            <Table.Body rows={paginated.rows} rowKey="id" />
+                                        </Table.Provider>
+                                    </div>
+                                </div>
+                                <div className="row">
+                                    <div className="col-sm-5"></div>
+                                    <div className="col-sm-7">
+                                        <div className="dataTables_paginate paging_simple_numbers">
+                                            <Paginator
+                                                pagination={pagination}
+                                                pages={paginated.amount}
+                                                onSelect={this.onSelect}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

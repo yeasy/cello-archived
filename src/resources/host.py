@@ -1,6 +1,9 @@
 import logging
 import os
 import sys
+import uuid
+import string
+import random
 
 from flask import jsonify, Blueprint, render_template
 from flask import request as r
@@ -33,6 +36,10 @@ def host_query(host_id):
         return jsonify(response_fail), CODE_BAD_REQUEST
 
 
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+
 @bp_host_api.route('/hosts_list', methods=['GET'])
 def hosts_list():
     logger.info("/hosts_list method=" + r.method)
@@ -40,10 +47,27 @@ def hosts_list():
     col_filter = dict((key, r.args.get(key)) for key in r.args)
     items = list(host_handler.list(filter_data=col_filter))
     hosts = {}
+    first_item = items[0]
+    logger.info(first_item)
     for i in items:
         hosts.update({
             i.get("id"): i
         })
+    for i in range(1, 91):
+        item_id = id_generator(24)
+        if item_id not in hosts:
+            hosts.update({
+                item_id: {
+                    "id": item_id,
+                    "log_level": "INFO",
+                    "log_type": "local",
+                    "name": item_id,
+                    "status": "active",
+                    "type": "single",
+                    "clusters": [],
+                    "capacity": 6
+                }
+            })
 
     return jsonify({'hosts': hosts}), CODE_OK
 
@@ -84,7 +108,11 @@ def host_create():
                                      log_server=log_server)
         if result:
             logger.debug("host creation successfully")
-            return jsonify(response_ok), CODE_CREATED
+            return jsonify({
+                "data": {
+                    result.get("id", ""): result
+                }
+            }), CODE_CREATED
         else:
             logger.debug("host creation failed")
             response_fail["error"] = "Failed to create host {}".format(
