@@ -53,21 +53,6 @@ def hosts_list():
         hosts.update({
             i.get("id"): i
         })
-    for i in range(1, 91):
-        item_id = id_generator(24)
-        if item_id not in hosts:
-            hosts.update({
-                item_id: {
-                    "id": item_id,
-                    "log_level": "INFO",
-                    "log_type": "local",
-                    "name": item_id,
-                    "status": "active",
-                    "type": "single",
-                    "clusters": [],
-                    "capacity": 6
-                }
-            })
 
     return jsonify({'hosts': hosts}), CODE_OK
 
