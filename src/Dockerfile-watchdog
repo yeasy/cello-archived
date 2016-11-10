@@ -3,8 +3,8 @@ MAINTAINER Baohua Yang <"baohyang@cn.ibm.com">
 ENV TZ Asia/Shanghai
 
 WORKDIR /app
-COPY ./requirements-watchdog.txt /app
-RUN pip install  -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com -r requirements-watchdog.txt
+COPY ./requirements.txt /app
+RUN pip install  -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com -r requirements.txt
 
 COPY . /app
 
