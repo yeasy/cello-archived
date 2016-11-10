@@ -286,8 +286,16 @@ def cluster_list():
     """
     request_debug(r, logger)
     json_body = r.get_json(force=True, silent=True) or {}
-    result = cluster_handler.list(filter_data=json_body)
-    response_ok["data"] = result
+    show_type = r.args.get("type", "active")
+    # result = cluster_handler.list(filter_data=json_body)
+    clusters = list(cluster_handler.list(filter_data=json_body,
+                                         col_name=show_type))
+    clusters_dict = {}
+    for cluster in clusters:
+        clusters_dict.update({
+            cluster.get("id"): cluster
+        })
+    response_ok["data"] = clusters_dict
     return jsonify(response_ok), CODE_OK
 
 

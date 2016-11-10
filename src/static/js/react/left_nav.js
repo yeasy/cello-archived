@@ -107,11 +107,11 @@ var LeftNav = React.createClass({
                                         <NavLink to="/chains/inused" activeClassName="current-page">
                                             Inused Chains
                                         </NavLink>
+                                        <NavLink to="/chains/release_history" activeClassName="current-page">
+                                            Release History
+                                        </NavLink>
                                     </ul>
                                 </li>
-                                <NavLink className="single-menu" to="/release_history">
-                                    <i className="fa fa-tags" /> Release History
-                                </NavLink>
                                 <NavLink className="single-menu" to="/about">
                                     <i className="fa fa-info-circle" /> About
                                 </NavLink>

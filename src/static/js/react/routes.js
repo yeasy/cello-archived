@@ -8,7 +8,7 @@ import HostInfo from './hosts/host_info'
 import ActiveChains from './chains/active_view'
 import InusedChains from './chains/inused_view'
 import About from './about/view'
-import ReleaseHistory from './release_history/view'
+import ReleaseHistory from './chains/release_view'
 
 export default (
     <Route render={props => <RouterContext {...props} />} path="/" name="Dashboard" component={Dashboard}>
@@ -22,8 +22,8 @@ export default (
         <Route name="Chains" path="chains">
             <Route name="ActiveChains" path="active" component={ActiveChains} />
             <Route name="InusedChains" path="inused" component={InusedChains} />
+            <Route name="ReleaseHistory" path="release_history" component={ReleaseHistory} />
         </Route>
         <Route name="About" path="about" component={About} />
-        <Route name="ReleaseHistory" path="release_history" component={ReleaseHistory} />
     </Route>
 )

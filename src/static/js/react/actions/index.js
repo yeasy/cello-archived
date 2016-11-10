@@ -18,6 +18,11 @@ import {
     fetchOverview
 } from '../overview/actions/overview'
 
+import {
+    fetchClusters,
+    clearClusters
+} from '../chains/actions/clusters'
+
 module.exports = {
     fetchHosts,
     createHost,
@@ -26,5 +31,7 @@ module.exports = {
     queryHost,
     hostAction,
     fetchOverview,
-    notifySuccess
+    notifySuccess,
+    fetchClusters,
+    clearClusters
 };
