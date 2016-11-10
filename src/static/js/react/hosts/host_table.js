@@ -135,6 +135,7 @@ var CreateHostModal = React.createClass({
             autofill: this.state.keepFilled ? "on" : "off",
             schedulable: this.state.schedulable ? "on": "off"
         };
+        console.log(hostJson);
         this.clearValues();
         this.props.close();
         var hostForm = new FormData();
@@ -149,7 +150,7 @@ var CreateHostModal = React.createClass({
             daemonUrl: '',
             capacity: 1,
             loggerLevel: 'DEBUG',
-            loggerType: 'LOCAL',
+            loggerType: 'local',
             loggerServer: '',
             showLoggerServer: false,
             disableCreate: true,

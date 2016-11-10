@@ -433,12 +433,12 @@ var PlatformStatus = React.createClass({
     fetchStatus: function (res) {
         var _that = this;
         switch (res) {
-            case 'hosts':
+            case 'host':
                 this.setState({
                     fetchingHostsStatus: true
                 });
                 break;
-            case 'clusters':
+            case 'cluster':
                 this.setState({
                     fetchingClustersStatus: true
                 });
@@ -457,10 +457,10 @@ var PlatformStatus = React.createClass({
                 response.json()
                     .then(json => {
                         switch (res) {
-                            case 'hosts':
+                            case 'host':
                                 _that.updateHostsChart(json);
                                 break;
-                            case 'clusters':
+                            case 'cluster':
                                 _that.updateClustersChart(json);
                                 break;
                             default:
@@ -473,8 +473,8 @@ var PlatformStatus = React.createClass({
     componentDidMount: function () {
         this.setupHostsType();
         this.setupClustersType();
-        this.fetchStatus('hosts');
-        this.fetchStatus('clusters');
+        this.fetchStatus('host');
+        this.fetchStatus('cluster');
     },
     render: function () {
         return (

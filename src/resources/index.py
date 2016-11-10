@@ -16,7 +16,7 @@ logger.addHandler(log_handler)
 
 from modules import cluster_handler, host_handler
 
-index = Blueprint('index', __name__)
+bp_index = Blueprint('bp_index', __name__)
 bp_index_api = Blueprint('bp_index_api', __name__,
                          url_prefix='/{}'.format("api"))
 
@@ -48,9 +48,8 @@ def overview():
     }), CODE_OK
 
 
-@index.route('/', methods=['GET'])
-@index.route('/admin', methods=['GET'])
-@index.route('/index', methods=['GET'])
+@bp_index.route('/', methods=['GET'])
+@bp_index.route('/index', methods=['GET'])
 def show():
     request_debug(r, logger)
 
@@ -68,7 +67,7 @@ def show():
                            )
 
 
-@index.route('/about', methods=['GET'])
+@bp_index.route('/about', methods=['GET'])
 def about():
     logger.info("path={}, method={}".format(r.path, r.method))
     return render_template("about.html", author=author, version=version,

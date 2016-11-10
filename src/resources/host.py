@@ -62,7 +62,7 @@ def host_create():
     request_debug(r, logger)
     name, daemon_url, capacity, log_type, log_server, log_level = \
         r.form['name'], r.form['daemon_url'], r.form['capacity'], \
-        r.form['log_type'], r.form['log_server'], r.form['log_level']
+        r.form['log_type'].lower(), r.form['log_server'], r.form['log_level']
 
     if "autofill" in r.form and r.form["autofill"] == "on":
         autofill = "true"

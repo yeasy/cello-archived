@@ -553,9 +553,11 @@ class ClusterHandler(object):
             return ""
 
         clusters_exists = self.col_active.find({"host_id": host_id})
+        clusters_valid = list(filter(lambda c: c.get("service_url"),
+                                     clusters_exists))
         ports_existed = list(map(
             lambda c: int(c["service_url"]["rest"].split(":")[-1]),
-            clusters_exists))
+            clusters_valid))
 
         logger.debug("The ports existed: {}".format(ports_existed))
         if len(ports_existed) + number >= 1000:
