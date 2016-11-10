@@ -65,6 +65,9 @@ export default function clusters(state = Immutable.Map({
                     case "restart":
                         actionInProgress = "restarting";
                         break;
+                    case "delete":
+                        actionInProgress = "deleting";
+                        break;
                     default:
                         break;
                 }
@@ -76,6 +79,9 @@ export default function clusters(state = Immutable.Map({
             return state.set("activeClusters", activeClusters);
         case actionTypes.adding_cluster:
             return state.set("addingCluster", action.inProgress);
+        case actionTypes.delete_cluster:
+            activeClusters = activeClusters.delete(action.clusterId);
+            return state.set("activeClusters", activeClusters);
         default:
             return state;
     }

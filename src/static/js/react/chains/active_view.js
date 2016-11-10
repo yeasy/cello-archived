@@ -32,6 +32,18 @@ var Actions = React.createClass({
         }
         dispatch(actions.operateCluster(rowData.id, rowData.name, operation))
     },
+    deleteCluster: function () {
+        const {dispatch, actions, rowData} = this.props;
+        var clusterJson = {
+            id: rowData.id,
+            col_name: "active"
+        };
+        var clusterForm = new FormData();
+        for (var key in clusterJson) {
+            clusterForm.append(key, clusterJson[key]);
+        }
+        dispatch(actions.deleteCluster(clusterForm, rowData.name));
+    },
     render: function () {
         const {rowData} = this.props;
         const releaseActionClass = classNames({
@@ -57,7 +69,7 @@ var Actions = React.createClass({
                     <li className={startActionClass}><a onClick={() => this.operateCluster("start")}><span className="glyphicon glyphicon-play" /> Start</a></li>
                     <li className={stopActionClass}><a onClick={() => this.operateCluster("stop")}><span className="glyphicon glyphicon-stop" /> Stop</a></li>
                     <li className={actionClass}><a onClick={() => this.operateCluster("restart")}><span className="glyphicon glyphicon-repeat" /> Restart</a></li>
-                    <li className={actionClass}><a><span className="glyphicon glyphicon-trash" /> Delete</a></li>
+                    <li className={actionClass}><a onClick={this.deleteCluster}><span className="glyphicon glyphicon-trash" /> Delete</a></li>
                     <li className={releaseActionClass}><a onClick={() => this.operateCluster("release")}><span className="glyphicon glyphicon-refresh" /> Release</a></li>
                 </ul>
             </div>

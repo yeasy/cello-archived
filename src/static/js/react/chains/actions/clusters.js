@@ -188,3 +188,42 @@ export function addChain(chainForm) {
         }
     }
 }
+
+function removeCluster(clusterId) {
+    return {
+        type: actionTypes.delete_cluster,
+        clusterId: clusterId
+    }
+}
+
+export function deleteCluster(clusterForm, clusterName) {
+    return dispatch => {
+        dispatch(clusterOperating(clusterForm.get("id"), true, "delete"));
+        return {
+            type: actionTypes.promise,
+            payload: {
+                promise: new Promise(() => {
+                    fetch(Urls.ClusterUrl, {
+                        method: "delete",
+                        credentials: 'include',
+                        headers: {
+                            "X-CSRFToken": cookie.load("csrftoken")
+                        },
+                        body: clusterForm
+                    }).then(response => {
+                        if (response.ok) {
+                            response.json()
+                                .then(json => {
+                                    dispatch(removeCluster(clusterForm.get("id")));
+                                    dispatch(notifySuccess("Delete cluster " + clusterName + " success"));
+                                })
+                        } else if (response.status == 400) {
+                            dispatch(notifyError("Delete cluster " + clusterName + " Fail"));
+                            dispatch(clusterOperating(clusterForm.get("id"), false, "delete"));
+                        }
+                    });
+                })
+            }
+        }
+    }
+}
