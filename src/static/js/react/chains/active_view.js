@@ -251,7 +251,7 @@ var ActiveChains = React.createClass({
                     <div className="col-md-12">
                         <div className="x_panel">
                             <div className="x_title">
-                                <h2>Active Chains List</h2>
+                                <h2>Active Chains List {clusters.get("addingCluster", false) && <IoLoadD className="spin"/>}</h2>
                                 <div className="clearfix"></div>
                             </div>
                             <div className="x_content">

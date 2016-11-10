@@ -55,7 +55,7 @@ def hosts_list():
             i.get("id"): i
         })
 
-    return jsonify({'hosts': hosts}), CODE_OK
+    return make_ok_response(data=hosts)
 
 
 @bp_host_api.route('/host', methods=['POST'])

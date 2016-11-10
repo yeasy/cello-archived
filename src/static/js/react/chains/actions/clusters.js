@@ -150,8 +150,16 @@ function fetchCluster(clusterId) {
     }
 }
 
+function addingCluster(inProgress) {
+    return {
+        type: actionTypes.adding_cluster,
+        inProgress: inProgress
+    }
+}
+
 export function addChain(chainForm) {
     return dispatch => {
+        dispatch(addingCluster(true));
         return {
             type: actionTypes.promise,
             payload: {
@@ -167,7 +175,9 @@ export function addChain(chainForm) {
                         if (response.ok) {
                             response.json()
                                 .then(json => {
-                                    console.log(json);
+                                    dispatch(fetchCluster(json.data.cluster_id));
+                                    dispatch(addingCluster(false));
+                                    dispatch(notifySuccess("add Chain Success"));
                                 })
                         } else if (response.status == 400) {
                             dispatch(notifyError("Create Host Fail"));

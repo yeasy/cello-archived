@@ -229,12 +229,13 @@ def cluster_create():
         if size not in CLUSTER_SIZES:
             logger.debug("Unknown cluster size={}".format(size))
             return make_fail_response()
-        if cluster_handler.create(name=name, host_id=host_id,
-                                  consensus_plugin=consensus_plugin,
-                                  consensus_mode=consensus_mode,
-                                  size=size):
+        cluster = cluster_handler.create(name=name, host_id=host_id,
+                                         consensus_plugin=consensus_plugin,
+                                         consensus_mode=consensus_mode,
+                                         size=size)
+        if cluster:
             logger.debug("cluster POST successfully")
-            return make_ok_response(code=CODE_CREATED)
+            return make_ok_response(data={"cluster_id": cluster}, code=CODE_CREATED)
         else:
             logger.debug("cluster creation failed")
             return make_fail_response(error="Failed to create cluster {}".

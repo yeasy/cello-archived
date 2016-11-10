@@ -66,7 +66,7 @@ export function fetchHosts() {
                         if (response.ok) {
                             response.json()
                                 .then(json => {
-                                    dispatch(fetchedHosts(json.hosts));
+                                    dispatch(fetchedHosts(json.data));
                                 });
                         } else if (response.status == 400) {
                         }

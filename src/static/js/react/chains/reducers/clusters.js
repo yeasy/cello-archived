@@ -8,7 +8,8 @@ export default function clusters(state = Immutable.Map({
     activeClusters: Immutable.Map({}),
     inUsedClusters: Immutable.Map({}),
     releasedClusters: Immutable.Map({}),
-    fetchingClusters: false
+    fetchingClusters: false,
+    addingCluster: false
 }), action) {
     var activeClusters = state.get("activeClusters");
     switch (action.type) {
@@ -71,8 +72,10 @@ export default function clusters(state = Immutable.Map({
             activeClusters = activeClusters.update(action.clusterId, (x) => (x.set("action", actionInProgress)));
             return state = state.set("activeClusters", activeClusters);
         case actionTypes.fetched_cluster:
-            activeClusters = activeClusters.update(action.clusterId, (x) => Immutable.fromJS(action.cluster));
+            activeClusters = activeClusters.set(action.clusterId, Immutable.fromJS(action.cluster));
             return state.set("activeClusters", activeClusters);
+        case actionTypes.adding_cluster:
+            return state.set("addingCluster", action.inProgress);
         default:
             return state;
     }

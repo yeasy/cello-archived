@@ -22,7 +22,8 @@ var AddChainModal = React.createClass({
             Name: "",
             hostName: "",
             chainSize: "",
-            plugin: ""
+            plugin: "",
+            mode: ""
         })
     },
     initialState: function () {
@@ -30,7 +31,8 @@ var AddChainModal = React.createClass({
             Name: "",
             hostName: "",
             chainSize: "",
-            plugin: ""
+            plugin: "",
+            mode: ""
         });
     },
     close: function () {
@@ -42,8 +44,9 @@ var AddChainModal = React.createClass({
         var hostJson = {
             name: this.state.Name,
             host_id: this.state.hostName,
-            consensus_mode: this.state.plugin,
-            size: this.state.chainSize
+            consensus_plugin: this.state.plugin,
+            size: this.state.chainSize,
+            consensus_mode: this.state.mode
         };
         var chainForm = new FormData();
         for (var key in hostJson) {
@@ -66,9 +69,11 @@ var AddChainModal = React.createClass({
         })
     },
     hostNameChange: function (val) {
-        this.setState({
-            hostName: val.value
-        })
+        if (val) {
+            this.setState({
+                hostName: val.value
+            })
+        }
     },
     hostNameClose: function () {
         this.setState({
@@ -76,9 +81,11 @@ var AddChainModal = React.createClass({
         })
     },
     chainSizeChange: function (val) {
-        this.setState({
-            chainSize: val.value
-        })
+        if (val) {
+            this.setState({
+                chainSize: val.value
+            })
+        }
     },
     chainSizeClose: function () {
         this.setState({
@@ -86,13 +93,27 @@ var AddChainModal = React.createClass({
         })
     },
     pluginChange: function (val) {
-        this.setState({
-            plugin: val.value
-        })
+        if (val) {
+            this.setState({
+                plugin: val.value
+            })
+        }
     },
     pluginClose: function () {
         this.setState({
             plugin: ""
+        })
+    },
+    modeChange: function (val) {
+        if (val) {
+            this.setState({
+                mode: val.value
+            })
+        }
+    },
+    modeClose: function () {
+        this.setState({
+            mode: ""
         })
     },
     getHostNameOptions: function () {
@@ -106,7 +127,7 @@ var AddChainModal = React.createClass({
             .then((response) => {
                 return response.json();
             }).then((json) => {
-                var hosts = Immutable.fromJS(json.hosts);
+                var hosts = Immutable.fromJS(json.data);
                 var hostsList = [];
                 hosts.map((host, i) => {
                     var capacity = parseInt(host.get("capacity"));
@@ -187,6 +208,25 @@ var AddChainModal = React.createClass({
                                 />
                             </Col>
                         </FormGroup>
+                        {this.state.plugin == "pbft" &&
+                        <FormGroup controlId="mode">
+                            <Col componentClass={ControlLabel} sm={2}>
+                                Consensus Mode
+                            </Col>
+                            <Col sm={6}>
+                                <Select
+                                    cache={false}
+                                    name="form-field-name"
+                                    value={this.state.mode}
+                                    options={[
+                                        {label: "BATCH", value: "batch"},
+                                    ]}
+                                    onChange={this.modeChange}
+                                    onClose={this.modeClose}
+                                />
+                            </Col>
+                        </FormGroup>
+                        }
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>

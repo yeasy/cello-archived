@@ -10,6 +10,7 @@ export default mirrorCreator([
     'clear_clusters',
     "released_cluster",
     "operating_cluster",
-    "fetched_cluster"
+    "fetched_cluster",
+    "adding_cluster"
 ]);
 
