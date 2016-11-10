@@ -16,12 +16,11 @@ logger.addHandler(log_handler)
 
 from modules import cluster_handler, host_handler
 
-index = Blueprint('index', __name__)
+bp_index = Blueprint('bp_index', __name__)
 
 
-@index.route('/', methods=['GET'])
-@index.route('/admin', methods=['GET'])
-@index.route('/index', methods=['GET'])
+@bp_index.route('/', methods=['GET'])
+@bp_index.route('/index', methods=['GET'])
 def show():
     request_debug(r, logger)
     hosts = list(host_handler.list(filter_data={}))
@@ -55,11 +54,11 @@ def show():
                            consensus_modes=CONSENSUS_MODES,
                            host_types=HOST_TYPES,
                            log_types=CLUSTER_LOG_TYPES,
-                           log_levels=CLUSTER_LOG_LEVEL
+                           log_levels=CLUSTER_LOG_LEVEL,
                            )
 
 
-@index.route('/about', methods=['GET'])
+@bp_index.route('/about', methods=['GET'])
 def about():
     logger.info("path={}, method={}".format(r.path, r.method))
     return render_template("about.html", author=author, version=version,

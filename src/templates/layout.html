@@ -36,27 +36,6 @@
 
 <body>
 
-<!--
-<nav class="navbar navbar-inverse navbar-fixed-top bg-inverse">
-<button type="button" class="navbar-toggler hidden-sm-up" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-<span class="sr-only">Toggle navigation</span>
-<span class="icon-bar"></span>
-<span class="icon-bar"></span>
-<span class="icon-bar"></span>
-</button>
-
-<a class="navbar-brand" href="#">Blockchain as a Service</a>
-<div id="navbar">
-<nav class="nav navbar-nav pull-xs-left">
-    <a class="nav-item nav-link" href="/index">Dashboard</a>
-    <a class="nav-item nav-link" href="#">Settings</a>
-    <a class="nav-item nav-link" href="#">Profile</a>
-    <a class="nav-item nav-link" href="#">Help</a>
-</nav>
-    </div>
-</nav>
--->
-
 <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
         <div class="navbar-header">
@@ -85,13 +64,13 @@
     <div class="row" style="position:relative">
         <div class="col-sm-2 col-md-2 sidebar">
             <ul class="nav nav-sidebar nav-list">
-                {{ nav_link("index.show", "Overview") }}
-                {{ nav_link("stat.show", "System Status") }}
+                {{ nav_link("bp_index.show", "Overview") }}
+                {{ nav_link("bp_stat_view.show", "System Status") }}
                 {{ nav_link("bp_host_view.hosts_show", "Hosts") }}
-                {{ nav_link("bp_cluster_view.clusters_view", "Active Chains", type="active") }}
-                {{ nav_link("bp_cluster_view.clusters_view", "Inused Chains", type="inused" ) }}
-                {{ nav_link("bp_cluster_view.clusters_view", "Release History", type="released") }}
-                {{ nav_link("index.about", "About") }}
+                {{ nav_link("bp_cluster_view.clusters_show", "Active Chains", type="active") }}
+                {{ nav_link("bp_cluster_view.clusters_show", "Inused Chains", type="inused" ) }}
+                {{ nav_link("bp_cluster_view.clusters_show", "Release History", type="released") }}
+                {{ nav_link("bp_index.about", "About") }}
             </ul>
         </div>
         <div class="col-sm-8 col-sm-offset-3 col-md-8 col-md-offset-3">
@@ -376,13 +355,6 @@
     </div>
 </form>
 
-<!--
-<div class="footer container-fluid">
-    <div class="container">
-        <p class="text-muted">Written By: Baohua Yang, 2016</p>
-    </div>
-</div>
--->
 
 <!-- Bootstrap core JavaScript
 ================================================== -->
