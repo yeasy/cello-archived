@@ -11,11 +11,10 @@ from common import log_handler, LOG_LEVEL, \
     make_ok_response, make_fail_response, \
     CODE_OK, CODE_BAD_REQUEST, CODE_NOT_FOUND, \
     CONSENSUS_PLUGINS, CONSENSUS_MODES, \
-    CLUSTER_SIZES, request_debug, request_get, request_json_body
+    CLUSTER_SIZES, request_debug, request_get
 
 from modules import cluster_handler
-from .cluster import cluster_start, cluster_stop, cluster_restart, \
-    make_fail_response
+from .cluster import cluster_start, cluster_stop, cluster_restart
 
 
 logger = logging.getLogger(__name__)
@@ -127,7 +126,8 @@ def cluster_release():
     if not user_id and not cluster_id:
         error_msg = "No id in release"
         logger.warning(error_msg)
-        return make_fail_response(error=error_msg,data=r.args), CODE_BAD_REQUEST
+        return make_fail_response(error=error_msg,
+                                  data=r.args), CODE_BAD_REQUEST
     else:
         result = None
         if cluster_id:
@@ -136,14 +136,14 @@ def cluster_release():
             result = cluster_handler.release_cluster_for_user(user_id=user_id)
         if not result:
             error_msg = "cluster_release failed user_id={} cluster_id={}". \
-                           format(user_id, cluster_id)
+                format(user_id, cluster_id)
             logger.warning(error_msg)
             data = {
-                        "user_id": user_id,
-                        "cluster_id": cluster_id,
+                "user_id": user_id,
+                "cluster_id": cluster_id,
             }
-            return make_fail_response(error=error_msg,data=data), \
-                   CODE_BAD_REQUEST
+            return make_fail_response(error=error_msg,
+                                      data=data), CODE_BAD_REQUEST
         else:
             return make_ok_response(), CODE_OK
 
@@ -174,5 +174,5 @@ def cluster_query(cluster_id):
     else:
         error_msg = "cluster not found with id=" + cluster_id
         logger.warning(error_msg)
-        return make_fail_response(error=error_msg,data=r.form), \
-               CODE_NOT_FOUND
+        return make_fail_response(error=error_msg,
+                                  data=r.form), CODE_NOT_FOUND

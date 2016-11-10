@@ -31,8 +31,8 @@ def host_query(host_id):
     else:
         error_msg = "host not found with id=" + host_id
         logger.warning(error_msg)
-        return make_fail_response(error=error_msg, data=r.form), \
-               CODE_BAD_REQUEST
+        return make_fail_response(error=error_msg,
+                                  data=r.form), CODE_BAD_REQUEST
 
 
 @bp_host_api.route('/host', methods=['POST'])
@@ -59,7 +59,8 @@ def host_create():
     if not name or not daemon_url or not capacity or not log_type:
         error_msg = "host POST without enough data"
         logger.warning(error_msg)
-        return make_fail_response(error=error_msg, data=r.form), CODE_BAD_REQUEST
+        return make_fail_response(error=error_msg,
+                                  data=r.form), CODE_BAD_REQUEST
     else:
         result = host_handler.create(name=name, daemon_url=daemon_url,
                                      capacity=int(capacity),
@@ -83,7 +84,8 @@ def host_update():
     if "id" not in r.form:
         error_msg = "host PUT without enough data"
         logger.warning(error_msg)
-        return make_fail_response(error=error_msg, data=r.form), CODE_BAD_REQUEST
+        return make_fail_response(error=error_msg,
+                                  data=r.form), CODE_BAD_REQUEST
     else:
         id, d = r.form["id"], {}
         for k in r.form:
@@ -105,8 +107,8 @@ def host_delete():
     if "id" not in r.form or not r.form["id"]:
         error_msg = "host delete without enough data"
         logger.warning(error_msg)
-        return make_fail_response(error=error_msg, data=r.form), \
-               CODE_BAD_REQUEST
+        return make_fail_response(error=error_msg,
+                                  data=r.form), CODE_BAD_REQUEST
     else:
         logger.debug("host delete with id={0}".format(r.form["id"]))
         if host_handler.delete(id=r.form["id"]):
@@ -126,8 +128,8 @@ def host_actions():
     if not host_id or not action:
         error_msg = "host POST without enough data"
         logger.warning(error_msg)
-        return make_fail_response(error=error_msg, data=r.form), \
-               CODE_BAD_REQUEST
+        return make_fail_response(error=error_msg,
+                                  data=r.form), CODE_BAD_REQUEST
     else:
         if action == "fillup":
             if host_handler.fillup(host_id):
@@ -136,8 +138,8 @@ def host_actions():
             else:
                 error_msg = "Failed to fillup the host."
                 logger.warning(error_msg)
-                return make_fail_response(error=error_msg, data=r.form), \
-                       CODE_BAD_REQUEST
+                return make_fail_response(error=error_msg,
+                                          data=r.form), CODE_BAD_REQUEST
         elif action == "clean":
             if host_handler.clean(host_id):
                 logger.debug("clean successfully")
@@ -145,8 +147,8 @@ def host_actions():
             else:
                 error_msg = "Failed to clean the host."
                 logger.warning(error_msg)
-                return make_fail_response(error=error_msg, data=r.form), \
-                       CODE_BAD_REQUEST
+                return make_fail_response(error=error_msg,
+                                          data=r.form), CODE_BAD_REQUEST
         elif action == "reset":
             if host_handler.reset(host_id):
                 logger.debug("reset successfully")
@@ -154,13 +156,13 @@ def host_actions():
             else:
                 error_msg = "Failed to reset the host."
                 logger.warning(error_msg)
-                return make_fail_response(error=error_msg, data=r.form), \
-                       CODE_BAD_REQUEST
+                return make_fail_response(error=error_msg,
+                                          data=r.form), CODE_BAD_REQUEST
 
     error_msg = "unknown host action={}".format(action)
     logger.warning(error_msg)
-    return make_fail_response(error=error_msg, data=r.form), \
-           CODE_BAD_REQUEST
+    return make_fail_response(error=error_msg,
+                              data=r.form), CODE_BAD_REQUEST
 
 
 bp_host_view = Blueprint('bp_host_view', __name__,

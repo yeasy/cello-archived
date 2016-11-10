@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-from flask import jsonify, Blueprint, render_template
+from flask import Blueprint, render_template
 from flask import request as r
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -185,8 +185,7 @@ def cluster_query(cluster_id):
         error_msg = "cluster not found with id=" + cluster_id
         logger.warning(error_msg)
         return make_fail_response(error=error_msg, data=r.form,
-                                  code=CODE_NOT_FOUND), \
-               CODE_NOT_FOUND
+                                  code=CODE_NOT_FOUND), CODE_NOT_FOUND
 
 
 @bp_cluster_api.route('/cluster', methods=['POST'])
@@ -205,8 +204,8 @@ def cluster_create():
             r.form["consensus_plugin"] or not r.form["size"]:
         error_msg = "cluster post without enough data"
         logger.warning(error_msg)
-        return make_fail_response(error=error_msg, data=r.form), \
-               CODE_BAD_REQUEST
+        return make_fail_response(error=error_msg,
+                                  data=r.form), CODE_BAD_REQUEST
     else:
         name, host_id, consensus_plugin, consensus_mode, size = \
             r.form['name'], r.form['host_id'], r.form['consensus_plugin'],\
@@ -233,9 +232,8 @@ def cluster_create():
             return make_ok_response(), CODE_CREATED
         else:
             logger.debug("cluster creation failed")
-            return make_fail_response(
-                error="Failed to create cluster {}".format(name)), \
-                   CODE_BAD_REQUEST
+            return make_fail_response(error="Failed to create cluster {}".
+                                      format(name)), CODE_BAD_REQUEST
 
 
 @bp_cluster_api.route('/cluster', methods=['DELETE'])
@@ -253,7 +251,8 @@ def cluster_delete():
     if not r.form["id"] or not r.form["col_name"]:
         error_msg = "cluster operation post without enough data"
         logger.warning(error_msg)
-        return make_fail_response(error=error_msg, data=r.form), CODE_BAD_REQUEST
+        return make_fail_response(error=error_msg,
+                                  data=r.form), CODE_BAD_REQUEST
     else:
         logger.debug("cluster delete with id={0}, col_name={1}".format(
             r.form["id"], r.form["col_name"]))
@@ -404,7 +403,8 @@ def cluster_release_dep():
     if not user_id and not cluster_id:
         error_msg = "cluster_release without id"
         logger.warning(error_msg)
-        return make_fail_response(error=error_msg, data=r.args), CODE_BAD_REQUEST
+        return make_fail_response(error=error_msg,
+                                  data=r.args), CODE_BAD_REQUEST
     else:
         result = None
         if cluster_id:
@@ -419,7 +419,7 @@ def cluster_release_dep():
                 "user_id": user_id,
                 "cluster_id": cluster_id,
             }
-            return make_fail_response(error=error_msg, data=data), \
-                   CODE_BAD_REQUEST
+            return make_fail_response(error=error_msg,
+                                      data=data), CODE_BAD_REQUEST
         else:
             return make_ok_response(), CODE_OK
