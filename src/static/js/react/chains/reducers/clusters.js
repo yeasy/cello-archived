@@ -6,9 +6,11 @@ import actionTypes from '../constants/actionTypes'
 
 export default function clusters(state = Immutable.Map({
     activeClusters: Immutable.Map({}),
-    inuseClusters: Immutable.Map({}),
+    inUsedClusters: Immutable.Map({}),
+    releasedClusters: Immutable.Map({}),
     fetchingClusters: false
 }), action) {
+    var activeClusters = state.get("activeClusters");
     switch (action.type) {
         case actionTypes.fetching_clusters:
             return state.set("fetchingClusters", true);
@@ -17,8 +19,11 @@ export default function clusters(state = Immutable.Map({
                 case "active":
                     state = state.set("activeClusters", Immutable.fromJS(action.clusters));
                     break;
-                case "inuse":
-                    state = state.set("inuseClusters", Immutable.fromJS(action.clusters));
+                case "inused":
+                    state = state.set("inUsedClusters", Immutable.fromJS(action.clusters));
+                    break;
+                case "released":
+                    state = state.set("releasedClusters", Immutable.fromJS(action.clusters));
                     break;
                 default:
                     break;
@@ -30,13 +35,44 @@ export default function clusters(state = Immutable.Map({
                 case 'active':
                     state = state.set("activeClusters", Immutable.fromJS({}));
                     break;
-                case 'inuse':
-                    state = state.set("inuseClusters", Immutable.fromJS({}));
+                case 'inused':
+                    state = state.set("inUsedClusters", Immutable.fromJS({}));
+                    break;
+                case 'released':
+                    state = state.set("releasedClusters", Immutable.fromJS({}));
                     break;
                 default:
                     break;
             }
             return state;
+        case actionTypes.released_cluster:
+            activeClusters = activeClusters.update(action.clusterId, (x) => (x.set("user_id", "")));
+            return state = state.set("activeClusters", activeClusters);
+        case actionTypes.operating_cluster:
+            var actionInProgress = "";
+            if (action.inProgress) {
+                switch (action.operation) {
+                    case "release":
+                        actionInProgress = "releasing";
+                        break;
+                    case "start":
+                        actionInProgress = "starting";
+                        break;
+                    case "stop":
+                        actionInProgress = "stopping";
+                        break;
+                    case "restart":
+                        actionInProgress = "restarting";
+                        break;
+                    default:
+                        break;
+                }
+            }
+            activeClusters = activeClusters.update(action.clusterId, (x) => (x.set("action", actionInProgress)));
+            return state = state.set("activeClusters", activeClusters);
+        case actionTypes.fetched_cluster:
+            activeClusters = activeClusters.update(action.clusterId, (x) => Immutable.fromJS(action.cluster));
+            return state.set("activeClusters", activeClusters);
         default:
             return state;
     }

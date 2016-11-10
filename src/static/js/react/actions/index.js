@@ -20,7 +20,9 @@ import {
 
 import {
     fetchClusters,
-    clearClusters
+    clearClusters,
+    operateCluster,
+    addChain
 } from '../chains/actions/clusters'
 
 module.exports = {
@@ -33,5 +35,7 @@ module.exports = {
     fetchOverview,
     notifySuccess,
     fetchClusters,
-    clearClusters
+    clearClusters,
+    operateCluster,
+    addChain
 };

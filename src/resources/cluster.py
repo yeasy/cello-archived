@@ -286,10 +286,21 @@ def cluster_list():
     """
     request_debug(r, logger)
     json_body = r.get_json(force=True, silent=True) or {}
+
     show_type = r.args.get("type", "active")
-    # result = cluster_handler.list(filter_data=json_body)
-    clusters = list(cluster_handler.list(filter_data=json_body,
-                                         col_name=show_type))
+    col_filter = dict((key, r.args.get(key)) for key in r.args if
+                      key != "col_name" and key != "page" and key != "type")
+    if show_type != "released":
+        col_name = r.args.get("col_name", "active")
+    else:
+        col_name = r.args.get("col_name", "released")
+
+    if show_type == "inused":
+        col_filter["user_id"] = {"$ne": ""}
+
+    logger.info("col_filter {} col_name {}".format(col_filter, col_name))
+    clusters = list(cluster_handler.list(filter_data=col_filter,
+                                         col_name=col_name))
     clusters_dict = {}
     for cluster in clusters:
         clusters_dict.update({

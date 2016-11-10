@@ -11,74 +11,8 @@ import { Table, search, Search} from 'reactabular';
 import { compose } from 'redux';
 import {Paginator, paginate} from '../helpers'
 var classNames = require("classnames");
-require("../style/table.css");
-import AddChainModal from './modal_add_chain'
 
-
-var Actions = React.createClass({
-    hostAction: function (hostAction, hostId) {
-        const {dispatch, actions} = this.props;
-
-        var hostForm = new FormData();
-        hostForm.append('id', hostId);
-        hostForm.append('action', hostAction);
-
-        dispatch(actions.hostAction(hostForm, hostId, hostAction));
-    },
-    operateCluster: function (operation) {
-        const {dispatch, actions, rowData} = this.props;
-        if ((operation == "release" && rowData.user_id == "") || ("action" in rowData && rowData.action != "")) {
-            return null;
-        }
-        dispatch(actions.operateCluster(rowData.id, rowData.name, operation))
-    },
-    render: function () {
-        const {rowData} = this.props;
-        const releaseActionClass = classNames({
-            disabled: rowData.user_id == "" || ("action" in rowData && rowData.action != "")
-        });
-        const startActionClass = classNames({
-            disabled: ("action" in rowData && rowData.action != "") || rowData.status == "running"
-        });
-        const stopActionClass = classNames({
-            disabled: ("action" in rowData && rowData.action != "") || rowData.status == "stopped"
-        });
-        const actionClass = classNames({
-            disabled: "action" in rowData && rowData.action != ""
-        });
-        return (
-            <div className="btn-group">
-                <button className="btn btn-primary btn-xs">Action</button>
-                <button className="btn btn-primary dropdown-toggle btn-xs" data-toggle="dropdown">
-                    <span className="caret"></span>
-                    <span className="sr-only">Toggle Dropdown</span>
-                </button>
-                <ul className="dropdown-menu" role="menu">
-                    <li className={startActionClass}><a onClick={() => this.operateCluster("start")}><span className="glyphicon glyphicon-play" /> Start</a></li>
-                    <li className={stopActionClass}><a onClick={() => this.operateCluster("stop")}><span className="glyphicon glyphicon-stop" /> Stop</a></li>
-                    <li className={actionClass}><a onClick={() => this.operateCluster("restart")}><span className="glyphicon glyphicon-repeat" /> Restart</a></li>
-                    <li className={actionClass}><a><span className="glyphicon glyphicon-trash" /> Delete</a></li>
-                    <li className={releaseActionClass}><a onClick={() => this.operateCluster("release")}><span className="glyphicon glyphicon-refresh" /> Release</a></li>
-                </ul>
-            </div>
-        )
-    }
-});
-
-var ActionStatus = React.createClass({
-    render: function () {
-        const {rowData} = this.props;
-        var action = "";
-        if ("action" in rowData) {
-            action = rowData.action;
-        }
-        return (
-            <span>{action != "" ? <span><IoLoadD className="spin"/> {action}</span> : ""}</span>
-        )
-    }
-});
-
-var ActiveChains = React.createClass({
+var ReleasedHistory = React.createClass({
     getInitialState: function () {
         return ({
             query: {},
@@ -86,18 +20,17 @@ var ActiveChains = React.createClass({
             pagination: {
                 page: 1,
                 perPage: 10
-            },
-            showAddModal: false
+            }
         })
     },
     componentDidMount: function () {
         const {dispatch, actions} = this.props;
 
-        dispatch(actions.fetchClusters("active"));
+        dispatch(actions.fetchClusters("released"));
     },
     componentWillUnmount: function () {
         const {dispatch, actions} = this.props;
-        dispatch(actions.clearClusters("active"));
+        dispatch(actions.clearClusters("released"));
     },
     searchColumnChange: function (searchColumn) {
         this.setState({
@@ -109,21 +42,11 @@ var ActiveChains = React.createClass({
             query: query
         })
     },
-    closeModal: function () {
-        this.setState({
-            showAddModal: false
-        })
-    },
-    addChain: function () {
-        this.setState({
-            showAddModal: true
-        })
-    },
     onSelect: function(data) {
         const {clusters} = this.props;
         var pagination = this.state.pagination;
         var page = data.selected + 1;
-        var clustersLength = clusters.get("activeClusters").valueSeq().toJS().length;
+        var clustersLength = clusters.get("releasedClusters").valueSeq().toJS().length;
         var perPage = this.state.pagination.perPage;
         const pages = Math.ceil(
             clustersLength / perPage
@@ -144,11 +67,6 @@ var ActiveChains = React.createClass({
                 perPage: parseInt(e.target.value)
             }
         })
-    },
-    onRow: function (row, { rowIndex, rowKey }) {
-        return {
-            className: row.user_id ? "used_row" : ""
-        }
     },
     render: function () {
         const {clusters} = this.props;
@@ -171,34 +89,6 @@ var ActiveChains = React.createClass({
                 }
             },
             {
-                property: 'status',
-                header: {
-                    label: 'Status'
-                },
-                cell: {
-                    format: (status, extra) => (
-                        <span className={classNames("label", {
-                            "label-success": status == "running",
-                            "label-danger": status == "stopped"
-                        })}>{status}</span>
-                    )
-                }
-            },
-            {
-                property: 'health',
-                header: {
-                    label: 'Health'
-                },
-                cell: {
-                    format: (health, extra) => (
-                        <span className={classNames("label", {
-                            "label-success": health == "OK",
-                            "label-danger": health != "OK"
-                        })}>{health}</span>
-                    )
-                }
-            },
-            {
                 property: 'size',
                 header: {
                     label: 'Size'
@@ -211,18 +101,21 @@ var ActiveChains = React.createClass({
                 }
             },
             {
-                cell: {
-                    format: (value, { rowData }) => (
-                        <Actions {...this.props} rowData={rowData} />
-                    )
-                },
-                visible: true
+                property: 'user_id',
+                header: {
+                    label: 'User'
+                }
             },
             {
-                cell: {
-                    format: (value, { rowData }) => (
-                        <ActionStatus {...this.props} rowData={rowData} />
-                    )
+                property: 'release_ts',
+                header: {
+                    label: 'Released'
+                }
+            },
+            {
+                property: 'duration',
+                header: {
+                    label: 'Duration'
                 }
             }
         ];
@@ -230,20 +123,13 @@ var ActiveChains = React.createClass({
         const paginated = compose(
             paginate(pagination),
             search.multipleColumns({ columns, query})
-        )(clusters.get("activeClusters").valueSeq().toJS());
+        )(clusters.get("releasedClusters").valueSeq().toJS());
         const pageSizeArray = [10, 20, 30, 40, 50];
         return (
             <div className="">
                 <div className="page-title">
                     <div className="title_left">
-                        <h3>Active Chains <small>{clusters.get("fetchingClusters", false) ? <IoLoadD className="spin" size={30} /> : clusters.get("activeClusters").valueSeq().toJS().length}</small></h3>
-                    </div>
-                    <div className="title_right">
-                        <div className="col-md-2 col-sm-2 col-xs-12 pull-right">
-                            <Button onClick={this.addChain} bsStyle="success" >
-                                Add Chain
-                            </Button>
-                        </div>
+                        <h3>Released History <small>{clusters.get("fetchingClusters", false) ? <IoLoadD className="spin" size={30} /> : clusters.get("releasedClusters").valueSeq().toJS().length}</small></h3>
                     </div>
                 </div>
                 <div className="clearfix"></div>
@@ -251,7 +137,7 @@ var ActiveChains = React.createClass({
                     <div className="col-md-12">
                         <div className="x_panel">
                             <div className="x_title">
-                                <h2>Active Chains List</h2>
+                                <h2>Released History List</h2>
                                 <div className="clearfix"></div>
                             </div>
                             <div className="x_content">
@@ -277,7 +163,7 @@ var ActiveChains = React.createClass({
                                                     columns={columns}
                                                     onColumnChange={this.searchColumnChange}
                                                     onChange={this.searchChange}
-                                                    rows={clusters.get("activeClusters").valueSeq().toJS()}
+                                                    rows={clusters.get("releasedClusters").valueSeq().toJS()}
                                                 />
                                             </label>
                                         </div>
@@ -291,8 +177,7 @@ var ActiveChains = React.createClass({
                                         >
                                             <Table.Header />
 
-                                            <Table.Body rows={paginated.rows} onRow={this.onRow}
-                                                        rowKey="id" />
+                                            <Table.Body rows={paginated.rows} rowKey="id" />
                                         </Table.Provider>
                                     </div>
                                 </div>
@@ -312,7 +197,6 @@ var ActiveChains = React.createClass({
                         </div>
                     </div>
                 </div>
-                <AddChainModal showModal={this.state.showAddModal} close={this.closeModal} />
             </div>
         )
     }
@@ -323,4 +207,4 @@ export default connect(state => ({
 }), dispatch => ({
     actions: bindActionCreators(AllActions, dispatch),
     dispatch: dispatch
-}))(ActiveChains)
+}))(ReleasedHistory)

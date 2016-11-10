@@ -7,6 +7,9 @@ export default mirrorCreator([
     'promise',
     'fetching_clusters',
     'fetched_clusters',
-    'clear_clusters'
+    'clear_clusters',
+    "released_cluster",
+    "operating_cluster",
+    "fetched_cluster"
 ]);
 
