@@ -9,9 +9,10 @@ from flask import jsonify, Blueprint, render_template
 from flask import request as r
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-from common import log_handler, LOG_LEVEL, response_ok, \
-    response_fail, CODE_OK, CODE_CREATED, CODE_BAD_REQUEST, \
-    HOST_TYPES, request_debug, request_get, \
+from common import log_handler, LOG_LEVEL, \
+    make_ok_response, make_fail_response, \
+    CODE_CREATED, \
+    HOST_TYPES, request_debug, \
     CLUSTER_LOG_TYPES, CLUSTER_LOG_LEVEL
 from modules import host_handler
 
@@ -29,11 +30,11 @@ def host_query(host_id):
     request_debug(r, logger)
     result = host_handler.get_by_id(host_id)
     if result:
-        return jsonify(result), CODE_OK
+        return make_ok_response(data=result)
     else:
-        logger.warning("host not found with id=" + host_id)
-        response_fail["data"] = r.form
-        return jsonify(response_fail), CODE_BAD_REQUEST
+        error_msg = "host not found with id=" + host_id
+        logger.warning(error_msg)
+        return make_fail_response(error=error_msg, data=r.form)
 
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
@@ -79,10 +80,9 @@ def host_create():
                  format(name, daemon_url, capacity, autofill, schedulable,
                         log_type, log_server))
     if not name or not daemon_url or not capacity or not log_type:
-        logger.warning("host post without enough data")
-        response_fail["error"] = "host POST without enough data"
-        response_fail["data"] = r.form
-        return jsonify(response_fail), CODE_BAD_REQUEST
+        error_msg = "host POST without enough data"
+        logger.warning(error_msg)
+        return make_fail_response(error=error_msg, data=r.form)
     else:
         result = host_handler.create(name=name, daemon_url=daemon_url,
                                      capacity=int(capacity),
@@ -93,26 +93,24 @@ def host_create():
                                      log_server=log_server)
         if result:
             logger.debug("host creation successfully")
-            return jsonify({
-                "data": {
-                    result.get("id", ""): result
-                }
-            }), CODE_CREATED
+            data = {
+                result.get("id", ""): result
+            }
+            return make_ok_response(data=data, code=CODE_CREATED)
         else:
-            logger.debug("host creation failed")
-            response_fail["error"] = "Failed to create host {}".format(
-                r.form["name"])
-            return jsonify(response_fail), CODE_BAD_REQUEST
+            error_msg = "Failed to create host {}".format(r.form["name"])
+            logger.warning(error_msg)
+            return make_fail_response(error=error_msg)
 
 
 @bp_host_api.route('/host', methods=['PUT'])
 def host_update():
     request_debug(r, logger)
     if "id" not in r.form:
-        logger.warning("host put without enough data")
-        response_fail["error"] = "host PUT without enough data"
-        response_fail["data"] = r.form
-        return jsonify(response_fail), CODE_BAD_REQUEST
+        error_msg = "host PUT without enough data"
+        logger.warning(error_msg)
+        return make_fail_response(error=error_msg,
+                                  data=r.form)
     else:
         id, d = r.form["id"], {}
         for k in r.form:
@@ -121,33 +119,28 @@ def host_update():
         result = host_handler.update(id, d)
         if result:
             logger.debug("host PUT successfully")
-            return jsonify({
-                "host_id": id,
-                "data": result
-            }), CODE_OK
+            return make_ok_response(data=result)
         else:
-            logger.debug("host PUT failed")
-            response_fail["error"] = "Failed to update host {}".format(
-                result.get("name"))
-            return jsonify(response_fail), CODE_BAD_REQUEST
+            error_msg = "Failed to update host {}".format(result.get("name"))
+            logger.warning(error_msg)
+            return make_fail_response(error=error_msg)
 
 
 @bp_host_api.route('/host', methods=['PUT', 'DELETE'])
 def host_delete():
     request_debug(r, logger)
     if "id" not in r.form or not r.form["id"]:
-        logger.warning("host operation post without enough data")
-        response_fail["error"] = "host delete without enough data"
-        response_fail["data"] = r.form
-        return jsonify(response_fail), CODE_BAD_REQUEST
+        error_msg = "host delete without enough data"
+        logger.warning(error_msg)
+        return make_fail_response(error=error_msg, data=r.form)
     else:
         logger.debug("host delete with id={0}".format(r.form["id"]))
         if host_handler.delete(id=r.form["id"]):
-            return jsonify(response_ok), CODE_OK
+            return make_ok_response()
         else:
-            response_fail["error"] = "Failed to delete host {}".format(
-                r.form["id"])
-            return jsonify(response_fail), CODE_BAD_REQUEST
+            error_msg = "Failed to delete host {}".format(r.form["id"])
+            logger.warning(error_msg)
+            return make_fail_response(error=error_msg)
 
 
 @bp_host_api.route('/host_op', methods=['POST'])
@@ -157,40 +150,39 @@ def host_actions():
 
     host_id, action = r.form['id'], r.form['action']
     if not host_id or not action:
-        logger.warning("host post without enough data")
-        response_fail["error"] = "host POST without enough data"
-        response_fail["data"] = r.form
-        return jsonify(response_fail), CODE_BAD_REQUEST
+        error_msg = "host POST without enough data"
+        logger.warning(error_msg)
+        return make_fail_response(error=error_msg,
+                                  data=r.form)
     else:
         if action == "fillup":
             if host_handler.fillup(host_id):
                 logger.debug("fillup successfully")
-                return jsonify(response_ok), CODE_OK
+                return make_ok_response()
             else:
-                response_fail["data"] = r.form
-                response_fail["error"] = "Failed to fillup the host."
-                return jsonify(response_fail), CODE_BAD_REQUEST
+                error_msg = "Failed to fillup the host."
+                logger.warning(error_msg)
+                return make_fail_response(error=error_msg, data=r.form)
         elif action == "clean":
             if host_handler.clean(host_id):
                 logger.debug("clean successfully")
-                return jsonify(response_ok), CODE_OK
+                return make_ok_response()
             else:
-                response_fail["data"] = r.form
-                response_fail["error"] = "Failed to clean the host."
-                return jsonify(response_fail), CODE_BAD_REQUEST
+                error_msg = "Failed to clean the host."
+                logger.warning(error_msg)
+                return make_fail_response(error=error_msg, data=r.form)
         elif action == "reset":
             if host_handler.reset(host_id):
                 logger.debug("reset successfully")
-                return jsonify(response_ok), CODE_OK
+                return make_ok_response()
             else:
-                response_fail["data"] = r.form
-                response_fail["error"] = "Failed to reset the host."
-                return jsonify(response_fail), CODE_BAD_REQUEST
+                error_msg = "Failed to reset the host."
+                logger.warning(error_msg)
+                return make_fail_response(error=error_msg, data=r.form)
 
-    logger.warning("unknown host action={}".format(action))
-    response_fail["error"] = "unknown operation method"
-    response_fail["data"] = r.form
-    return jsonify(response_fail), CODE_BAD_REQUEST
+    error_msg = "unknown host action={}".format(action)
+    logger.warning(error_msg)
+    return make_fail_response(error=error_msg, data=r.form)
 
 
 bp_host_view = Blueprint('bp_host_view', __name__,
@@ -213,4 +205,4 @@ def hosts_show():
 def host_info(host_id):
     logger.debug("/ host_info/{0} method={1}".format(host_id, r.method))
     return render_template("host_info.html", item=host_handler.get_by_id(
-        host_id)), CODE_OK
+        host_id))

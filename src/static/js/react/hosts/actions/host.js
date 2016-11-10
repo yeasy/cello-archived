@@ -124,8 +124,8 @@ export function updateHost(hostForm) {
                         if (response.ok) {
                             response.json()
                                 .then(json => {
-                                    dispatch(updateSpecialHost(json.host_id, json.data));
-                                    dispatch(notifySuccess("Update host " + json.host_id + " success"));
+                                    dispatch(updateSpecialHost(json.data.id, json.data));
+                                    dispatch(notifySuccess("Update host " + json.data.id + " success"));
                                 })
                         } else if (response.status == 400) {
                             dispatch(notifyError("Update Host Fail"));
