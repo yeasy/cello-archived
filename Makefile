@@ -27,8 +27,13 @@ logs:
 redeploy:
 	bash scripts/redeploy.sh ${service}
 
-restart:
-	bash scripts/restart.sh
+start:
+	bash scripts/start.sh
+
+stop:
+	bash scripts/stop.sh
+
+restart: stop start
 
 setup:
 	bash scripts/setup.sh

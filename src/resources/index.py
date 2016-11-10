@@ -54,7 +54,7 @@ def show():
                            consensus_modes=CONSENSUS_MODES,
                            host_types=HOST_TYPES,
                            log_types=CLUSTER_LOG_TYPES,
-                           log_levels=CLUSTER_LOG_LEVEL
+                           log_levels=CLUSTER_LOG_LEVEL,
                            )
 
 
