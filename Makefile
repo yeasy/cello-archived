@@ -18,10 +18,10 @@ clean:
 
 # Use like "make log service=dashboard"
 log:
-	docker-compose logs -f ${service}
+	docker-compose logs -f ${service} --tail=100
 
 logs:
-	docker-compose logs -f
+	docker-compose logs -f --tail=100
 
 # Use like "make redeploy service=dashboard"
 redeploy:
