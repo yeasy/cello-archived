@@ -13,6 +13,7 @@ import {Paginator, paginate} from '../helpers'
 var classNames = require("classnames");
 require("../style/table.css");
 import AddChainModal from './modal_add_chain'
+var Link = require('react-router').Link;
 
 
 var Actions = React.createClass({
@@ -169,6 +170,11 @@ var ActiveChains = React.createClass({
                 property: 'name',
                 header: {
                     label: 'Name'
+                },
+                cell: {
+                    format: (name, {rowData}) => (
+                        <Link to={`/chains/cluster/${rowData.id}`}>{name}</Link>
+                    )
                 }
             },
             {

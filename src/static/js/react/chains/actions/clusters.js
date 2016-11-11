@@ -122,9 +122,16 @@ function fetchedCluster(clusterId, cluster) {
     }
 }
 
-function fetchCluster(clusterId) {
+function fetchingCluster() {
+    return {
+        type: actionTypes.fetching_cluster
+    }
+}
+
+export function fetchCluster(clusterId) {
     var url = Urls.ClusterUrl + "/" + clusterId;
     return dispatch => {
+        dispatch(fetchingCluster());
         return {
             type: actionTypes.promise,
             payload: {

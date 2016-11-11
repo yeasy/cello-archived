@@ -23,6 +23,7 @@ import {
     clearClusters,
     operateCluster,
     addChain,
+    fetchCluster,
     deleteCluster
 } from '../chains/actions/clusters'
 
@@ -39,5 +40,6 @@ module.exports = {
     clearClusters,
     operateCluster,
     addChain,
+    fetchCluster,
     deleteCluster
 };

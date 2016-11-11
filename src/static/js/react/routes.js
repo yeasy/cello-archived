@@ -9,6 +9,7 @@ import ActiveChains from './chains/active_view'
 import InUsedChains from './chains/inused_view'
 import About from './about/view'
 import ReleaseHistory from './chains/released_view'
+import ClusterInfo from './chains/cluster_info'
 
 export default (
     <Route render={props => <RouterContext {...props} />} path="/" name="Dashboard" component={Dashboard}>
@@ -21,6 +22,7 @@ export default (
         </Route>
         <Route name="Chains" path="chains">
             <Route name="ActiveChains" path="active" component={ActiveChains} />
+            <Route name="ClusterInfo" path="cluster/:clusterId" component={ClusterInfo} />
             <Route name="InusedChains" path="inused" component={InUsedChains} />
             <Route name="ReleaseHistory" path="release_history" component={ReleaseHistory} />
         </Route>
