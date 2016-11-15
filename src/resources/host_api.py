@@ -26,6 +26,7 @@ bp_host_api = Blueprint('bp_host_api', __name__,
 def host_query(host_id):
     request_debug(r, logger)
     result = host_handler.get_by_id(host_id)
+    logger.debug(result)
     if result:
         return make_ok_response(data=result)
     else:
