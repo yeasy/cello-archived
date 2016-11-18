@@ -8,4 +8,4 @@ RUN pip install  -i http://pypi.douban.com/simple/ --trusted-host pypi.douban.co
 
 COPY . /app
 
-CMD ["gunicorn", "-w", "128", "-b", "0.0.0.0:8080", "dashboard:app"]
+CMD ["gunicorn", "-k", "gevent", "-w", "8", "-b", "0.0.0.0:8080", "dashboard:app"]
