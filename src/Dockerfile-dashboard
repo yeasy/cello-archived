@@ -8,8 +8,9 @@ RUN pip install --no-cache-dir  -i http://pypi.douban.com/simple/ --trusted-host
 
 COPY . /app
 
-ADD node-v6.2.0-linux-x64.tar.xz /usr/local/
-run echo "registry = https://registry.npm.taobao.org" > /root/.npmrc
+RUN cd /tmp && wget -c https://nodejs.org/dist/v7.1.0/node-v7.1.0-linux-x64.tar.xz \
+	&& tar -xvf node-v7.1.0-linux-x64.tar.xz && cp -r node-v7.1.0-linux-x64/* /usr/local/ \
+	&& rm -rf node-v7.1.0-linux-x64*
 
 # use this in development
 CMD ["python", "dashboard.py"]

@@ -1,13 +1,18 @@
 #Help
 
-**before build react, you need install nodejs packages**
+**If You want to develop with reactjs, please install nodejs packages**
 ```sh
-$ cd src
-$ npm install
+$ make npm-install
 ```
 
-**Then build react js component.**
+**Then in dev mode, you can run watch mode with js modification**
 
 ```sh
-$ npm run build-prod
+$ make watch-mode
+```
+
+**Finally If you want to publish the js**
+
+```sh
+$ make build-prod-js
 ```
