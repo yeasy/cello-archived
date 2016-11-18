@@ -215,7 +215,7 @@ export function queryHost(hostId) {
                         if (response.ok) {
                             response.json()
                                 .then(json => {
-                                    dispatch(updateSpecialHost(hostId, json));
+                                    dispatch(updateSpecialHost(hostId, json.data));
                                 })
                         } else if (response.status == 400) {
                             console.log("is bad request");
