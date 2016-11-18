@@ -1,5 +1,9 @@
-# from .rest_action import front_rest_v1, front_rest_v2
 from .index import bp_index, bp_index_api
-from .host import bp_host_api, bp_host_view
-from .cluster import bp_cluster_api, bp_cluster_view, front_rest_v2
+
+from .host_api import bp_host_api
+from .cluster_api import bp_cluster_api, front_rest_v2
+
+from .cluster_view import bp_cluster_view
+from .host_view import bp_host_view
+
 from .stat import bp_stat_api, bp_stat_view

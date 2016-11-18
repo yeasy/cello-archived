@@ -328,7 +328,7 @@ class ClusterHandler(object):
         :return: True or False
         """
         c = self.db_update_one(
-            {"id": cluster_id, "release_ts": ""},
+            {"id": cluster_id},
             {"$set": {"release_ts": datetime.datetime.now()}})
         if not c:
             logger.warning("No cluster find for released with id {}".format(
