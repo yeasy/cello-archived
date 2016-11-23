@@ -58,6 +58,7 @@
     "material-ui": "^0.15.2",
     "mirror-creator": "^1.1.0",
     "node-gettext": "^1.1.0",
+    "path": "^0.12.7",
     "randomstring": "^1.1.4",
     "react": "^15.0.2",
     "react-bootstrap": "^0.30.3",
