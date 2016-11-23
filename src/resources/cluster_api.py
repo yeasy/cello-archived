@@ -235,7 +235,8 @@ def cluster_create():
                                          size=size)
         if cluster:
             logger.debug("cluster POST successfully")
-            return make_ok_response(data={"cluster_id": cluster}, code=CODE_CREATED)
+            return make_ok_response(data={"cluster_id": cluster},
+                                    code=CODE_CREATED)
         else:
             logger.debug("cluster creation failed")
             return make_fail_response(error="Failed to create cluster {}".
