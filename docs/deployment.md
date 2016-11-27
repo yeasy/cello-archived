@@ -7,7 +7,7 @@ There are two kinds of nodes, we suggest all nodes are Linux-based (Ubuntu 14.04
 * Master Node: Manage (e.g., create/delete) the chains in Work Nodes, providing dashboard on port `8080` and rest api on port `80`;
 * Worker Node: Container providers, can be Docker Host or Swarm Cluster, usually the Docker service should listen on port `2375`.
 
-[!Deployment topology](imgs/deployment.png)
+![Deployment topology](imgs/deployment.png)
 
 If it's the first time to setup Cello, we recommend first setup a Docker Host as Worker Node. 
 
