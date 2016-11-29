@@ -136,7 +136,7 @@ var InUsedChains = React.createClass({
             <div className="">
                 <div className="page-title">
                     <div className="title_left">
-                        <h3>InUsed Chains <small>{clusters.get("fetchingClusters", false) ? <IoLoadD className="spin" size={30} /> : clusters.get("inUsedClusters").valueSeq().toJS().length}</small></h3>
+                        <h3>Inused Chains <small>{clusters.get("fetchingClusters", false) ? <IoLoadD className="spin" size={30} /> : clusters.get("inUsedClusters").valueSeq().toJS().length}</small></h3>
                     </div>
                 </div>
                 <div className="clearfix"></div>
@@ -144,7 +144,7 @@ var InUsedChains = React.createClass({
                     <div className="col-md-12">
                         <div className="x_panel">
                             <div className="x_title">
-                                <h2>InUsed Chains List</h2>
+                                <h2>Inused Chains List</h2>
                                 <div className="clearfix"></div>
                             </div>
                             <div className="x_content">

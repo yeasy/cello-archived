@@ -37,7 +37,7 @@ var SystemOverview = React.createClass({
                         </div>
                     </div>
                     <div className="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
-                        <span className="count_top red">InActive Hosts</span>
+                        <span className="count_top red">Inactive Hosts</span>
                         <div className="count red">
                             {overview.get("fetchingOverview", false)
                                 ? <IoLoadD className="spin"/>
@@ -64,7 +64,7 @@ var SystemOverview = React.createClass({
                         </div>
                     </div>
                     <div className="col-md-2 col-sm-4 col-xs-6 tile_stats_count">
-                        <span className="count_top red">InUse Clusters</span>
+                        <span className="count_top red">Inuse Clusters</span>
                         <div className="count red">
                             {overview.get("fetchingOverview", false)
                                 ? <IoLoadD className="spin"/>
