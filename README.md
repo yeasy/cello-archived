@@ -29,9 +29,9 @@ You can also find more [scenarios](docs/scenario.md).
 * [Dashboard](docs/dashboard.md)
 
 ### Operator Docs
-* [System Requirement](docs/system_requirement.md)
 * [Installation & Deployment](docs/deployment.md)
 * [Scenarios](docs/scenario.md)
+* [Production Configuration](docs/production_config.md)
 
 ### Development Docs
 * [Architecture Design](docs/arch.md)
