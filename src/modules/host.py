@@ -196,13 +196,13 @@ class HostHandler(object):
         :param id: host id
         :return: True or False
         """
-        logger.debug("fillup host with id = {}".format(id))
+        logger.debug("Try fillup host {}".format(id))
         host = self.get_by_id(id)
         if not host:
             return False
         num_new = host.get("capacity") - len(host.get("clusters"))
         if num_new <= 0:
-            logger.warning("host already full")
+            logger.warning("host {} already full".format(id))
             return True
 
         free_ports = cluster.cluster_handler.find_free_start_ports(id, num_new)
