@@ -110,13 +110,18 @@ def host_update():
     if "id" not in r.form:
         error_msg = "host PUT without enough data"
         logger.warning(error_msg)
-        return make_fail_response(error=error_msg,
-                                  data=r.form)
+        return make_fail_response(error=error_msg, data=r.form)
     else:
         id, d = r.form["id"], {}
         for k in r.form:
             if k != "id":
                 d[k] = r.form.get(k)
+            if k in ['schedulable', 'autofill']:
+                if d[k] == 'on':
+                    d[k] = 'true'
+                else:
+                    d[k] = 'false'
+        logger.debug("Host update with {}".format(d))
         result = host_handler.update(id, d)
         if result:
             logger.debug("host PUT successfully")
@@ -127,7 +132,7 @@ def host_update():
             return make_fail_response(error=error_msg)
 
 
-@bp_host_api.route('/host', methods=['PUT', 'DELETE'])
+@bp_host_api.route('/host', methods=['DELETE'])
 def host_delete():
     request_debug(r, logger)
     if "id" not in r.form or not r.form["id"]:
