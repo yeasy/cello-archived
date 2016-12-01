@@ -75,6 +75,11 @@ var InUsedChains = React.createClass({
                 property: 'name',
                 header: {
                     label: 'Name'
+                },
+                cell: {
+                    format: (name, {rowData}) => (
+                      <Link to={`/chains/cluster/${rowData.id}`}>{name}</Link>
+                    )
                 }
             },
             {

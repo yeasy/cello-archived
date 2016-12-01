@@ -5,6 +5,7 @@
   "description": "cello",
   "license": "Apache 2.0",
   "devDependencies": {
+    "autoprefixer": "^6.5.3",
     "css-loader": "^0.24.0",
     "cz-conventional-changelog": "^1.1.5",
     "eslint": "^0.23.0",
