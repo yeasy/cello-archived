@@ -1,6 +1,6 @@
 
 from .db import db, col_host
-from .error import response_ok, response_fail, CODE_NOT_FOUND,\
+from .response import make_ok_response, make_fail_response, CODE_NOT_FOUND,\
     CODE_BAD_REQUEST, CODE_CONFLICT, CODE_CREATED, CODE_FORBIDDEN, \
     CODE_METHOD_NOT_ALLOWED, CODE_NO_CONTENT, CODE_NOT_ACCEPTABLE, CODE_OK
 

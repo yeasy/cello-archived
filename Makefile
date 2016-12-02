@@ -18,17 +18,22 @@ clean:
 
 # Use like "make log service=dashboard"
 log:
-	docker-compose logs -f ${service}
+	docker-compose logs -f ${service} --tail=100
 
 logs:
-	docker-compose logs -f
+	docker-compose logs -f --tail=100
 
 # Use like "make redeploy service=dashboard"
 redeploy:
 	bash scripts/redeploy.sh ${service}
 
-restart:
-	bash scripts/restart.sh
+start:
+	bash scripts/start.sh
+
+stop:
+	bash scripts/stop.sh
+
+restart: stop start
 
 setup:
 	bash scripts/setup.sh

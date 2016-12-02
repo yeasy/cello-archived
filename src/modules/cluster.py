@@ -328,7 +328,7 @@ class ClusterHandler(object):
         :return: True or False
         """
         c = self.db_update_one(
-            {"id": cluster_id, "release_ts": ""},
+            {"id": cluster_id},
             {"$set": {"release_ts": datetime.datetime.now()}})
         if not c:
             logger.warning("No cluster find for released with id {}".format(
@@ -553,9 +553,11 @@ class ClusterHandler(object):
             return ""
 
         clusters_exists = self.col_active.find({"host_id": host_id})
+        clusters_valid = list(filter(lambda c: c.get("service_url"),
+                                     clusters_exists))
         ports_existed = list(map(
             lambda c: int(c["service_url"]["rest"].split(":")[-1]),
-            clusters_exists))
+            clusters_valid))
 
         logger.debug("The ports existed: {}".format(ports_existed))
         if len(ports_existed) + number >= 1000:

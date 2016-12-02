@@ -113,24 +113,25 @@ $(document).ready(function () {
       dataType: 'json',
     }).success(function (response) {
       // Populate the form fields with the data returned from server
+      host = response.data;
       $('#config_host_form')
-        .find('[name="id"]').val(response.id).end()
-        .find('[name="name"]').val(response.name).end()
-        .find('[name="daemon_url"]').val(response.daemon_url).end()
-        .find('[name="type"]').val(response.type).end()
-        .find('[name="log_level"]').val(response.log_level).end()
-        .find('[name="log_type"]').val(response.log_type).end()
-        .find('[name="log_server"]').val(response.log_server).end()
-        .find('[name="capacity"]').val(response.capacity).end()
-        .find('[name="status"]').val(response.status).end()
-        .find('[name="create_ts"]').val(response.create_ts).end()
-        .find('[name="clusters"]').val(response.clusters.length).end();
+        .find('[name="id"]').val(host.id).end()
+        .find('[name="name"]').val(host.name).end()
+        .find('[name="daemon_url"]').val(host.daemon_url).end()
+        .find('[name="type"]').val(host.type).end()
+        .find('[name="log_level"]').val(host.log_level).end()
+        .find('[name="log_type"]').val(host.log_type).end()
+        .find('[name="log_server"]').val(host.log_server).end()
+        .find('[name="capacity"]').val(host.capacity).end()
+        .find('[name="status"]').val(host.status).end()
+        .find('[name="create_ts"]').val(host.create_ts).end()
+        .find('[name="clusters"]').val(host.clusters.length).end();
 
-      if (response.schedulable == "true")
+      if (host.schedulable == "true")
         $('#config_host_form').find('[name="schedulable"]').prop('checked', true);
       else
         $('#config_host_form').find('[name="schedulable"]').prop('checked', false);
-      if (response.autofill == "true")
+      if (host.autofill == "true")
         $('#config_host_form').find('[name="autofill"]').prop('checked', true);
       else
         $('#config_host_form').find('[name="autofill"]').prop('checked', false);
@@ -142,7 +143,7 @@ $(document).ready(function () {
           show: false // We will show it manually later
         })
         .on('shown.bs.modal', function () {
-          var selected = response.log_type.toUpperCase();
+          var selected = host.log_type.toUpperCase();
           //console.log(selected);
           if (selected == 'LOCAL') {
             $('#config_host_form #log_server').hide(200);
@@ -170,128 +171,6 @@ $(document).ready(function () {
     });
     e.preventDefault();
   });
-
-  /*
-  $('.edit_host_button').on('click', function () {
-    // Get the record's ID via attribute
-    var id = $(this).attr('data-id');
-    $.ajax({
-      url: '/api/host',
-      method: 'GET',
-      dataType: 'json',
-      data: {
-        "id": id
-      }
-    }).success(function (response) {
-      // Populate the form fields with the data returned from server
-      $('#config_host_form')
-        .find('[name="id"]').val(response.id).end()
-        .find('[name="name"]').val(response.name).end()
-        .find('[name="daemon_url"]').val(response.daemon_url).end()
-        .find('[name="type"]').val(response.type).end()
-        .find('[name="log_level"]').val(response.log_level).end()
-        .find('[name="log_type"]').val(response.log_type).end()
-        .find('[name="log_server"]').val(response.log_server).end()
-        .find('[name="capacity"]').val(response.capacity).end()
-        .find('[name="status"]').val(response.status).end()
-        .find('[name="create_ts"]').val(response.create_ts).end()
-        .find('[name="clusters"]').val(response.clusters.length).end();
-
-      if (response.schedulable == "true")
-        $('#config_host_form').find('[name="schedulable"]').prop('checked', true);
-      else
-        $('#config_host_form').find('[name="schedulable"]').prop('checked', false);
-      if (response.autofill == "true")
-        $('#config_host_form').find('[name="autofill"]').prop('checked', true);
-      else
-        $('#config_host_form').find('[name="autofill"]').prop('checked', false);
-      // Show the dialog
-      bootbox
-        .dialog({
-          title: 'Edit the Host Config',
-          message: $('#config_host_form'),
-          show: false // We will show it manually later
-        })
-        .on('shown.bs.modal', function () {
-          var selected = response.log_type.toUpperCase();
-          //console.log(selected);
-          if (selected == 'LOCAL') {
-            $('#config_host_form #log_server').hide(200);
-          } else {
-            $('#config_host_form #log_server').show(200);
-          }
-          $('#config_host_form #log_type').change(function () {
-            selected = $("#config_host_form #log_type option:selected").text().toUpperCase();
-            console.log(selected);
-            if (selected == 'LOCAL') {
-              $('#config_host_form #log_server').hide(200);
-            } else {
-              $('#config_host_form #log_server').show(200);
-            }
-          });
-          $('#config_host_form').show();
-        })
-        .on('hide.bs.modal', function (e) {
-          // Bootbox will remove the modal (including the body which contains the login form)
-          // after hiding the modal
-          // Therefor, we need to backup the form
-          $('#config_host_form').hide().appendTo('body');
-        })
-        .modal('show');
-    });
-  });
-  $('.fillup_host_button').click(function () {
-    // Confirm
-    var id = $(this).attr('data-id');
-
-    $.ajax({
-      url: "/host_op",
-      type: 'POST',
-      dataType: 'json',
-      data: {
-        "id": id,
-        "action": "fillup"
-      },
-      success: function (response) {
-        console.log(response);
-        setTimeout(function () {
-          alertMsg('Success!', 'The host is fullfilled now.', 'success');
-        }, 1000);
-
-        setTimeout("location.reload(true);", 2000);
-      },
-      error: function (error) {
-        console.log(error);
-        alertMsg('Failed!', error.responseJSON.error, 'danger');
-        setTimeout(location.reload, 2000);
-      }
-    });
-  });
-  $('.clean_host_button').click(function () {
-    // Confirm
-    var id = $(this).attr('data-id');
-
-    $.ajax({
-      url: "/host_op",
-      type: 'POST',
-      dataType: 'json',
-      data: {
-        "id": id,
-        "action": "clean"
-      },
-      success: function (response) {
-        console.log(response);
-        alertMsg('Success!', 'The host is clean now, autofill disabled.', 'success');
-        setTimeout("location.reload(true);", 2000);
-      },
-      error: function (error) {
-        console.log(error);
-        alertMsg('Failed!', error.responseJSON.error, 'danger');
-        setTimeout("location.reload(true);", 2000);
-      }
-    });
-  });
-   */
 
   $('#reset_host_confirm_modal').on('click', '.btn-ok', function (e) {
     var $modalDiv = $(e.delegateTarget);
@@ -395,14 +274,15 @@ $(document).ready(function () {
       }
     }).success(function (response) {
       // Get the cells
-      var $button = $('button[data-id="' + response.id + '"]'),
+      host = response.data
+      var $button = $('button[data-id="' + host.id + '"]'),
         $tr = $button.closest('tr'),
         $cells = $tr.find('td');
 
       // Update the cell data
       $cells
-        .eq(1).html(response.name).end()
-        .eq(3).html(response.capacity).end();
+        .eq(1).html(host.name).end()
+        .eq(3).html(host.capacity).end();
 
       // Hide the dialog
       $form.parents('.bootbox').modal('hide');
@@ -793,7 +673,7 @@ $('.chain_action_restart').on('click', function (e) {
 
   function request_hosts() {
     $.ajax({
-      url: '/api/_stat?res=hosts',
+      url: '/api/stat?res=host',
       type: 'GET',
       dataType: 'json',
       success: function (response) {
@@ -895,7 +775,7 @@ $('.chain_action_restart').on('click', function (e) {
 
   function request_clusters() {
     $.ajax({
-      url: '/api/_stat?res=clusters',
+      url: '/api/stat?res=cluster',
       type: 'GET',
       dataType: 'json',
       success: function (response) {

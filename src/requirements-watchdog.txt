@@ -1,4 +1,0 @@
-docker-compose>=1.7.0
-greenlet>=0.4.5
-pymongo>=3.2.0
-requests>=2.0.0
