@@ -31,15 +31,40 @@ Currently we support Docker Host and Swarm Cluster as Worker Node.
 
 ### Docker Setup
 
-Let Docker daemon listen on port 2375, and make sure Master can reach Worker Node through this port. Simple add this line into your Docker config file (In Ubuntu 14.04, typically is `/etc/default/docker`).
+Let Docker daemon listen on port 2375, and make sure Master can reach Worker Node through this port. 
+
+#### Ubuntu 14.04 
+Simple add this line into your Docker config file `/etc/default/docker`.
 
 ```sh
 DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*' --default-ulimit=nofile=8192:16384 --default-ulimit=nproc=8192:16384"
 ```
 
-Then restart the docker daemon.
+Then restart the docker daemon with:
 
-Run the follow test at Master node and get OK response, to make sure it can access Worker node successfully.
+```sh
+$ sudo service docker restart
+```
+
+#### Ubuntu 16.04
+Update `/etc/systemd/system/docker.service.d/override.conf` like
+
+```
+[Service]
+DOCKER_OPTS="$DOCKER_OPTS -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --api-cors-header='*' --default-ulimit=nofile=8192:16384 --default-ulimit=nproc=8192:16384"
+EnvironmentFile=-/etc/default/docker
+ExecStart=
+ExecStart=/usr/bin/dockerd -H fd:// $DOCKER_OPTS
+```
+
+Regenerate the docker service script and restart the docker engine:
+ 
+```sh
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart docker.service
+```
+
+At last, run the follow test at Master node and get OK response, to make sure it can access Worker node successfully.
 
 ```sh
 [Master] $ docker -H Worker_Node_IP:2375 version
