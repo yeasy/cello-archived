@@ -148,12 +148,6 @@ The application configuration can be imported from file named `CELLO_CONFIG_FILE
 
 By default, it also loads the `config.py` file as the configurations.
 
-Configuration can be set through following environment variables in the [docker-compose.yml](docker-compose.yml):
-
-* `MONGO_URL=mongodb://mongo:27017`
-* `MONGO_COLLECTION=dev`
-* `DEBUG=True`
-
 ### Data Storage
 The mongo container will use local `/opt/cello/mongo` directory for persistent storage. 
 
