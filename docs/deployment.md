@@ -19,15 +19,8 @@ Currently we support Docker Host and Swarm Cluster as Worker Node.
 ### System Requirement
 * Hardware: 8c16g100g
 * Docker engine:
-    - 1.12.0+ (1.11.2+ for 0.5-dp branch).
-    - Config Docker daemon as the following:
-* Docker images
-    - `hyperledger/fabric-peer:latest`
-    - `hyperledger/fabric-baseimage:latest`
-    - `hyperledger/fabric-membersrvc:latest`
+    - 1.12.0+
 * aufs-tools (optional): Only required on ubuntu 14.04.
-
-*Notice: the official image is still changed quickly, we currently recommend to use `yeasy/hyperledger-fabric:0.6-dp` instead and tag them with the official image names.*
 
 ### Docker Setup
 
@@ -70,6 +63,18 @@ At last, run the follow test at Master node and get OK response, to make sure it
 [Master] $ docker -H Worker_Node_IP:2375 version
 ```
 
+### Docker images
+Pulling the following images.
+
+```bash
+$ docker pull hyperledger/fabric-peer:x86_64-0.6.1-preview \
+  && docker pull hyperledger/fabric-membersrvc:x86_64-0.6.1-preview \
+  && docker pull yeasy/blockchain-explorer:latest \
+  && docker tag hyperledger/fabric-peer:x86_64-0.6.1-preview hyperledger/fabric-peer \
+  && docker tag hyperledger/fabric-peer:x86_64-0.6.1-preview hyperledger/fabric-baseimage \
+  && docker tag hyperledger/fabric-membersrvc:x86_64-0.6.1-preview hyperledger/fabric-membersrvc
+```
+
 ### Firewall Setup
 Make sure ip forward is enabled, you can simply run the follow command.
 
@@ -84,11 +89,6 @@ You may need to install `git` and `make` manually before cloning the code and us
 ### System Requirement
 * Hardware: 8c16g100g
 * Docker engine: 1.12.0+
-* Docker images:
-    - python:3.5
-    - mongo:3.2
-    - yeasy/nginx:latest
-    - mongo-express:0.30 (optional)
 * docker-compose: 1.7.0+
 
 
@@ -98,6 +98,19 @@ You may need to install `git` and `make` manually before cloning the code and us
 $ sudo aptitude install git make -y
 $ git clone https://github.com/yeasy/cello && cd cello
 ```
+
+### Docker images
+
+Pull the following images
+
+```bash
+$ docker pull python:3.5 \
+	&& docker pull mongo:3.2 \
+	&& docker pull yeasy/nginx:latest \
+	&& docker pull mongo-express:0.30
+```
+
+*Note: mongo-express:0.30 is for debugging the db, which is optional for basic setup.*
 
 ###  Setup
 
