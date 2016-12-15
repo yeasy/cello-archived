@@ -227,7 +227,7 @@ $(document).ready(function () {
     });
     $modalDiv.modal('hide');
   });
-  $('#delete_host_confirm').on('show.bs.modal', function (e) {
+  $('#delete_host_confirm_modal').on('show.bs.modal', function (e) {
     var data = $(e.relatedTarget).data();
     $('#title', this).text(data.title);
     $('.btn-ok', this).data('hostId', data.id);
@@ -504,7 +504,6 @@ $('.chain_action_restart').on('click', function (e) {
     });
     e.preventDefault();
   });
-
 
   //not used yet
   $('.release_cluster_button').click(function () {
