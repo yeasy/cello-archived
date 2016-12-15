@@ -70,7 +70,7 @@ def host_create():
                                      log_server=log_server)
         if result:
             logger.debug("host creation successfully")
-            return make_ok_response(), CODE_CREATED
+            return make_ok_response(code=CODE_CREATED)
         else:
             error_msg = "Failed to create host {}".format(r.form["name"])
             logger.warning(error_msg)
