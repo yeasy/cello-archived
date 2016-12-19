@@ -124,41 +124,6 @@
 
                         </ul>
                     </div>
-
-                    <!--
-                    <button type="button" data-id="{{ item.id }}"
-                            class="btn btn-xs btn-sm btn-primary btn-info btn-default edit_host_button"
-                            style="float: right;"
-                    >
-
-                    </button>
-
-                    <button
-                            title="Try best to clean unused clusters at this host"
-                            class="btn btn-xs btn-sm btn-warning btn-default
-                             btn-primary clean_host_button"
-                            data-id="{{ item.id }}"
-                            style="float: right;"
-                            {% if item.clusters|length <= 0 %}
-                            disabled
-                            {% endif %} >
-                        <span class="glyphicon glyphicon-chevron-down"
-                              aria-hidden="true"></span>
-                    </button>
-
-                    <button
-                            class="btn btn-xs btn-sm btn-default btn-primary fillup_host_button"
-                            data-id="{{ item.id }}"
-                            title="Fill up this host to its capacity = {{ item.capacity|string }}"
-                            style="float: right;"
-                            {% if item.clusters|length >= item.capacity %}
-                            disabled
-                            {% endif %}>
-                        <span class="glyphicon glyphicon-chevron-up"
-                              aria-hidden="true"></span>
-                    </button>
-                -->
-
                 </td>
                 </tr>
                 {% endfor %}
@@ -195,7 +160,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title" id="delete_host_confirm_ModalLabel">Confirm Delete</h4>
+                <h4 class="modal-title">Confirm Delete</h4>
             </div>
             <div class="modal-body">
                 <p>You are about to <font color="red">remove</font> the host <font color="red"><i id="title"></i></font>, this procedure is irreversible.</p>

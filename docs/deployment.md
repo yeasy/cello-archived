@@ -1,35 +1,33 @@
 # Deployment
 
-**Hyperledger fabric changes the service port number since 0.6, so if you want to use the legacy 0.5 code, please use the dp-0.5 branch, which will be deprecated soon.**
+*Here we describe the deployment setups for development usage. If you want to deploy Cello for production, please also refer to the [Production Configuration](production_config.md).*
 
-There are two kinds of nodes, we suggest all nodes are Linux-based (Ubuntu 14.04+) VM/Servers: 
+Cell follows a typical Master-Worker architecture. Hence there will be two types of Nodes.
 
-* Master Node: Manage (e.g., create/delete) the chains in Work Nodes, providing dashboard on port `8080` and rest api on port `80`;
-* Worker Node: Container providers, can be Docker Host or Swarm Cluster, usually the Docker service should listen on port `2375`.
+* Master Node: Manage (e.g., create/delete) the chains inside Work Nodes, with Web dashboard on port `8080` and RESTful api on port `80`;
+* Worker Node: Chain providers, now support Docker Host or Swarm Cluster. The Docker service should be accessible from port `2375` from the Master Node.
 
-![Deployment topology](imgs/deployment.png)
+![Deployment topology](imgs/deployment_topo.png)
 
-If it's the first time to setup Cello, we recommend first setup a Docker Host as Worker Node. 
+For each Node, it is suggested as a Linux-based (e.g., Ubuntu 14.04+) server/vm: 
 
-This doc only describe the basic deployment setups, we highly recommend you to read the [Production Configuration](production_config.md) if you adopt Cello for production usage.
 
 ## Worker Node
-Currently we support Docker Host and Swarm Cluster as Worker Node.
+Currently we support Docker Host or Swarm Cluster as Worker Node. More types will be added soon.
 
-### System Requirement
+For the Worker Node with meeting the [system requirements](#system-requirements), three steps are required:
+
+* [Docker daemon setup](#docker-daemon-setup)
+* [Docker images pulling](#docker-images-pulling)
+* [Firewall Setup](#firewall-setup)
+
+### System Requirements
 * Hardware: 8c16g100g
 * Docker engine:
-    - 1.12.0+ (1.11.2+ for 0.5-dp branch).
-    - Config Docker daemon as the following:
-* Docker images
-    - `hyperledger/fabric-peer:latest`
-    - `hyperledger/fabric-baseimage:latest`
-    - `hyperledger/fabric-membersrvc:latest`
+    - 1.12.0+
 * aufs-tools (optional): Only required on ubuntu 14.04.
 
-*Notice: the official image is still changed quickly, we currently recommend to use `yeasy/hyperledger-fabric:0.6-dp` instead and tag them with the official image names.*
-
-### Docker Setup
+### Docker Daemon Setup
 
 Let Docker daemon listen on port 2375, and make sure Master can reach Worker Node through this port. 
 
@@ -70,6 +68,18 @@ At last, run the follow test at Master node and get OK response, to make sure it
 [Master] $ docker -H Worker_Node_IP:2375 version
 ```
 
+### Docker Images Pulling
+Pulling the following images.
+
+```bash
+$ docker pull hyperledger/fabric-peer:x86_64-0.6.1-preview \
+  && docker pull hyperledger/fabric-membersrvc:x86_64-0.6.1-preview \
+  && docker pull yeasy/blockchain-explorer:latest \
+  && docker tag hyperledger/fabric-peer:x86_64-0.6.1-preview hyperledger/fabric-peer \
+  && docker tag hyperledger/fabric-peer:x86_64-0.6.1-preview hyperledger/fabric-baseimage \
+  && docker tag hyperledger/fabric-membersrvc:x86_64-0.6.1-preview hyperledger/fabric-membersrvc
+```
+
 ### Firewall Setup
 Make sure ip forward is enabled, you can simply run the follow command.
 
@@ -79,27 +89,48 @@ $ sysctl -w net.ipv4.ip_forward=1
 And check the os iptables config, to make sure host ports are open (e.g., 2375, 7050~10000)
 
 ## Master Node
-You may need to install `git` and `make` manually before cloning the code and using the setup scripts. 
+The Master Node includes several services: 
+
+* dashboard: Provide Web UI for operators.
+* restserver: Provide RESTful APIs for chain consumers.
+* watchdog: Watch for health checking.
+
+More details can be found at the [architecture doc](docs/arch.md).
+
+It can be deployed by in 3 steps.
+
+* Clone code
+* Pull Docker images
+* Run setup script
 
 ### System Requirement
 * Hardware: 8c16g100g
 * Docker engine: 1.12.0+
-* Docker images:
-    - python:3.5
-    - mongo:3.2
-    - yeasy/nginx:latest
-    - mongo-express:0.30 (optional)
 * docker-compose: 1.7.0+
 
-
 ### Clone Code
+
+You may check `git` and `make` are installed to clone the code.
 
 ```sh
 $ sudo aptitude install git make -y
 $ git clone https://github.com/yeasy/cello && cd cello
 ```
 
-###  Setup
+### Docker images pulling
+
+Pull the following images
+
+```bash
+$ docker pull python:3.5 \
+	&& docker pull mongo:3.2 \
+	&& docker pull yeasy/nginx:latest \
+	&& docker pull mongo-express:0.30
+```
+
+*Note: mongo-express:0.30 is for debugging the db, which is optional for basic setup.*
+
+### Run Setup
 
 For the first time running, please setup the master node with
 
@@ -111,35 +142,38 @@ Make sure there is no error during the setup. Otherwise, please check the log ms
 
 ### Usage
 
+#### Start/Restart
 To (re)start the whole services, please run
 
 ```sh
 $ make restart
 ```
 
-To (re)deploy one sub service, e.g., dashboard, please run
+#### Deploy/Redploy
+To (re)deploy one specific service, e.g., dashboard, please run
 
 ```sh
-$ make redeploy service=watchdog
+$ make redeploy service=dashboard
 ```
 
-To check the logs for the services, please run
+#### Check Logs
+To check the logs for all the services, please run
 
 ```sh
 $ make logs
+```
+
+To check the logs for one specific service, please run
+```sh
 $ make log service=watchdog
 ```
+
+Now you can access the `MASTER_NODE_IP:8080` to open the Web-based [operational dashboard](docs/dashboard.md).
 
 ### Configuration
 The application configuration can be imported from file named `CELLO_CONFIG_FILE`.
 
 By default, it also loads the `config.py` file as the configurations.
-
-Configuration can be set through following environment variables in the [docker-compose.yml](docker-compose.yml):
-
-* `MONGO_URL=mongodb://mongo:27017`
-* `MONGO_COLLECTION=dev`
-* `DEBUG=True`
 
 ### Data Storage
 The mongo container will use local `/opt/cello/mongo` directory for persistent storage. 
