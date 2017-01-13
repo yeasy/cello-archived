@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/yeasy/cello.svg?branch=dev)](https://travis-ci.org/yeasy/cello)
 
+**The project has been accepted by Hyperledger Community as [Cello](https://github.com/hyperledger/cello).**
+
 Platform to provide Blockchain as a Service!
 
 Using Cello, we can 
